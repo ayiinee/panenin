@@ -2,34 +2,58 @@ import 'package:flutter/material.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 
-enum ActiveOrderStatus { awaitingPayment, processing }
+enum OrderStatus { awaitingPayment, processing, completed }
+
+const demoOrders = [
+  OrderListItem(
+    customer: 'Tacibay',
+    product: 'Tomat',
+    price: 'Rp15.000/Kg',
+    deliveryDate: 'Kirim: 09 Juli 2026',
+    code: 'E839KG',
+    imagePath: 'assets/images/home/order_tomato.png',
+    status: OrderStatus.completed,
+  ),
+  OrderListItem(
+    customer: 'Rumah Makan Suhat',
+    product: 'Lobak Putih',
+    price: 'Rp20.000/Kg',
+    deliveryDate: 'Kirim: 11 Juli 2026',
+    code: 'E840KG',
+    imagePath: 'assets/images/home/order_white_radish.png',
+    status: OrderStatus.completed,
+  ),
+  OrderListItem(
+    customer: 'Warung Tegal Klojen',
+    product: 'Kacang Panjang',
+    price: 'Rp16.000/Kg',
+    deliveryDate: 'Kirim: 13 Juli 2026',
+    code: 'E841KG',
+    imagePath: 'assets/images/home/order_long_beans.png',
+    status: OrderStatus.awaitingPayment,
+  ),
+  OrderListItem(
+    customer: 'Warung Swimpit',
+    product: 'Kubis',
+    price: 'Rp5.000/Kg',
+    deliveryDate: 'Kirim: 15 Juli 2026',
+    code: 'E842KG',
+    imagePath: 'assets/images/home/order_cabbage.png',
+    status: OrderStatus.processing,
+  ),
+];
 
 class ActiveOrdersSection extends StatelessWidget {
-  const ActiveOrdersSection({super.key});
+  const ActiveOrdersSection({this.onViewAll, super.key});
 
-  static const _orders = [
-    _ActiveOrder(
-      customer: 'Warung Tegal Klojen',
-      product: 'Kacang Panjang',
-      price: 'Rp16.000/Kg',
-      deliveryDate: 'Kirim: 13 Juli 2026',
-      code: 'E841KG',
-      imagePath: 'assets/images/home/order_long_beans.png',
-      status: ActiveOrderStatus.awaitingPayment,
-    ),
-    _ActiveOrder(
-      customer: 'Warung Swimpit',
-      product: 'Kubis',
-      price: 'Rp5.000/Kg',
-      deliveryDate: 'Kirim: 15 Juli 2026',
-      code: 'E842KG',
-      imagePath: 'assets/images/home/order_cabbage.png',
-      status: ActiveOrderStatus.processing,
-    ),
-  ];
+  final VoidCallback? onViewAll;
 
   @override
   Widget build(BuildContext context) {
+    final activeOrders = demoOrders
+        .where((order) => order.status != OrderStatus.completed)
+        .toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -47,7 +71,7 @@ class ActiveOrdersSection extends StatelessWidget {
               ),
             ),
             TextButton(
-              onPressed: () {},
+              onPressed: onViewAll,
               style: TextButton.styleFrom(
                 minimumSize: const Size(48, 48),
                 padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -62,26 +86,27 @@ class ActiveOrdersSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 2),
-        for (var index = 0; index < _orders.length; index++) ...[
-          _ActiveOrderCard(
-            order: _orders[index],
+        for (var index = 0; index < activeOrders.length; index++) ...[
+          OrderCard(
+            order: activeOrders[index],
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => OrderDetailScreen(order: _orders[index].detail),
+                builder: (_) =>
+                    OrderDetailScreen(order: activeOrders[index].detail),
               ),
             ),
           ),
-          if (index != _orders.length - 1) const SizedBox(height: 9),
+          if (index != activeOrders.length - 1) const SizedBox(height: 9),
         ],
       ],
     );
   }
 }
 
-class _ActiveOrderCard extends StatelessWidget {
-  const _ActiveOrderCard({required this.order, required this.onTap});
+class OrderCard extends StatelessWidget {
+  const OrderCard({required this.order, required this.onTap, super.key});
 
-  final _ActiveOrder order;
+  final OrderListItem order;
   final VoidCallback onTap;
 
   @override
@@ -147,7 +172,7 @@ class _ActiveOrderCard extends StatelessWidget {
 class _OrderDetails extends StatelessWidget {
   const _OrderDetails({required this.order});
 
-  final _ActiveOrder order;
+  final OrderListItem order;
 
   @override
   Widget build(BuildContext context) {
@@ -194,7 +219,7 @@ class _OrderDetails extends StatelessWidget {
 class _OrderActions extends StatelessWidget {
   const _OrderActions({required this.order, required this.onTap});
 
-  final _ActiveOrder order;
+  final OrderListItem order;
   final VoidCallback onTap;
 
   @override
@@ -255,8 +280,8 @@ class _OrderActions extends StatelessWidget {
   }
 }
 
-class _ActiveOrder {
-  const _ActiveOrder({
+class OrderListItem {
+  const OrderListItem({
     required this.customer,
     required this.product,
     required this.price,
@@ -272,9 +297,33 @@ class _ActiveOrder {
   final String deliveryDate;
   final String code;
   final String imagePath;
-  final ActiveOrderStatus status;
+  final OrderStatus status;
 
   OrderDetailData get detail => switch (code) {
+    'E839KG' => const OrderDetailData(
+      code: 'E839KG',
+      customer: 'Tacibay',
+      tagline: 'Olahan tomat segar setiap hari',
+      recipient: 'Tacibay',
+      address: 'Jl. Tidar No. 39, Malang',
+      phone: '0812 3456 8390',
+      item: 'Tomat 20 Kg',
+      note: 'Pilih tomat matang dan segar',
+      imagePath: 'assets/images/home/buyer_avatar.png',
+      initialStage: OrderDetailStage.completed,
+    ),
+    'E840KG' => const OrderDetailData(
+      code: 'E840KG',
+      customer: 'Rumah Makan Suhat',
+      tagline: 'Masakan rumahan di kawasan Suhat',
+      recipient: 'Rumah Makan Suhat',
+      address: 'Jl. Soekarno Hatta No. 40, Malang',
+      phone: '0812 3456 8400',
+      item: 'Lobak Putih 25 Kg',
+      note: 'Ukuran sedang dan tidak memar',
+      imagePath: 'assets/images/home/pasar_induk.png',
+      initialStage: OrderDetailStage.completed,
+    ),
     'E841KG' => const OrderDetailData(
       code: 'E841KG',
       customer: 'Warung Tegal Klojen',
@@ -302,17 +351,20 @@ class _ActiveOrder {
   };
 
   String get statusLabel => switch (status) {
-    ActiveOrderStatus.awaitingPayment => 'Menunggu DP',
-    ActiveOrderStatus.processing => 'Proses',
+    OrderStatus.awaitingPayment => 'Menunggu DP',
+    OrderStatus.processing => 'Proses',
+    OrderStatus.completed => 'Selesai',
   };
 
   Color get statusColor => switch (status) {
-    ActiveOrderStatus.awaitingPayment => const Color(0xFFDC2626),
-    ActiveOrderStatus.processing => AppColors.accent,
+    OrderStatus.awaitingPayment => const Color(0xFFDC2626),
+    OrderStatus.processing => AppColors.accent,
+    OrderStatus.completed => AppColors.primary,
   };
 
   Color get statusTextColor => switch (status) {
-    ActiveOrderStatus.awaitingPayment => Colors.white,
-    ActiveOrderStatus.processing => Colors.black,
+    OrderStatus.awaitingPayment => Colors.white,
+    OrderStatus.processing => Colors.black,
+    OrderStatus.completed => Colors.white,
   };
 }

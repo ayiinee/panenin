@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 
 class PaneninBottomNavigation extends StatelessWidget {
-  const PaneninBottomNavigation({this.selectedIndex = 0, super.key});
+  const PaneninBottomNavigation({
+    this.selectedIndex = 0,
+    this.onDestinationSelected,
+    super.key,
+  });
 
   final int selectedIndex;
+  final ValueChanged<int>? onDestinationSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -35,6 +40,7 @@ class PaneninBottomNavigation extends StatelessWidget {
                       label: 'Beranda',
                       icon: Icons.home_outlined,
                       selected: selectedIndex == 0,
+                      onTap: () => onDestinationSelected?.call(0),
                     ),
                   ),
                   Expanded(
@@ -42,6 +48,7 @@ class PaneninBottomNavigation extends StatelessWidget {
                       label: 'Stok',
                       icon: Icons.inventory_2_outlined,
                       selected: selectedIndex == 1,
+                      onTap: () => onDestinationSelected?.call(1),
                     ),
                   ),
                   SizedBox(width: 82),
@@ -50,6 +57,7 @@ class PaneninBottomNavigation extends StatelessWidget {
                       label: 'Pesanan',
                       icon: Icons.receipt_long_outlined,
                       selected: selectedIndex == 2,
+                      onTap: () => onDestinationSelected?.call(2),
                     ),
                   ),
                   Expanded(
@@ -57,6 +65,7 @@ class PaneninBottomNavigation extends StatelessWidget {
                       label: 'Profile',
                       icon: Icons.person_outline,
                       selected: selectedIndex == 3,
+                      onTap: () => onDestinationSelected?.call(3),
                     ),
                   ),
                 ],
@@ -74,11 +83,13 @@ class _NavigationItem extends StatelessWidget {
   const _NavigationItem({
     required this.label,
     required this.icon,
+    required this.onTap,
     this.selected = false,
   });
 
   final String label;
   final IconData icon;
+  final VoidCallback? onTap;
   final bool selected;
 
   @override
@@ -90,7 +101,7 @@ class _NavigationItem extends StatelessWidget {
       selected: selected,
       label: label,
       child: InkWell(
-        onTap: () {},
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.only(top: 10, bottom: 7),

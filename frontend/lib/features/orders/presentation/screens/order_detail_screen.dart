@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 
 enum OrderDetailStage { awaitingPayment, readyToShip, completed }
@@ -61,11 +60,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         systemNavigationBarColor: Colors.white,
       ),
       child: Scaffold(
-        extendBody: true,
         extendBodyBehindAppBar: true,
-        bottomNavigationBar: const PaneninBottomNavigation(selectedIndex: 2),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 112),
+          padding: EdgeInsets.only(
+            bottom: 32 + MediaQuery.paddingOf(context).bottom,
+          ),
           child: Stack(
             children: [
               const _DetailHeader(),
@@ -149,14 +148,33 @@ class _DetailHeader extends StatelessWidget {
         ),
         borderRadius: BorderRadius.vertical(bottom: Radius.circular(15)),
       ),
-      alignment: const Alignment(0, 0.15),
-      child: const Text(
-        'Detail Pesanan',
-        style: TextStyle(
-          color: Colors.white,
-          fontSize: 24,
-          height: 32 / 24,
-          fontWeight: FontWeight.w600,
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Center(
+              child: Text(
+                'Detail Pesanan',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  height: 32 / 24,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                key: const ValueKey('detail-back'),
+                onPressed: () => Navigator.of(context).maybePop(),
+                tooltip: 'Kembali ke kelola pesanan',
+                color: Colors.white,
+                icon: const Icon(Icons.arrow_back_rounded),
+              ),
+            ),
+          ],
         ),
       ),
     );

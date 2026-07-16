@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:panenin/app/app.dart';
 import 'package:panenin/app/router/route_names.dart';
+import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_theme.dart';
 import 'package:panenin/features/auth/data/models/authenticated_user.dart';
 import 'package:panenin/features/auth/data/models/email_sign_up_result.dart';
@@ -14,6 +15,7 @@ import 'package:panenin/features/auth/presentation/screens/reset_password_screen
 import 'package:panenin/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
+import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -183,6 +185,77 @@ void main() {
     );
     expect(find.text('Konfirmasi Pesanan'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('lihat semua membuka kelola pesanan dengan empat kategori', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('Lihat Semua').last,
+      400,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.tap(find.text('Lihat Semua').last);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ManageOrdersScreen), findsOneWidget);
+    expect(find.text('Kelola Pesanan'), findsOneWidget);
+    expect(find.text('Pesanan Aktif'), findsOneWidget);
+    expect(find.byKey(const ValueKey('order-filter-all')), findsOneWidget);
+    expect(
+      find.byKey(const ValueKey('order-filter-awaitingPayment')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('order-filter-processing')),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('order-filter-completed')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('filter pesanan dan detail selesai dapat kembali ke kelola', (
+    tester,
+  ) async {
+    await _pumpManageOrders(tester);
+
+    expect(find.byKey(const ValueKey('managed-order-E839KG')), findsOneWidget);
+    expect(find.byKey(const ValueKey('managed-order-E842KG')), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('order-filter-completed')));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const ValueKey('managed-order-E839KG')), findsOneWidget);
+    expect(find.byKey(const ValueKey('managed-order-E840KG')), findsOneWidget);
+    expect(find.byKey(const ValueKey('managed-order-E841KG')), findsNothing);
+    expect(find.byKey(const ValueKey('managed-order-E842KG')), findsNothing);
+
+    final manageTitleTop = tester.getTopLeft(find.text('Kelola Pesanan')).dy;
+
+    await tester.tap(
+      find.descendant(
+        of: find.byKey(const ValueKey('managed-order-E839KG')),
+        matching: find.text('Lihat Detail'),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('Detail Pesanan'), findsOneWidget);
+    expect(find.text('Tacibay'), findsNWidgets(2));
+    expect(find.byKey(const ValueKey('advance-order')), findsNothing);
+    expect(find.byType(PaneninBottomNavigation), findsNothing);
+    expect(
+      tester.getTopLeft(find.text('Detail Pesanan')).dy,
+      closeTo(manageTitleTop, 0.1),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('detail-back')));
+    await tester.pumpAndSettle();
+    expect(find.byType(ManageOrdersScreen), findsOneWidget);
   });
 
   const demoUser = AuthenticatedUser(
@@ -475,5 +548,15 @@ Future<void> _pumpApp(
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
     MaterialApp(theme: AppTheme.light, home: const FarmerHomeScreen()),
+  );
+}
+
+Future<void> _pumpManageOrders(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(428, 938);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    MaterialApp(theme: AppTheme.light, home: const ManageOrdersScreen()),
   );
 }

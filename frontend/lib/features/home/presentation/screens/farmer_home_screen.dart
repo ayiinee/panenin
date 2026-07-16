@@ -7,6 +7,7 @@ import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
 import 'package:panenin/features/home/presentation/widgets/demand_request_card.dart';
 import 'package:panenin/features/home/presentation/widgets/farmer_home_header.dart';
+import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
 
 enum _DemandAction { accepted, rejected }
@@ -41,6 +42,12 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   _DemandAction? _feedback;
   final _activeDemandIds = {'rina', 'syaiful'};
   bool _showNotification = false;
+
+  void _openOrders() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const ManageOrdersScreen()));
+  }
 
   void _completeDemand(String id, _DemandAction action) {
     if (!_activeDemandIds.contains(id)) return;
@@ -91,7 +98,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
       ),
       child: Scaffold(
         extendBody: true,
-        bottomNavigationBar: const PaneninBottomNavigation(),
+        bottomNavigationBar: PaneninBottomNavigation(
+          onDestinationSelected: (index) {
+            if (index == 2) _openOrders();
+          },
+        ),
         body: Stack(
           children: [
             SafeArea(
@@ -130,7 +141,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                   onNegotiate: () {},
                                 ),
                               ),
-                          const ActiveOrdersSection(),
+                          ActiveOrdersSection(onViewAll: _openOrders),
                           SizedBox(
                             height: MediaQuery.paddingOf(context).bottom + 8,
                           ),
