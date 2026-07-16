@@ -7,6 +7,8 @@ import 'package:panenin/features/auth/presentation/screens/create_account_screen
 import 'package:panenin/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaneninApp extends StatefulWidget {
@@ -55,12 +57,14 @@ class _PaneninAppState extends State<PaneninApp> {
       title: 'Panenin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: RouteNames.register,
+      initialRoute: RouteNames.selectRole,
       routes: {
+        RouteNames.selectRole: (_) => const SelectRoleScreen(),
         RouteNames.register: (_) => const CreateAccountScreen(),
         RouteNames.login: (_) => const LoginScreen(),
         RouteNames.forgotPassword: (_) => const ForgotPasswordScreen(),
         RouteNames.resetPassword: (_) => const ResetPasswordScreen(),
+        RouteNames.profile: (_) => const ProfileSetupScreen(),
       },
     );
   }

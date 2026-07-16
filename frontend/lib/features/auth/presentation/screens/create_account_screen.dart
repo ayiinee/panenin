@@ -11,6 +11,7 @@ import 'package:panenin/features/auth/presentation/widgets/auth_primary_button.d
 import 'package:panenin/features/auth/presentation/widgets/auth_switch_link.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/shared/widgets/auth_shell.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -84,6 +85,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
         return;
       }
+      if (_selectedRole == UserRole.farmer) {
+        _openFarmerProfile();
+        return;
+      }
       final identity = result.user?.name ?? result.user?.email ?? 'pengguna';
       _showMessage('Akun berhasil dibuat sebagai $identity.');
     } on Object catch (error) {
@@ -113,6 +118,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     try {
       final user = await (widget.googleSignIn ?? _googleSignInWithService)();
       if (!mounted) return;
+      if (_selectedRole == UserRole.farmer) {
+        _openFarmerProfile();
+        return;
+      }
       final identity = user.name ?? user.email ?? 'pengguna';
       _showMessage('Pendaftaran berhasil sebagai $identity.');
     } on Object catch (error) {
@@ -134,16 +143,25 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     return _authService!.signInWithGoogle();
   }
 
+  UserRole? get _selectedRole =>
+      ModalRoute.of(context)?.settings.arguments as UserRole?;
+
+  void _openFarmerProfile() {
+    Navigator.pushReplacementNamed(context, RouteNames.profile);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final selectedRole = _selectedRole;
+    final subtitle = selectedRole == null
+        ? 'Kami hadir untuk membantu usahamu'
+        : 'Daftar sebagai ${selectedRole.label}';
+
     return AuthShell(
       child: AutofillGroup(
         child: Column(
           children: [
-            const AuthBrandHeader(
-              title: 'Buat Akun Anda',
-              subtitle: 'Kami hadir untuk membantu usahamu',
-            ),
+            AuthBrandHeader(title: 'Buat Akun Anda', subtitle: subtitle),
             const SizedBox(height: 39),
             AuthTextField(
               label: 'Nama Pengguna',
