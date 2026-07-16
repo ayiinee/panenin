@@ -278,7 +278,7 @@ class _ActiveOrder {
     'E841KG' => const OrderDetailData(
       code: 'E841KG',
       customer: 'Warung Tegal Klojen',
-      tagline: 'Sedia aneka masakan rumahan',
+      tagline: 'Sedia aneka masakan rumahan khas Tegal',
       recipient: 'Warung Tegal Klojen',
       address: 'Jl. Klojen No. 27, Malang',
       phone: '0812 3456 8410',

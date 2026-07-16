@@ -30,6 +30,9 @@ file_size_limit = "10MiB"
 [auth]
 enabled = true
 site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = []
+additional_redirect_urls = [
+  "com.panenin.app://login-callback/",
+  "com.panenin.app://reset-password/",
+]
 enable_signup = true
 minimum_password_length = 8
