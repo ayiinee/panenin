@@ -359,10 +359,23 @@ void main() {
   testWidgets('farmer registration continues to profile setup', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const PaneninApp());
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.profile: (_) => const ProfileSetupScreen()},
+        home: CreateAccountScreen(
+          role: UserRole.farmer,
+          emailSignUp: (name, email, password) async => const EmailSignUpResult(
+            requiresEmailVerification: false,
+            user: demoUser,
+          ),
+        ),
+      ),
+    );
 
-    await tester.tap(find.text('Jual Hasil Panen'));
-    await tester.pumpAndSettle();
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Demo Panenin');
+    await tester.enterText(fields.at(1), 'demo@panenin.id');
+    await tester.enterText(fields.at(2), 'password123');
     await tester.tap(find.text('Daftarkan Akun'));
     await tester.pumpAndSettle();
 

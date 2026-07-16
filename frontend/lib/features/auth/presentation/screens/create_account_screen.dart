@@ -19,12 +19,14 @@ class CreateAccountScreen extends StatefulWidget {
     this.authService,
     this.googleSignIn,
     this.emailSignUp,
+    this.role,
     super.key,
   });
 
   final AuthService? authService;
   final GoogleSignIn? googleSignIn;
   final EmailSignUp? emailSignUp;
+  final UserRole? role;
 
   @override
   State<CreateAccountScreen> createState() => _CreateAccountScreenState();
@@ -143,8 +145,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     return _authService!.signInWithGoogle();
   }
 
-  UserRole? get _selectedRole =>
-      ModalRoute.of(context)?.settings.arguments as UserRole?;
+  UserRole? get _selectedRole {
+    if (widget.role case final role?) return role;
+    return switch (ModalRoute.of(context)?.settings.arguments) {
+      UserRole role => role,
+      _ => null,
+    };
+  }
 
   void _openFarmerProfile() {
     Navigator.pushReplacementNamed(context, RouteNames.profile);
