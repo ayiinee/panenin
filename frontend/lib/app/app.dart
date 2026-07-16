@@ -1,0 +1,23 @@
+import 'package:flutter/material.dart';
+import 'package:panenin/app/router/route_names.dart';
+import 'package:panenin/app/theme/app_theme.dart';
+import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
+import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
+
+class PaneninApp extends StatelessWidget {
+  const PaneninApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Panenin',
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.light,
+      initialRoute: RouteNames.register,
+      routes: {
+        RouteNames.register: (_) => const CreateAccountScreen(),
+        RouteNames.login: (_) => const LoginScreen(),
+      },
+    );
+  }
+}
