@@ -84,11 +84,20 @@ class AuthService {
 
   Future<AuthenticatedUser> signInWithGoogle() async {
     final signedIn = Completer<void>();
-    final subscription = _supabase.auth.onAuthStateChange.listen((event) {
-      if (event.event == AuthChangeEvent.signedIn && !signedIn.isCompleted) {
-        signedIn.complete();
-      }
-    });
+    final subscription = _supabase.auth.onAuthStateChange.listen(
+      (event) {
+        if (event.event == AuthChangeEvent.signedIn &&
+            event.session != null &&
+            !signedIn.isCompleted) {
+          signedIn.complete();
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!signedIn.isCompleted) {
+          signedIn.completeError(error, stackTrace);
+        }
+      },
+    );
 
     try {
       final launched = await _supabase.auth.signInWithOAuth(

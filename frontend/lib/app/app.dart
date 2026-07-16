@@ -29,20 +29,25 @@ class _PaneninAppState extends State<PaneninApp> {
   @override
   void initState() {
     super.initState();
-    _authSubscription = widget.authEvents?.listen((state) {
-      if (state.event != AuthChangeEvent.passwordRecovery ||
-          _recoveryRouteOpen) {
-        return;
-      }
-      _recoveryRouteOpen = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _navigatorKey.currentState?.pushNamedAndRemoveUntil(
-          RouteNames.resetPassword,
-          (_) => false,
-        );
-      });
-    });
+    _authSubscription = widget.authEvents?.listen(
+      (state) {
+        if (state.event != AuthChangeEvent.passwordRecovery ||
+            _recoveryRouteOpen) {
+          return;
+        }
+        _recoveryRouteOpen = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+            RouteNames.resetPassword,
+            (_) => false,
+          );
+        });
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        debugPrint('Supabase auth stream error: $error');
+      },
+    );
   }
 
   @override
