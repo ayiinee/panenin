@@ -15,7 +15,11 @@ class StockScreen extends StatefulWidget {
 class _StockScreenState extends State<StockScreen> {
   final _items = List<StockItem>.of(demoStockItems);
 
-  int get _totalStock => _items.fold(0, (total, item) => total + item.quantity);
+  int get _totalStock => _items.fold(
+    0,
+    (total, item) =>
+        total + (item.status == StockStatus.expired ? 0 : item.quantity),
+  );
 
   Future<void> _openForm([StockItem? current]) async {
     final result = await Navigator.of(context).push<StockItem>(
@@ -224,11 +228,21 @@ class _StockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final status = item.status;
+    final isExpired = status == StockStatus.expired;
+    final reservedQuantity = item.reservedQuantityAt(DateTime.now());
+
     return Container(
+      key: ValueKey('stock-card-surface-${item.id}'),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0x55000000), width: 0.5),
+        color: isExpired
+            ? AppColors.danger.withValues(alpha: 0.08)
+            : Colors.white,
+        border: Border.all(
+          color: isExpired ? AppColors.danger : const Color(0x55000000),
+          width: isExpired ? 1.5 : 0.5,
+        ),
         borderRadius: BorderRadius.circular(9),
         boxShadow: const [
           BoxShadow(
@@ -300,9 +314,9 @@ class _StockCard extends StatelessWidget {
                         Expanded(
                           child: _StockMetric(
                             label: 'Status',
-                            value: _statusLabel(item.status),
-                            color: _statusColor(item.status),
-                            backgroundColor: _statusBackground(item.status),
+                            value: _statusLabel(status),
+                            color: _statusColor(status),
+                            backgroundColor: _statusBackground(status),
                           ),
                         ),
                       ],
@@ -312,6 +326,38 @@ class _StockCard extends StatelessWidget {
               ),
             ],
           ),
+          if (isExpired) ...[
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.danger,
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Melewati umur simpan ${item.shelfLifeDays} hari. '
+                      'Tinjau stok sebelum ditawarkan.${reservedQuantity > 0 ? ' $reservedQuantity${item.unit} masih direservasi.' : ''}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -401,12 +447,14 @@ String _statusLabel(StockStatus status) => switch (status) {
   StockStatus.available => 'Tersedia',
   StockStatus.low => 'Hampir Habis',
   StockStatus.empty => 'Habis',
+  StockStatus.expired => 'Perlu Ditinjau',
 };
 
 Color _statusColor(StockStatus status) => switch (status) {
   StockStatus.available => AppColors.primary,
   StockStatus.low => AppColors.accent,
   StockStatus.empty => AppColors.danger,
+  StockStatus.expired => AppColors.danger,
 };
 
 Color _statusBackground(StockStatus status) =>

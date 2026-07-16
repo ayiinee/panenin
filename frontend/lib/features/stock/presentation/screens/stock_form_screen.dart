@@ -20,6 +20,7 @@ class _StockFormScreenState extends State<StockFormScreen> {
   );
   late int _quantity = widget.item?.quantity ?? 0;
   late String _unit = widget.item?.unit ?? 'Kg';
+  late DateTime _harvestedAt = widget.item?.harvestedAt ?? DateTime.now();
 
   bool get _isEditing => widget.item != null;
 
@@ -40,6 +41,9 @@ class _StockFormScreenState extends State<StockFormScreen> {
       quantity: _quantity,
       unit: _unit,
       price: int.parse(_priceController.text),
+      harvestedAt: _harvestedAt,
+      shelfLifeDays: existing?.shelfLifeDays,
+      reservations: existing?.reservations ?? const [],
       imagePath: existing?.imagePath,
     );
     Navigator.of(context).pop(item);
@@ -80,6 +84,28 @@ class _StockFormScreenState extends State<StockFormScreen> {
                             value == null || value.trim().isEmpty
                             ? 'Nama produk wajib diisi.'
                             : null,
+                      ),
+                      const SizedBox(height: 26),
+                      _FieldLabel(text: 'Tanggal Panen'),
+                      const SizedBox(height: 8),
+                      InkWell(
+                        key: const ValueKey('stock-harvest-date-field'),
+                        onTap: () async {
+                          final selected = await showDatePicker(
+                            context: context,
+                            initialDate: _harvestedAt,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime.now(),
+                          );
+                          if (selected != null) {
+                            setState(() => _harvestedAt = selected);
+                          }
+                        },
+                        borderRadius: BorderRadius.circular(9),
+                        child: InputDecorator(
+                          decoration: _inputDecoration('Pilih tanggal panen'),
+                          child: Text(_formatDate(_harvestedAt)),
+                        ),
                       ),
                       const SizedBox(height: 26),
                       _FieldLabel(text: 'Jumlah Stok'),
@@ -358,3 +384,21 @@ InputDecoration _inputDecoration(String hint) => InputDecoration(
     borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
   ),
 );
+
+String _formatDate(DateTime value) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
+  return '${value.day} ${months[value.month - 1]} ${value.year}';
+}

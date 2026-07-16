@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
-import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 
 enum _OrderFilter { all, awaitingPayment, processing, completed }
 
@@ -34,11 +34,9 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
   }
 
   void _openDetail(OrderListItem order) {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => OrderDetailScreen(order: order.detail),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).pushNamed(RouteNames.detailPesanan, arguments: order.detail);
   }
 
   @override
@@ -265,36 +263,44 @@ class _FilterBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 8),
-      child: Wrap(
-        spacing: 6,
-        runSpacing: 6,
+      child: Row(
         children: [
-          for (final filter in _OrderFilter.values)
-            ChoiceChip(
-              key: ValueKey('order-filter-${filter.name}'),
-              label: Text(_label(filter)),
-              selected: selected == filter,
-              onSelected: (_) => onSelected(filter),
-              showCheckmark: false,
-              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              visualDensity: const VisualDensity(horizontal: -2, vertical: -3),
-              labelPadding: const EdgeInsets.symmetric(horizontal: 7),
-              side: BorderSide(
-                color: selected == filter
-                    ? AppColors.primary
-                    : const Color(0x33000000),
-              ),
-              selectedColor: AppColors.primary,
-              backgroundColor: Colors.white,
-              labelStyle: TextStyle(
-                color: selected == filter ? Colors.white : AppColors.primary,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+          for (final filter in _OrderFilter.values) ...[
+            Expanded(
+              child: ChoiceChip(
+                key: ValueKey('order-filter-${filter.name}'),
+                label: SizedBox(
+                  width: double.infinity,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(_label(filter)),
+                  ),
+                ),
+                selected: selected == filter,
+                onSelected: (_) => onSelected(filter),
+                showCheckmark: false,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: const VisualDensity(vertical: -3),
+                labelPadding: const EdgeInsets.symmetric(horizontal: 2),
+                side: BorderSide(
+                  color: selected == filter
+                      ? AppColors.primary
+                      : const Color(0x33000000),
+                ),
+                selectedColor: AppColors.primary,
+                backgroundColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: selected == filter ? Colors.white : AppColors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15),
+                ),
               ),
             ),
+            if (filter != _OrderFilter.values.last) const SizedBox(width: 6),
+          ],
         ],
       ),
     );

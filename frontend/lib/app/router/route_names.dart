@@ -3,5 +3,9 @@ abstract final class RouteNames {
   static const login = '/login';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
-  static const home = '/home';
+  static const homePetani = '/beranda';
+  static const kelolaPesanan = '/kelola-pesanan';
+  static const detailPesanan = '/detail-pesanan';
+  static const stokSaya = '/stok';
 }
+  

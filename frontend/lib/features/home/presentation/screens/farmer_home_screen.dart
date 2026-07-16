@@ -2,13 +2,12 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
 import 'package:panenin/features/home/presentation/widgets/demand_request_card.dart';
 import 'package:panenin/features/home/presentation/widgets/farmer_home_header.dart';
-import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
-import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
 
 enum _DemandAction { accepted, rejected }
@@ -45,15 +44,11 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   bool _showNotification = false;
 
   void _openOrders() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const ManageOrdersScreen()));
+    Navigator.of(context).pushNamed(RouteNames.kelolaPesanan);
   }
 
   void _openStock() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute<void>(builder: (_) => const StockScreen()));
+    Navigator.of(context).pushNamed(RouteNames.stokSaya);
   }
 
   void _completeDemand(String id, _DemandAction action) {

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:panenin/app/app.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
+import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/app/theme/app_theme.dart';
 import 'package:panenin/features/auth/data/models/authenticated_user.dart';
 import 'package:panenin/features/auth/data/models/email_sign_up_result.dart';
@@ -15,6 +16,7 @@ import 'package:panenin/features/auth/presentation/screens/reset_password_screen
 import 'package:panenin/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
+import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
@@ -22,6 +24,22 @@ import 'package:panenin/shared/widgets/app_notification_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() {
+  test('route utama mengikuti nama branch UI', () {
+    expect(RouteNames.homePetani, '/beranda');
+    expect(RouteNames.kelolaPesanan, '/kelola-pesanan');
+    expect(RouteNames.detailPesanan, '/detail-pesanan');
+    expect(RouteNames.stokSaya, '/stok');
+    expect(
+      buildAppRoutes().keys,
+      containsAll([
+        RouteNames.homePetani,
+        RouteNames.kelolaPesanan,
+        RouteNames.detailPesanan,
+        RouteNames.stokSaya,
+      ]),
+    );
+  });
+
   testWidgets('menampilkan informasi utama home petani', (tester) async {
     await _pumpApp(tester);
 
@@ -153,6 +171,12 @@ void main() {
     await _openOrder(tester, 'E841KG');
 
     expect(find.text('Detail Pesanan'), findsOneWidget);
+    expect(
+      ModalRoute.settingsOf(
+        tester.element(find.byType(OrderDetailScreen)),
+      )!.name,
+      RouteNames.detailPesanan,
+    );
     expect(find.text('Identitas Penerima'), findsOneWidget);
     expect(find.text('Warung Tegal Klojen'), findsNWidgets(2));
     expect(find.text('Sedia aneka masakan rumahan khas Tegal'), findsOneWidget);
@@ -204,6 +228,12 @@ void main() {
 
     expect(find.byType(ManageOrdersScreen), findsOneWidget);
     expect(find.text('Kelola Pesanan'), findsOneWidget);
+    expect(
+      ModalRoute.settingsOf(
+        tester.element(find.byType(ManageOrdersScreen)),
+      )!.name,
+      RouteNames.kelolaPesanan,
+    );
     expect(find.text('Pesanan Aktif'), findsOneWidget);
     expect(find.byKey(const ValueKey('order-filter-all')), findsOneWidget);
     expect(
@@ -260,6 +290,28 @@ void main() {
     expect(find.byType(ManageOrdersScreen), findsOneWidget);
   });
 
+  testWidgets('empat kategori pesanan sejajar pada layar sempit', (
+    tester,
+  ) async {
+    await _pumpManageOrders(tester, size: const Size(320, 700));
+
+    final filters = [
+      for (final name in const [
+        'all',
+        'awaitingPayment',
+        'processing',
+        'completed',
+      ])
+        find.byKey(ValueKey('order-filter-$name')),
+    ];
+    final centerY = tester.getCenter(filters.first).dy;
+
+    for (final filter in filters.skip(1)) {
+      expect(tester.getCenter(filter).dy, closeTo(centerY, 0.1));
+    }
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('navbar stok membuka halaman stok dan form tanpa navbar', (
     tester,
   ) async {
@@ -271,6 +323,10 @@ void main() {
     expect(find.byType(StockScreen), findsOneWidget);
     expect(find.text('Stok Saya'), findsOneWidget);
     expect(find.text('3 Produk  •  22 Kg tersedia'), findsOneWidget);
+    expect(
+      ModalRoute.settingsOf(tester.element(find.byType(StockScreen)))!.name,
+      RouteNames.stokSaya,
+    );
 
     await tester.tap(find.byKey(const ValueKey('add-stock')));
     await tester.pumpAndSettle();
@@ -316,6 +372,21 @@ void main() {
     expect(find.text('Ubah Stok'), findsNothing);
     expect(find.text('Ubah Harga'), findsNothing);
     expect(find.text('Jual'), findsNothing);
+  });
+
+  testWidgets('batch melewati umur simpan menampilkan kartu peringatan', (
+    tester,
+  ) async {
+    await _pumpStock(tester);
+
+    expect(find.text('Perlu Ditinjau'), findsOneWidget);
+    expect(find.textContaining('Melewati umur simpan 3 hari'), findsOneWidget);
+
+    final card = tester.widget<Container>(
+      find.byKey(const ValueKey('stock-card-surface-kacang-panjang')),
+    );
+    final decoration = card.decoration! as BoxDecoration;
+    expect(decoration.border!.top.color, AppColors.danger);
   });
 
   const demoUser = AuthenticatedUser(
@@ -607,17 +678,28 @@ Future<void> _pumpApp(
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(theme: AppTheme.light, home: const FarmerHomeScreen()),
+    MaterialApp(
+      theme: AppTheme.light,
+      routes: buildAppRoutes(),
+      home: const FarmerHomeScreen(),
+    ),
   );
 }
 
-Future<void> _pumpManageOrders(WidgetTester tester) async {
-  tester.view.physicalSize = const Size(428, 938);
+Future<void> _pumpManageOrders(
+  WidgetTester tester, {
+  Size size = const Size(428, 938),
+}) async {
+  tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(theme: AppTheme.light, home: const ManageOrdersScreen()),
+    MaterialApp(
+      theme: AppTheme.light,
+      routes: buildAppRoutes(),
+      home: const ManageOrdersScreen(),
+    ),
   );
 }
 
@@ -627,6 +709,10 @@ Future<void> _pumpStock(WidgetTester tester) async {
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
-    MaterialApp(theme: AppTheme.light, home: const StockScreen()),
+    MaterialApp(
+      theme: AppTheme.light,
+      routes: buildAppRoutes(),
+      home: const StockScreen(),
+    ),
   );
 }

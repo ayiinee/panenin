@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 
@@ -89,11 +90,9 @@ class ActiveOrdersSection extends StatelessWidget {
         for (var index = 0; index < activeOrders.length; index++) ...[
           OrderCard(
             order: activeOrders[index],
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    OrderDetailScreen(order: activeOrders[index].detail),
-              ),
+            onTap: () => Navigator.of(context).pushNamed(
+              RouteNames.detailPesanan,
+              arguments: activeOrders[index].detail,
             ),
           ),
           if (index != activeOrders.length - 1) const SizedBox(height: 9),
