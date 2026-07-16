@@ -8,6 +8,7 @@ import 'package:panenin/features/auth/presentation/screens/select_role_screen.da
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
 void main() {
@@ -260,6 +261,71 @@ void main() {
     await tester.pump();
     expect(find.text('Bawang Putih'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tapping a buyer product opens its detail page', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.productDetail: (_) => const ProductDetailScreen()},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    final product = find.byKey(const ValueKey('open-Cabai Merah Kering'));
+    await tester.ensureVisible(product);
+    await tester.tap(product);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProductDetailScreen), findsOneWidget);
+    expect(find.text('Detail Produk'), findsOneWidget);
+    expect(find.text('Tomat Segar'), findsOneWidget);
+  });
+
+  testWidgets('product detail switches from description to reviews', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1055));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProductDetailScreen()));
+
+    expect(find.text('Buat Kontrak Pasokan'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('product-reviews-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tambah Ulasan'), findsOneWidget);
+    expect(find.text('Es Buah Rosyidah'), findsOneWidget);
+    expect(find.text('Tacibay'), findsOneWidget);
+    await tester.tap(find.text('Bintang 4'));
+    await tester.pump();
+    expect(find.text('Belum ada ulasan untuk rating ini.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('product detail supports loading, empty, and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.empty),
+      ),
+    );
+    expect(find.text('Produk tidak ditemukan'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat produk'), findsOneWidget);
   });
 
   testWidgets('profile setup requires terms before submission', (tester) async {

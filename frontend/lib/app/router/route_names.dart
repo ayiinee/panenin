@@ -4,4 +4,5 @@ abstract final class RouteNames {
   static const login = '/login';
   static const profile = '/profile';
   static const buyerHome = '/buyer/home';
+  static const productDetail = '/buyer/products/detail';
 }
