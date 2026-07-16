@@ -6,6 +6,7 @@ import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
+import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
 void main() {
   testWidgets('renders the role selection screen', (tester) async {
@@ -127,5 +128,124 @@ void main() {
       tester.getSize(find.byKey(const ValueKey('buyer-role-button'))).height,
       greaterThanOrEqualTo(44),
     );
+  });
+
+  testWidgets('farmer registration continues to profile setup', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const PaneninApp());
+
+    await tester.tap(find.text('Jual Hasil Panen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Daftarkan Akun'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Silahkan Isi Data Diri Anda'), findsOneWidget);
+    expect(find.text('Daftar Sekarang'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('profile-submit-button')))
+          .height,
+      54,
+    );
+  });
+
+  testWidgets('profile setup requires terms before submission', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(
+      find.text('Setujui Syarat & Ketentuan untuk melanjutkan.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profile setup validates commodity selection', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(
+      find.text('Pilih minimal satu komoditas penjualan.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profile setup adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('Daftar Sekarang'));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('profile setup keeps location action accessible', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('choose-location-button')))
+          .height,
+      greaterThanOrEqualTo(44),
+    );
+    await tester.tap(find.byKey(const ValueKey('choose-location-button')));
+    await tester.pump();
+    expect(
+      find.text('Pemilihan lokasi di peta akan segera tersedia.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profile setup submits a valid profile', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.enterText(
+      find.byKey(const ValueKey('farmer-name-field')),
+      'Pak Ferdi',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('farmer-group-field')),
+      'Kelompok Tani Makmur',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('address-field')),
+      'Garut, Jawa Barat',
+    );
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(find.text('Data diri berhasil disimpan.'), findsOneWidget);
+  });
+
+  testWidgets('profile setup validates required fields', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(find.text('Bagian ini wajib diisi.'), findsNWidgets(3));
   });
 }

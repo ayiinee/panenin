@@ -4,4 +4,5 @@ abstract final class AppAssets {
   static const roleBuyer = 'assets/images/role_buyer.png';
   static const roleFarmer = 'assets/images/role_farmer.png';
   static const roleHeroBasket = 'assets/images/role_hero_basket.png';
+  static const profileBackground = 'assets/images/profile_background.png';
 }

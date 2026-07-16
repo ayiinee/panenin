@@ -4,6 +4,7 @@ import 'package:panenin/app/theme/app_theme.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
 class PaneninApp extends StatelessWidget {
   const PaneninApp({super.key});
@@ -19,6 +20,7 @@ class PaneninApp extends StatelessWidget {
         RouteNames.selectRole: (_) => const SelectRoleScreen(),
         RouteNames.register: (_) => const CreateAccountScreen(),
         RouteNames.login: (_) => const LoginScreen(),
+        RouteNames.profile: (_) => const ProfileSetupScreen(),
       },
     );
   }

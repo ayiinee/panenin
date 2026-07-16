@@ -11,6 +11,20 @@ import 'package:panenin/shared/widgets/auth_shell.dart';
 class CreateAccountScreen extends StatelessWidget {
   const CreateAccountScreen({super.key});
 
+  void _register(BuildContext context, UserRole? selectedRole) {
+    if (selectedRole == UserRole.farmer) {
+      Navigator.pushReplacementNamed(context, RouteNames.profile);
+      return;
+    }
+
+    _showMessage(
+      context,
+      selectedRole == null
+          ? 'Formulir pendaftaran siap diproses.'
+          : 'Formulir pendaftaran ${selectedRole.label} siap diproses.',
+    );
+  }
+
   void _showMessage(BuildContext context, String message) {
     FocusManager.instance.primaryFocus?.unfocus();
     ScaffoldMessenger.of(context)
@@ -53,12 +67,7 @@ class CreateAccountScreen extends StatelessWidget {
           const SizedBox(height: 27),
           AuthPrimaryButton(
             label: 'Daftarkan Akun',
-            onPressed: () => _showMessage(
-              context,
-              selectedRole == null
-                  ? 'Formulir pendaftaran siap diproses.'
-                  : 'Formulir pendaftaran ${selectedRole.label} siap diproses.',
-            ),
+            onPressed: () => _register(context, selectedRole),
           ),
           const SizedBox(height: 39),
           GoogleAuthButton(
