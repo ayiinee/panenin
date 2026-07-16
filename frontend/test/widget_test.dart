@@ -16,6 +16,8 @@ import 'package:panenin/features/auth/presentation/screens/verify_email_screen.d
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
+import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
+import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -256,6 +258,64 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('detail-back')));
     await tester.pumpAndSettle();
     expect(find.byType(ManageOrdersScreen), findsOneWidget);
+  });
+
+  testWidgets('navbar stok membuka halaman stok dan form tanpa navbar', (
+    tester,
+  ) async {
+    await _pumpApp(tester);
+
+    await tester.tap(find.text('Stok'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockScreen), findsOneWidget);
+    expect(find.text('Stok Saya'), findsOneWidget);
+    expect(find.text('3 Produk  •  22 Kg tersedia'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('add-stock')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockFormScreen), findsOneWidget);
+    expect(find.byType(PaneninBottomNavigation), findsNothing);
+    expect(find.text('Isi dan Jumlah Harga'), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-name-field')),
+      'Bayam',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-price-field')),
+      '12000',
+    );
+    await tester.tap(find.byKey(const ValueKey('increase-stock')));
+    await tester.tap(find.byKey(const ValueKey('save-stock')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockScreen), findsOneWidget);
+    expect(find.text('Bayam'), findsOneWidget);
+    expect(find.text('4 Produk  •  23 Kg tersedia'), findsOneWidget);
+  });
+
+  testWidgets('ikon pensil mengedit jumlah stok produk', (tester) async {
+    await _pumpStock(tester);
+
+    await tester.tap(find.byKey(const ValueKey('edit-stock-cabai-merah')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockFormScreen), findsOneWidget);
+    expect(find.byType(PaneninBottomNavigation), findsNothing);
+    expect(find.text('12'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('increase-stock')));
+    await tester.tap(find.byKey(const ValueKey('save-stock')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockScreen), findsOneWidget);
+    expect(find.text('13Kg'), findsOneWidget);
+    expect(find.text('Ubah Stok'), findsNothing);
+    expect(find.text('Ubah Harga'), findsNothing);
+    expect(find.text('Jual'), findsNothing);
   });
 
   const demoUser = AuthenticatedUser(
@@ -558,5 +618,15 @@ Future<void> _pumpManageOrders(WidgetTester tester) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(
     MaterialApp(theme: AppTheme.light, home: const ManageOrdersScreen()),
+  );
+}
+
+Future<void> _pumpStock(WidgetTester tester) async {
+  tester.view.physicalSize = const Size(428, 938);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
+  await tester.pumpWidget(
+    MaterialApp(theme: AppTheme.light, home: const StockScreen()),
   );
 }

@@ -8,6 +8,7 @@ import 'package:panenin/features/home/presentation/widgets/active_orders_section
 import 'package:panenin/features/home/presentation/widgets/demand_request_card.dart';
 import 'package:panenin/features/home/presentation/widgets/farmer_home_header.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
+import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
 
 enum _DemandAction { accepted, rejected }
@@ -47,6 +48,12 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
     Navigator.of(
       context,
     ).push(MaterialPageRoute<void>(builder: (_) => const ManageOrdersScreen()));
+  }
+
+  void _openStock() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const StockScreen()));
   }
 
   void _completeDemand(String id, _DemandAction action) {
@@ -100,6 +107,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
         extendBody: true,
         bottomNavigationBar: PaneninBottomNavigation(
           onDestinationSelected: (index) {
+            if (index == 1) _openStock();
             if (index == 2) _openOrders();
           },
         ),
