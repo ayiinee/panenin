@@ -5,4 +5,14 @@ abstract final class AppAssets {
   static const roleFarmer = 'assets/images/role_farmer.png';
   static const roleHeroBasket = 'assets/images/role_hero_basket.png';
   static const profileBackground = 'assets/images/profile_background.png';
+  static const buyerHomeBanner = 'assets/images/buyer_home_banner.png';
+  static const categoryChili = 'assets/images/category_chili.png';
+  static const categoryTomato = 'assets/images/category_tomato.png';
+  static const categoryVegetable = 'assets/images/category_vegetable.png';
+  static const categoryPotato = 'assets/images/category_potato.png';
+  static const categoryFruit = 'assets/images/category_fruit.png';
+  static const productDriedChili = 'assets/images/product_dried_chili.png';
+  static const productPotato = 'assets/images/product_potato.png';
+  static const productSawi = 'assets/images/product_sawi.png';
+  static const productGarlic = 'assets/images/product_garlic.png';
 }

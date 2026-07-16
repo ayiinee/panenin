@@ -5,6 +5,7 @@ import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
+import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
 class PaneninApp extends StatelessWidget {
@@ -27,6 +28,7 @@ class PaneninApp extends StatelessWidget {
             _ => UserRole.farmer,
           },
         ),
+        RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
       },
     );
   }

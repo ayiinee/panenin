@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:panenin/app/app.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
+import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
 void main() {
@@ -170,11 +172,14 @@ void main() {
     expect(find.text('Masukkan nama bisnis'), findsOneWidget);
   });
 
-  testWidgets('buyer business name is optional', (tester) async {
+  testWidgets('buyer profile continues to the buyer home', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      const MaterialApp(home: ProfileSetupScreen(role: UserRole.buyer)),
+      MaterialApp(
+        routes: {RouteNames.buyerHome: (_) => const BuyerHomeScreen()},
+        home: const ProfileSetupScreen(role: UserRole.buyer),
+      ),
     );
 
     await tester.enterText(
@@ -192,7 +197,69 @@ void main() {
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 450));
-    expect(find.text('Data diri berhasil disimpan.'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(find.byType(BuyerHomeScreen), findsOneWidget);
+    expect(find.text('Komoditas Cepat'), findsOneWidget);
+  });
+
+  testWidgets('buyer home renders the Figma content and large tap targets', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerHomeScreen()));
+
+    expect(find.text('Lokasi Anda'), findsOneWidget);
+    expect(find.text('Malang, Jawa Timur'), findsOneWidget);
+    expect(find.text('Pasokan rutin,\nusaha makin pasti'), findsOneWidget);
+    expect(find.text('Cabai Merah Kering'), findsOneWidget);
+    expect(find.text('Rp 49.500'), findsOneWidget);
+    expect(find.text('Beranda'), findsOneWidget);
+    expect(find.text('Maps'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('find-commodities-button')))
+          .height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('buyer home supports loading, empty, and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerHomeScreen(state: BuyerHomeViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: BuyerHomeScreen(state: BuyerHomeViewState.empty)),
+    );
+    expect(find.text('Komoditas belum tersedia'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: BuyerHomeScreen(state: BuyerHomeViewState.error)),
+    );
+    expect(find.text('Gagal memuat beranda'), findsOneWidget);
+  });
+
+  testWidgets('buyer home adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerHomeScreen()));
+
+    expect(find.text('Komoditas Cepat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.drag(
+      find.byKey(const ValueKey('buyer-home-scroll')),
+      const Offset(0, -500),
+    );
+    await tester.pump();
+    expect(find.text('Bawang Putih'), findsOneWidget);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('profile setup requires terms before submission', (tester) async {
