@@ -3,6 +3,7 @@ import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/theme/app_theme.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
+import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 
 class PaneninApp extends StatelessWidget {
   const PaneninApp({super.key});
@@ -13,8 +14,9 @@ class PaneninApp extends StatelessWidget {
       title: 'Panenin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: RouteNames.register,
+      initialRoute: RouteNames.selectRole,
       routes: {
+        RouteNames.selectRole: (_) => const SelectRoleScreen(),
         RouteNames.register: (_) => const CreateAccountScreen(),
         RouteNames.login: (_) => const LoginScreen(),
       },

@@ -5,6 +5,7 @@ import 'package:panenin/features/auth/presentation/widgets/auth_primary_button.d
 import 'package:panenin/features/auth/presentation/widgets/auth_switch_link.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/shared/widgets/auth_shell.dart';
 
 class CreateAccountScreen extends StatelessWidget {
@@ -19,13 +20,18 @@ class CreateAccountScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final selectedRole = switch (ModalRoute.of(context)?.settings.arguments) {
+      UserRole role => role,
+      _ => null,
+    };
+    final subtitle = selectedRole == null
+        ? 'Kami hadir untuk membantu usahamu'
+        : 'Daftar sebagai ${selectedRole.label}';
+
     return AuthShell(
       child: Column(
         children: [
-          const AuthBrandHeader(
-            title: 'Buat Akun Anda',
-            subtitle: 'Kami hadir untuk membantu usahamu',
-          ),
+          AuthBrandHeader(title: 'Buat Akun Anda', subtitle: subtitle),
           const SizedBox(height: 39),
           const AuthTextField(
             label: 'Nama Pengguna',
@@ -47,8 +53,12 @@ class CreateAccountScreen extends StatelessWidget {
           const SizedBox(height: 27),
           AuthPrimaryButton(
             label: 'Daftarkan Akun',
-            onPressed: () =>
-                _showMessage(context, 'Formulir pendaftaran siap diproses.'),
+            onPressed: () => _showMessage(
+              context,
+              selectedRole == null
+                  ? 'Formulir pendaftaran siap diproses.'
+                  : 'Formulir pendaftaran ${selectedRole.label} siap diproses.',
+            ),
           ),
           const SizedBox(height: 39),
           GoogleAuthButton(
