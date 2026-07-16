@@ -19,17 +19,35 @@ class FarmerHomeScreen extends StatefulWidget {
 }
 
 class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
+  static const _demands = [
+    (
+      id: 'rina',
+      buyerName: 'Mbak Rina',
+      businessName: 'Mango Sticky Rice Sigura-Gura',
+      requestText: 'Ingin langganan Cabai Merah 10 kg tiap Selasa & Jumat...',
+      avatarPath: 'assets/images/home/buyer_avatar.png',
+    ),
+    (
+      id: 'syaiful',
+      buyerName: 'Pak Syaiful',
+      businessName: 'Warung Barokah Dinoyo',
+      requestText:
+          'Butuh Kacang Panjang 15 kg setiap Senin & Kamis untuk stok warung...',
+      avatarPath: 'assets/images/home/syaiful_avatar.png',
+    ),
+  ];
+
   Timer? _notificationTimer;
   _DemandAction? _feedback;
-  bool _hasDemand = true;
+  final _activeDemandIds = {'rina', 'syaiful'};
   bool _showNotification = false;
 
-  void _completeDemand(_DemandAction action) {
-    if (!_hasDemand) return;
+  void _completeDemand(String id, _DemandAction action) {
+    if (!_activeDemandIds.contains(id)) return;
 
     _notificationTimer?.cancel();
     setState(() {
-      _hasDemand = false;
+      _activeDemandIds.remove(id);
       _showNotification = false;
     });
 
@@ -45,6 +63,17 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
         if (mounted) setState(() => _showNotification = false);
       });
     });
+  }
+
+  Future<void> _confirmReject(String id, String buyerName) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => _RejectDemandDialog(buyerName: buyerName),
+    );
+
+    if (confirmed == true && mounted) {
+      _completeDemand(id, _DemandAction.rejected);
+    }
   }
 
   @override
@@ -77,20 +106,30 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                       child: Column(
                         children: [
                           const _SectionHeading(),
-                          if (_hasDemand)
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                top: 6,
-                                bottom: 12,
+                          for (final demand in _demands)
+                            if (_activeDemandIds.contains(demand.id))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 6,
+                                  bottom: 12,
+                                ),
+                                child: DemandRequestCard(
+                                  key: ValueKey('demand-${demand.id}'),
+                                  buyerName: demand.buyerName,
+                                  businessName: demand.businessName,
+                                  requestText: demand.requestText,
+                                  avatarPath: demand.avatarPath,
+                                  onAccept: () => _completeDemand(
+                                    demand.id,
+                                    _DemandAction.accepted,
+                                  ),
+                                  onReject: () => _confirmReject(
+                                    demand.id,
+                                    demand.buyerName,
+                                  ),
+                                  onNegotiate: () {},
+                                ),
                               ),
-                              child: DemandRequestCard(
-                                onAccept: () =>
-                                    _completeDemand(_DemandAction.accepted),
-                                onReject: () =>
-                                    _completeDemand(_DemandAction.rejected),
-                                onNegotiate: () {},
-                              ),
-                            ),
                           const ActiveOrdersSection(),
                           SizedBox(
                             height: MediaQuery.paddingOf(context).bottom + 8,
@@ -156,6 +195,112 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RejectDemandDialog extends StatelessWidget {
+  const _RejectDemandDialog({required this.buyerName});
+
+  final String buyerName;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: const BoxDecoration(
+                      color: AppColors.danger,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.warning_rounded,
+                      color: Colors.white,
+                      size: 28,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Yakin menolak permintaan?',
+                          style: TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Permintaan kontrak tani dari $buyerName akan ditolak.',
+                          style: const TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(context, false),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.surfaceSubtle,
+                          foregroundColor: AppColors.textPrimary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Batalkan'),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: SizedBox(
+                      height: 44,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(context, true),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.danger,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text('Lanjutkan'),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

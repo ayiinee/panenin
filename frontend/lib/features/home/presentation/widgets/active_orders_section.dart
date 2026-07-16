@@ -1,30 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:panenin/app/theme/app_colors.dart';
+import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 
-enum ActiveOrderStatus { completed, awaitingPayment, processing }
+enum ActiveOrderStatus { awaitingPayment, processing }
 
 class ActiveOrdersSection extends StatelessWidget {
   const ActiveOrdersSection({super.key});
 
   static const _orders = [
-    _ActiveOrder(
-      customer: 'Tacibay',
-      product: 'Tomat',
-      price: 'Rp15.000/Kg',
-      deliveryDate: 'Kirim: 09 Juli 2026',
-      code: 'E839KG',
-      imagePath: 'assets/images/home/order_tomato.png',
-      status: ActiveOrderStatus.completed,
-    ),
-    _ActiveOrder(
-      customer: 'Rumah Makan Suhat',
-      product: 'Lobak Putih',
-      price: 'Rp20.000/Kg',
-      deliveryDate: 'Kirim: 11 Juli 2026',
-      code: 'E840KG',
-      imagePath: 'assets/images/home/order_white_radish.png',
-      status: ActiveOrderStatus.completed,
-    ),
     _ActiveOrder(
       customer: 'Warung Tegal Klojen',
       product: 'Kacang Panjang',
@@ -80,7 +63,14 @@ class ActiveOrdersSection extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         for (var index = 0; index < _orders.length; index++) ...[
-          _ActiveOrderCard(order: _orders[index]),
+          _ActiveOrderCard(
+            order: _orders[index],
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => OrderDetailScreen(order: _orders[index].detail),
+              ),
+            ),
+          ),
           if (index != _orders.length - 1) const SizedBox(height: 9),
         ],
       ],
@@ -89,20 +79,22 @@ class ActiveOrdersSection extends StatelessWidget {
 }
 
 class _ActiveOrderCard extends StatelessWidget {
-  const _ActiveOrderCard({required this.order});
+  const _ActiveOrderCard({required this.order, required this.onTap});
 
   final _ActiveOrder order;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Semantics(
+      key: ValueKey('active-order-${order.code}'),
       button: true,
       label: '${order.customer}, ${order.product}, ${order.statusLabel}',
       child: Material(
         color: Colors.white,
         borderRadius: BorderRadius.circular(9),
         child: InkWell(
-          onTap: () {},
+          onTap: onTap,
           borderRadius: BorderRadius.circular(9),
           child: Container(
             constraints: const BoxConstraints(minHeight: 116),
@@ -139,7 +131,7 @@ class _ActiveOrderCard extends StatelessWidget {
                     SizedBox(
                       width: compact ? 92 : 105,
                       height: 96,
-                      child: _OrderActions(order: order),
+                      child: _OrderActions(order: order, onTap: onTap),
                     ),
                   ],
                 );
@@ -200,9 +192,10 @@ class _OrderDetails extends StatelessWidget {
 }
 
 class _OrderActions extends StatelessWidget {
-  const _OrderActions({required this.order});
+  const _OrderActions({required this.order, required this.onTap});
 
   final _ActiveOrder order;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -238,7 +231,7 @@ class _OrderActions extends StatelessWidget {
         SizedBox(
           height: 28,
           child: OutlinedButton(
-            onPressed: () {},
+            onPressed: onTap,
             style: OutlinedButton.styleFrom(
               foregroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -281,20 +274,44 @@ class _ActiveOrder {
   final String imagePath;
   final ActiveOrderStatus status;
 
+  OrderDetailData get detail => switch (code) {
+    'E841KG' => const OrderDetailData(
+      code: 'E841KG',
+      customer: 'Warung Tegal Klojen',
+      tagline: 'Sedia aneka masakan rumahan',
+      recipient: 'Warung Tegal Klojen',
+      address: 'Jl. Klojen No. 27, Malang',
+      phone: '0812 3456 8410',
+      item: 'Kacang Panjang 15 Kg',
+      note: 'Pastikan masih segar',
+      imagePath: 'assets/images/home/warteg_owner.png',
+      initialStage: OrderDetailStage.awaitingPayment,
+    ),
+    _ => const OrderDetailData(
+      code: 'E842KG',
+      customer: 'Warung Swimpit',
+      tagline: 'Sedia nasi hangat dan lauk rumahan setiap hari',
+      recipient: 'Bu Siti',
+      address: 'Jl. Swimpit No. 8, Malang',
+      phone: '0812 3456 8420',
+      item: 'Kubis 20 Kg',
+      note: 'Pilih ukuran sedang',
+      imagePath: 'assets/images/home/swimpit_owner.png',
+      initialStage: OrderDetailStage.readyToShip,
+    ),
+  };
+
   String get statusLabel => switch (status) {
-    ActiveOrderStatus.completed => 'Selesai',
     ActiveOrderStatus.awaitingPayment => 'Menunggu DP',
     ActiveOrderStatus.processing => 'Proses',
   };
 
   Color get statusColor => switch (status) {
-    ActiveOrderStatus.completed => AppColors.primary,
     ActiveOrderStatus.awaitingPayment => const Color(0xFFDC2626),
     ActiveOrderStatus.processing => AppColors.accent,
   };
 
   Color get statusTextColor => switch (status) {
-    ActiveOrderStatus.completed => Colors.white,
     ActiveOrderStatus.awaitingPayment => Colors.white,
     ActiveOrderStatus.processing => Colors.black,
   };

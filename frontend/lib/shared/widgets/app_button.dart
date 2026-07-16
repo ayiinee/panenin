@@ -24,7 +24,7 @@ class AppButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 48,
+      height: 40,
       width: double.infinity,
       child: FilledButton(
         onPressed: onPressed,
@@ -32,10 +32,10 @@ class AppButton extends StatelessWidget {
           backgroundColor: _backgroundColor,
           disabledBackgroundColor: _backgroundColor.withValues(alpha: 0.45),
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: TextStyle(
-            fontSize: variant == AppButtonVariant.primary ? 16 : 14,
+            fontSize: variant == AppButtonVariant.primary ? 14 : 13,
             fontWeight: variant == AppButtonVariant.primary
                 ? FontWeight.w700
                 : FontWeight.w500,
