@@ -1,0 +1,7 @@
+{
+  "API_BASE_URL": "http://10.0.2.2:8000",
+  "SUPABASE_URL": "https://replace-with-project.supabase.co",
+  "SUPABASE_ANON_KEY": "replace-with-public-anon-or-publishable-key",
+  "AUTH_REDIRECT_URL": "com.panenin.app://login-callback/",
+  "PASSWORD_RESET_REDIRECT_URL": "com.panenin.app://reset-password/"
+}

@@ -5,11 +5,13 @@ class GoogleAuthButton extends StatelessWidget {
   const GoogleAuthButton({
     required this.action,
     required this.onPressed,
+    this.isLoading = false,
     super.key,
   });
 
   final String action;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -37,14 +39,19 @@ class GoogleAuthButton extends StatelessWidget {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: onPressed,
-              child: const SizedBox.square(
+              child: SizedBox.square(
                 dimension: 67,
                 child: Center(
-                  child: FaIcon(
-                    FontAwesomeIcons.google,
-                    color: Color(0xFF4285F4),
-                    size: 36,
-                  ),
+                  child: isLoading
+                      ? const SizedBox.square(
+                          dimension: 26,
+                          child: CircularProgressIndicator(strokeWidth: 3),
+                        )
+                      : const FaIcon(
+                          FontAwesomeIcons.google,
+                          color: Color(0xFF4285F4),
+                          size: 36,
+                        ),
                 ),
               ),
             ),

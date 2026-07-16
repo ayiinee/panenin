@@ -5,11 +5,13 @@ class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
     required this.label,
     required this.onPressed,
+    this.isLoading = false,
     super.key,
   });
 
   final String label;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -37,10 +39,21 @@ class AuthPrimaryButton extends StatelessWidget {
             EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           ),
         ),
-        child: Text(
-          label,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-        ),
+        child: isLoading
+            ? const SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+              )
+            : Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
       ),
     );
   }
