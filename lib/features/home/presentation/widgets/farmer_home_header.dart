@@ -87,7 +87,7 @@ class _Greeting extends StatelessWidget {
                       ),
                     ),
                     child: const Text(
-                      'Pak Farel!',
+                      'Alvin!',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 13,

@@ -1,0 +1,9 @@
+{
+  "API_BASE_URL": "http://172.25.141.168:8000",
+  "SUPABASE_URL": "https://npczucfvnjgutvynsrka.supabase.co",
+  "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5wY3p1Y2Z2bmpndXR2eW5zcmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQxOTY3MDEsImV4cCI6MjA5OTc3MjcwMX0.0EdEAEBuqDwN0XMdT5DMtr4uNlxrodNFrCXCkfBNBoQ",
+  "AUTH_REDIRECT_URL": "com.panenin.app://login-callback/",
+  "PASSWORD_RESET_REDIRECT_URL": "com.panenin.app://reset-password/"
+}
+
+

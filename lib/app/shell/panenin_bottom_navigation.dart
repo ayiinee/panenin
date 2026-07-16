@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 
 class PaneninBottomNavigation extends StatelessWidget {
-  const PaneninBottomNavigation({super.key});
+  const PaneninBottomNavigation({this.selectedIndex = 0, super.key});
+
+  final int selectedIndex;
 
   @override
   Widget build(BuildContext context) {
@@ -27,18 +29,19 @@ class PaneninBottomNavigation extends StatelessWidget {
                 ],
               ),
               child: Row(
-                children: const [
+                children: [
                   Expanded(
                     child: _NavigationItem(
                       label: 'Beranda',
                       icon: Icons.home_outlined,
-                      selected: true,
+                      selected: selectedIndex == 0,
                     ),
                   ),
                   Expanded(
                     child: _NavigationItem(
                       label: 'Stok',
                       icon: Icons.inventory_2_outlined,
+                      selected: selectedIndex == 1,
                     ),
                   ),
                   SizedBox(width: 82),
@@ -46,12 +49,14 @@ class PaneninBottomNavigation extends StatelessWidget {
                     child: _NavigationItem(
                       label: 'Pesanan',
                       icon: Icons.receipt_long_outlined,
+                      selected: selectedIndex == 2,
                     ),
                   ),
                   Expanded(
                     child: _NavigationItem(
                       label: 'Profile',
                       icon: Icons.person_outline,
+                      selected: selectedIndex == 3,
                     ),
                   ),
                 ],

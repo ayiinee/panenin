@@ -4,12 +4,20 @@ import 'package:panenin/shared/widgets/app_button.dart';
 
 class DemandRequestCard extends StatelessWidget {
   const DemandRequestCard({
+    required this.buyerName,
+    required this.businessName,
+    required this.requestText,
+    required this.avatarPath,
     required this.onAccept,
     required this.onReject,
     required this.onNegotiate,
     super.key,
   });
 
+  final String buyerName;
+  final String businessName;
+  final String requestText;
+  final String avatarPath;
   final VoidCallback onAccept;
   final VoidCallback onReject;
   final VoidCallback onNegotiate;
@@ -25,7 +33,11 @@ class DemandRequestCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const _BuyerIdentity(),
+          _BuyerIdentity(
+            buyerName: buyerName,
+            businessName: businessName,
+            avatarPath: avatarPath,
+          ),
           const SizedBox(height: 12),
           Container(
             constraints: const BoxConstraints(minHeight: 57),
@@ -36,9 +48,9 @@ class DemandRequestCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.centerLeft,
-            child: const Text(
-              '"Ingin langganan Cabai Merah 10 kg tiap Selasa & Jumat..."',
-              style: TextStyle(
+            child: Text(
+              '"$requestText"',
+              style: const TextStyle(
                 color: Color(0xFF1B1C1C),
                 fontSize: 14,
                 height: 24 / 14,
@@ -103,7 +115,15 @@ class DemandRequestCard extends StatelessWidget {
 }
 
 class _BuyerIdentity extends StatelessWidget {
-  const _BuyerIdentity();
+  const _BuyerIdentity({
+    required this.buyerName,
+    required this.businessName,
+    required this.avatarPath,
+  });
+
+  final String buyerName;
+  final String businessName;
+  final String avatarPath;
 
   @override
   Widget build(BuildContext context) {
@@ -111,20 +131,20 @@ class _BuyerIdentity extends StatelessWidget {
       children: [
         ClipOval(
           child: Image.asset(
-            'assets/images/home/buyer_avatar.png',
+            avatarPath,
             width: 47,
             height: 47,
             fit: BoxFit.cover,
           ),
         ),
         const SizedBox(width: 12),
-        const Expanded(
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Mbak Rina',
-                style: TextStyle(
+                buyerName,
+                style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,
                   height: 1.25,
@@ -132,10 +152,10 @@ class _BuyerIdentity extends StatelessWidget {
                 ),
               ),
               Text(
-                'Mango Sticky Rice Sigura-Gura',
+                businessName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.black,
                   fontSize: 16,
                   height: 1.25,
