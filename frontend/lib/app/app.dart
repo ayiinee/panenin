@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/theme/app_theme.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
@@ -64,7 +65,12 @@ class _PaneninAppState extends State<PaneninApp> {
         RouteNames.login: (_) => const LoginScreen(),
         RouteNames.forgotPassword: (_) => const ForgotPasswordScreen(),
         RouteNames.resetPassword: (_) => const ResetPasswordScreen(),
-        RouteNames.profile: (_) => const ProfileSetupScreen(),
+        RouteNames.profile: (context) => ProfileSetupScreen(
+          role: switch (ModalRoute.of(context)?.settings.arguments) {
+            UserRole role => role,
+            _ => UserRole.farmer,
+          },
+        ),
       },
     );
   }

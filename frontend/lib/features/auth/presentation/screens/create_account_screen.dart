@@ -87,8 +87,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
         return;
       }
-      if (_selectedRole == UserRole.farmer) {
-        _openFarmerProfile();
+      if (_selectedRole case final role?) {
+        _openProfile(role);
         return;
       }
       final identity = result.user?.name ?? result.user?.email ?? 'pengguna';
@@ -120,8 +120,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     try {
       final user = await (widget.googleSignIn ?? _googleSignInWithService)();
       if (!mounted) return;
-      if (_selectedRole == UserRole.farmer) {
-        _openFarmerProfile();
+      if (_selectedRole case final role?) {
+        _openProfile(role);
         return;
       }
       final identity = user.name ?? user.email ?? 'pengguna';
@@ -153,8 +153,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     };
   }
 
-  void _openFarmerProfile() {
-    Navigator.pushReplacementNamed(context, RouteNames.profile);
+  void _openProfile(UserRole role) {
+    Navigator.pushReplacementNamed(
+      context,
+      RouteNames.profile,
+      arguments: role,
+    );
   }
 
   @override
