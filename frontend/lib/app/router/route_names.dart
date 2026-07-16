@@ -5,4 +5,5 @@ abstract final class RouteNames {
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
   static const profile = '/profile';
+  static const buyerHome = '/buyer/home';
 }

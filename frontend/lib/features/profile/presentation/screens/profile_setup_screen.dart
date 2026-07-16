@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
@@ -88,6 +89,14 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     await Future<void>.delayed(const Duration(milliseconds: 400));
     if (!mounted) return;
     setState(() => _submitting = false);
+    if (widget.role == UserRole.buyer) {
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        RouteNames.buyerHome,
+        (_) => false,
+      );
+      return;
+    }
     _showMessage('Data diri berhasil disimpan.');
   }
 

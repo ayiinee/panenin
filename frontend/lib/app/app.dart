@@ -9,6 +9,7 @@ import 'package:panenin/features/auth/presentation/screens/forgot_password_scree
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
+import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -76,6 +77,7 @@ class _PaneninAppState extends State<PaneninApp> {
             _ => UserRole.farmer,
           },
         ),
+        RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
       },
     );
   }
