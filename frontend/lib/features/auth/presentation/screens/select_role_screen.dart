@@ -17,7 +17,7 @@ class SelectRoleScreen extends StatelessWidget {
   void _continueAs(BuildContext context, UserRole role) {
     Navigator.pushReplacementNamed(
       context,
-      RouteNames.register,
+      RouteNames.profile,
       arguments: role,
     );
   }

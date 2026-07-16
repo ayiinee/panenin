@@ -11,7 +11,6 @@ import 'package:panenin/features/auth/presentation/widgets/auth_primary_button.d
 import 'package:panenin/features/auth/presentation/widgets/auth_switch_link.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
-import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/shared/widgets/auth_shell.dart';
 
 class CreateAccountScreen extends StatefulWidget {
@@ -19,14 +18,12 @@ class CreateAccountScreen extends StatefulWidget {
     this.authService,
     this.googleSignIn,
     this.emailSignUp,
-    this.role,
     super.key,
   });
 
   final AuthService? authService;
   final GoogleSignIn? googleSignIn;
   final EmailSignUp? emailSignUp;
-  final UserRole? role;
 
   @override
   State<CreateAccountScreen> createState() => _CreateAccountScreenState();
@@ -87,12 +84,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
         return;
       }
-      if (_selectedRole case final role?) {
-        _openProfile(role);
-        return;
-      }
-      final identity = result.user?.name ?? result.user?.email ?? 'pengguna';
-      _showMessage('Akun berhasil dibuat sebagai $identity.');
+      _openRoleSelection();
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -118,14 +110,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   Future<void> _registerWithGoogle() async {
     setState(() => _isGoogleLoading = true);
     try {
-      final user = await (widget.googleSignIn ?? _googleSignInWithService)();
+      await (widget.googleSignIn ?? _googleSignInWithService)();
       if (!mounted) return;
-      if (_selectedRole case final role?) {
-        _openProfile(role);
-        return;
-      }
-      final identity = user.name ?? user.email ?? 'pengguna';
-      _showMessage('Pendaftaran berhasil sebagai $identity.');
+      _openRoleSelection();
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -145,34 +132,24 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     return _authService!.signInWithGoogle();
   }
 
-  UserRole? get _selectedRole {
-    if (widget.role case final role?) return role;
-    return switch (ModalRoute.of(context)?.settings.arguments) {
-      UserRole role => role,
-      _ => null,
-    };
-  }
-
-  void _openProfile(UserRole role) {
-    Navigator.pushReplacementNamed(
+  void _openRoleSelection() {
+    Navigator.pushNamedAndRemoveUntil(
       context,
-      RouteNames.profile,
-      arguments: role,
+      RouteNames.selectRole,
+      (_) => false,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final selectedRole = _selectedRole;
-    final subtitle = selectedRole == null
-        ? 'Kami hadir untuk membantu usahamu'
-        : 'Daftar sebagai ${selectedRole.label}';
-
     return AuthShell(
       child: AutofillGroup(
         child: Column(
           children: [
-            AuthBrandHeader(title: 'Buat Akun Anda', subtitle: subtitle),
+            const AuthBrandHeader(
+              title: 'Buat Akun Anda',
+              subtitle: 'Kami hadir untuk membantu usahamu',
+            ),
             const SizedBox(height: 39),
             AuthTextField(
               label: 'Nama Pengguna',

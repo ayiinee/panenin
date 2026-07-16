@@ -58,7 +58,7 @@ class _PaneninAppState extends State<PaneninApp> {
       title: 'Panenin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: RouteNames.selectRole,
+      initialRoute: RouteNames.register,
       routes: {
         RouteNames.selectRole: (_) => const SelectRoleScreen(),
         RouteNames.register: (_) => const CreateAccountScreen(),

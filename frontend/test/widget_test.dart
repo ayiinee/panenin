@@ -47,8 +47,15 @@ void main() {
     expect(fields[2].textInputAction, TextInputAction.done);
   });
 
-  testWidgets('renders the role selection screen', (tester) async {
+  testWidgets('opens registration as the first screen', (tester) async {
     await tester.pumpWidget(const PaneninApp());
+
+    expect(find.byType(CreateAccountScreen), findsOneWidget);
+    expect(find.text('Buat Akun Anda'), findsOneWidget);
+  });
+
+  testWidgets('renders the role selection screen', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SelectRoleScreen()));
 
     expect(find.byType(SelectRoleScreen), findsOneWidget);
     expect(find.textContaining('Halo!'), findsOneWidget);
@@ -71,40 +78,48 @@ void main() {
     );
   });
 
-  testWidgets('farmer role continues to account creation', (tester) async {
-    await tester.pumpWidget(const PaneninApp());
+  testWidgets('farmer role continues to farmer profile setup', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: const SelectRoleScreen(),
+      ),
+    );
 
     final farmerAction = find.text('Jual Hasil Panen');
     await tester.ensureVisible(farmerAction);
     await tester.tap(farmerAction);
     await tester.pumpAndSettle();
 
-    expect(find.byType(CreateAccountScreen), findsOneWidget);
-    expect(find.text('Daftar sebagai Petani'), findsOneWidget);
-    expect(
-      ModalRoute.of(
-        tester.element(find.byType(CreateAccountScreen)),
-      )?.settings.arguments,
-      UserRole.farmer,
-    );
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Petani'), findsOneWidget);
+    expect(find.text('Komoditas Penjualan'), findsOneWidget);
   });
 
-  testWidgets('buyer role continues to account creation', (tester) async {
-    await tester.pumpWidget(const PaneninApp());
+  testWidgets('buyer role continues to UMKM profile setup', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: const SelectRoleScreen(),
+      ),
+    );
 
     final buyerAction = find.text('Beli Hasil Panen');
     await tester.ensureVisible(buyerAction);
     await tester.tap(buyerAction);
     await tester.pumpAndSettle();
 
-    expect(find.byType(CreateAccountScreen), findsOneWidget);
-    expect(find.text('Daftar sebagai UMKM'), findsOneWidget);
-    expect(
-      ModalRoute.of(
-        tester.element(find.byType(CreateAccountScreen)),
-      )?.settings.arguments,
-      UserRole.buyer,
-    );
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Pengguna'), findsOneWidget);
+    expect(find.text('Kategori Produk UMKM'), findsOneWidget);
   });
 
   testWidgets('registration validates required fields before Supabase', (
@@ -166,6 +181,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MaterialApp(
+        routes: {RouteNames.selectRole: (_) => const SelectRoleScreen()},
         home: CreateAccountScreen(googleSignIn: () async => demoUser),
       ),
     );
@@ -175,10 +191,7 @@ void main() {
     await tester.tap(googleButton);
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Pendaftaran berhasil sebagai Demo Panenin.'),
-      findsOneWidget,
-    );
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
   });
 
   testWidgets('login screen is separate and navigable', (tester) async {
@@ -204,6 +217,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        routes: {RouteNames.selectRole: (_) => const SelectRoleScreen()},
         home: LoginScreen(
           emailSignIn: (email, password) async {
             expect(email, 'demo@panenin.id');
@@ -221,7 +235,7 @@ void main() {
     await tester.tap(find.text('Masuk'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Berhasil masuk sebagai Demo Panenin.'), findsOneWidget);
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
   });
 
   testWidgets('forgot password sends a privacy-safe response', (tester) async {
@@ -308,7 +322,10 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      MaterialApp(home: LoginScreen(googleSignIn: () async => demoUser)),
+      MaterialApp(
+        routes: {RouteNames.selectRole: (_) => const SelectRoleScreen()},
+        home: LoginScreen(googleSignIn: () async => demoUser),
+      ),
     );
 
     final googleButton = find.byType(GoogleAuthButton);
@@ -316,7 +333,7 @@ void main() {
     await tester.tap(googleButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('Berhasil masuk sebagai Demo Panenin.'), findsOneWidget);
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
   });
 
   testWidgets('Google login failure gives actionable feedback', (tester) async {
@@ -356,14 +373,20 @@ void main() {
     );
   });
 
-  testWidgets('farmer registration continues to profile setup', (tester) async {
+  testWidgets('registration continues through role to farmer profile setup', (
+    tester,
+  ) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MaterialApp(
-        routes: {RouteNames.profile: (_) => const ProfileSetupScreen()},
+        routes: {
+          RouteNames.selectRole: (_) => const SelectRoleScreen(),
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
         home: CreateAccountScreen(
-          role: UserRole.farmer,
           emailSignUp: (name, email, password) async => const EmailSignUpResult(
             requiresEmailVerification: false,
             user: demoUser,
@@ -379,6 +402,11 @@ void main() {
     await tester.tap(find.text('Daftarkan Akun'));
     await tester.pumpAndSettle();
 
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    await tester.ensureVisible(find.text('Jual Hasil Panen'));
+    await tester.tap(find.text('Jual Hasil Panen'));
+    await tester.pumpAndSettle();
+
     expect(find.byType(ProfileSetupScreen), findsOneWidget);
     expect(find.text('Silahkan Isi Data Diri Anda'), findsOneWidget);
     expect(find.text('Daftar Sekarang'), findsOneWidget);
@@ -390,7 +418,7 @@ void main() {
     );
   });
 
-  testWidgets('buyer registration continues to the UMKM profile setup', (
+  testWidgets('registration continues through role to UMKM profile setup', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
@@ -398,12 +426,12 @@ void main() {
     await tester.pumpWidget(
       MaterialApp(
         routes: {
+          RouteNames.selectRole: (_) => const SelectRoleScreen(),
           RouteNames.profile: (context) => ProfileSetupScreen(
             role: ModalRoute.of(context)!.settings.arguments! as UserRole,
           ),
         },
         home: CreateAccountScreen(
-          role: UserRole.buyer,
           emailSignUp: (name, email, password) async => const EmailSignUpResult(
             requiresEmailVerification: false,
             user: demoUser,
@@ -417,6 +445,11 @@ void main() {
     await tester.enterText(fields.at(1), 'demo@panenin.id');
     await tester.enterText(fields.at(2), 'password123');
     await tester.tap(find.text('Daftarkan Akun'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    await tester.ensureVisible(find.text('Beli Hasil Panen'));
+    await tester.tap(find.text('Beli Hasil Panen'));
     await tester.pumpAndSettle();
 
     expect(find.byType(ProfileSetupScreen), findsOneWidget);

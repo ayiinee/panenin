@@ -62,13 +62,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isEmailLoading = true);
     try {
-      final user = await (widget.emailSignIn ?? _emailSignInWithService)(
-        email,
-        password,
-      );
+      await (widget.emailSignIn ?? _emailSignInWithService)(email, password);
       if (!mounted) return;
-      final identity = user.name ?? user.email ?? 'pengguna';
-      _showMessage('Berhasil masuk sebagai $identity.');
+      _openRoleSelection();
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -93,10 +89,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isGoogleLoading = true);
     try {
-      final user = await (widget.googleSignIn ?? _googleSignInWithService)();
+      await (widget.googleSignIn ?? _googleSignInWithService)();
       if (!mounted) return;
-      final identity = user.name ?? user.email ?? 'pengguna';
-      _showMessage('Berhasil masuk sebagai $identity.');
+      _openRoleSelection();
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -114,6 +109,14 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<AuthenticatedUser> _googleSignInWithService() {
     _authService ??= widget.authService ?? AuthService.create();
     return _authService!.signInWithGoogle();
+  }
+
+  void _openRoleSelection() {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      RouteNames.selectRole,
+      (_) => false,
+    );
   }
 
   @override
