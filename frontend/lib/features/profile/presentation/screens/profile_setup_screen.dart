@@ -4,10 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 
-/// Collects the basic farmer profile after account registration.
+/// Collects the role-specific basic profile after account registration.
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({super.key});
+  const ProfileSetupScreen({this.role = UserRole.farmer, super.key});
+
+  final UserRole role;
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -30,8 +33,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   ];
 
   final _formKey = GlobalKey<FormState>();
-  final _farmerNameController = TextEditingController();
-  final _groupNameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _organizationNameController = TextEditingController();
   final _addressController = TextEditingController();
   final _selectedCommodities = <String>{};
 
@@ -40,8 +43,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   void dispose() {
-    _farmerNameController.dispose();
-    _groupNameController.dispose();
+    _nameController.dispose();
+    _organizationNameController.dispose();
     _addressController.dispose();
     super.dispose();
   }
@@ -72,7 +75,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       return;
     }
     if (_selectedCommodities.isEmpty) {
-      _showMessage('Pilih minimal satu komoditas penjualan.');
+      _showMessage(
+        widget.role == UserRole.buyer
+            ? 'Pilih minimal satu kategori produk UMKM.'
+            : 'Pilih minimal satu komoditas penjualan.',
+      );
       return;
     }
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -86,6 +93,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isBuyer = widget.role == UserRole.buyer;
+
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.white,
@@ -172,15 +181,36 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 29),
+                                  const Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Icon(
+                                      Icons.map_outlined,
+                                      color: Colors.black,
+                                      size: 24,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
                                   _ProfileTextField(
-                                    key: const ValueKey('farmer-name-field'),
-                                    controller: _farmerNameController,
-                                    label: 'Nama Petani',
-                                    hint: 'Masukkan nama petani',
+                                    key: ValueKey(
+                                      isBuyer
+                                          ? 'buyer-name-field'
+                                          : 'farmer-name-field',
+                                    ),
+                                    controller: _nameController,
+                                    label: isBuyer
+                                        ? 'Nama Pengguna'
+                                        : 'Nama Petani',
+                                    hint: isBuyer
+                                        ? 'Masukkan nama pengguna'
+                                        : 'Masukkan nama petani',
                                     validator: _required,
                                   ),
                                   const SizedBox(height: 12),
-                                  const _FieldLabel('Komoditas Penjualan'),
+                                  _FieldLabel(
+                                    isBuyer
+                                        ? 'Kategori Produk UMKM'
+                                        : 'Komoditas Penjualan',
+                                  ),
                                   Wrap(
                                     spacing: 3,
                                     runSpacing: 4,
@@ -204,24 +234,45 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                   ),
                                   const SizedBox(height: 12),
                                   _ProfileTextField(
-                                    key: const ValueKey('farmer-group-field'),
-                                    controller: _groupNameController,
-                                    label: 'Nama Kelompok Tani',
-                                    hint: 'Masukkan nama kelompok tani',
-                                    validator: _required,
+                                    key: ValueKey(
+                                      isBuyer
+                                          ? 'buyer-business-field'
+                                          : 'farmer-group-field',
+                                    ),
+                                    controller: _organizationNameController,
+                                    label: isBuyer
+                                        ? 'Nama Bisnis (Opsional)'
+                                        : 'Nama Kelompok Tani',
+                                    hint: isBuyer
+                                        ? 'Masukkan nama bisnis'
+                                        : 'Masukkan nama kelompok tani',
+                                    validator: isBuyer ? null : _required,
                                   ),
                                   const SizedBox(height: 12),
-                                  _ProfileTextField(
-                                    key: const ValueKey('address-field'),
-                                    controller: _addressController,
-                                    label: 'Alamat',
-                                    hint: 'Tambahkan alamatmu',
-                                    validator: _required,
-                                    maxLines: 3,
+                                  SizedBox(
+                                    height: 153,
+                                    child: Stack(
+                                      clipBehavior: Clip.none,
+                                      children: [
+                                        _ProfileTextField(
+                                          key: const ValueKey('address-field'),
+                                          controller: _addressController,
+                                          label: 'Alamat',
+                                          hint: 'Tambahkan alamatmu',
+                                          validator: _required,
+                                          maxLines: 3,
+                                        ),
+                                        Positioned(
+                                          top: 112,
+                                          left: 0,
+                                          child: _LocationButton(
+                                            onPressed: _chooseLocation,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  const SizedBox(height: 12),
-                                  _LocationButton(onPressed: _chooseLocation),
-                                  const SizedBox(height: 11),
+                                  const SizedBox(height: 8),
                                   _TermsRow(
                                     value: _acceptedTerms,
                                     onChanged: (value) =>
@@ -316,7 +367,7 @@ class _ProfileTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String hint;
-  final FormFieldValidator<String> validator;
+  final FormFieldValidator<String>? validator;
   final int maxLines;
 
   @override

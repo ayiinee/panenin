@@ -151,6 +151,50 @@ void main() {
     );
   });
 
+  testWidgets('buyer registration continues to the UMKM profile setup', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const PaneninApp());
+
+    await tester.tap(find.text('Beli Hasil Panen'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Daftarkan Akun'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Pengguna'), findsOneWidget);
+    expect(find.text('Kategori Produk UMKM'), findsOneWidget);
+    expect(find.text('Nama Bisnis (Opsional)'), findsOneWidget);
+    expect(find.text('Masukkan nama bisnis'), findsOneWidget);
+  });
+
+  testWidgets('buyer business name is optional', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MaterialApp(home: ProfileSetupScreen(role: UserRole.buyer)),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('buyer-name-field')),
+      'Mbak Ani',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('address-field')),
+      'Ambarawa, Jawa Tengah',
+    );
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(find.text('Data diri berhasil disimpan.'), findsOneWidget);
+  });
+
   testWidgets('profile setup requires terms before submission', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));

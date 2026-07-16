@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/theme/app_theme.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
@@ -20,7 +21,12 @@ class PaneninApp extends StatelessWidget {
         RouteNames.selectRole: (_) => const SelectRoleScreen(),
         RouteNames.register: (_) => const CreateAccountScreen(),
         RouteNames.login: (_) => const LoginScreen(),
-        RouteNames.profile: (_) => const ProfileSetupScreen(),
+        RouteNames.profile: (context) => ProfileSetupScreen(
+          role: switch (ModalRoute.of(context)?.settings.arguments) {
+            UserRole role => role,
+            _ => UserRole.farmer,
+          },
+        ),
       },
     );
   }

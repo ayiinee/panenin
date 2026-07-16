@@ -12,17 +12,16 @@ class CreateAccountScreen extends StatelessWidget {
   const CreateAccountScreen({super.key});
 
   void _register(BuildContext context, UserRole? selectedRole) {
-    if (selectedRole == UserRole.farmer) {
-      Navigator.pushReplacementNamed(context, RouteNames.profile);
+    if (selectedRole != null) {
+      Navigator.pushReplacementNamed(
+        context,
+        RouteNames.profile,
+        arguments: selectedRole,
+      );
       return;
     }
 
-    _showMessage(
-      context,
-      selectedRole == null
-          ? 'Formulir pendaftaran siap diproses.'
-          : 'Formulir pendaftaran ${selectedRole.label} siap diproses.',
-    );
+    _showMessage(context, 'Formulir pendaftaran siap diproses.');
   }
 
   void _showMessage(BuildContext context, String message) {
