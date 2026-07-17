@@ -1,12 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/stock/domain/stock_item.dart';
 
 class StockFormScreen extends StatefulWidget {
-  const StockFormScreen({this.item, super.key});
+  const StockFormScreen({this.item, this.capturedPhotoPath, super.key});
 
   final StockItem? item;
+  final String? capturedPhotoPath;
 
   @override
   State<StockFormScreen> createState() => _StockFormScreenState();
@@ -21,6 +24,8 @@ class _StockFormScreenState extends State<StockFormScreen> {
   late int _quantity = widget.item?.quantity ?? 0;
   late String _unit = widget.item?.unit ?? 'Kg';
   late DateTime _harvestedAt = widget.item?.harvestedAt ?? DateTime.now();
+  late final String? _photoStoragePath =
+      widget.capturedPhotoPath ?? widget.item?.photoStoragePath;
 
   bool get _isEditing => widget.item != null;
 
@@ -45,6 +50,7 @@ class _StockFormScreenState extends State<StockFormScreen> {
       shelfLifeDays: existing?.shelfLifeDays,
       reservations: existing?.reservations ?? const [],
       imagePath: existing?.imagePath,
+      photoStoragePath: _photoStoragePath,
     );
     Navigator.of(context).pop(item);
   }
@@ -73,6 +79,27 @@ class _StockFormScreenState extends State<StockFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (_photoStoragePath != null) ...[
+                        _FieldLabel(text: 'Foto Produk'),
+                        const SizedBox(height: 8),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Image.file(
+                            File(_photoStoragePath),
+                            key: const ValueKey('captured-stock-photo'),
+                            width: double.infinity,
+                            height: 180,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Container(
+                              height: 180,
+                              color: AppColors.surfaceSubtle,
+                              alignment: Alignment.center,
+                              child: const Text('Foto tidak dapat ditampilkan'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 26),
+                      ],
                       _FieldLabel(text: 'Nama Produk'),
                       const SizedBox(height: 8),
                       TextFormField(

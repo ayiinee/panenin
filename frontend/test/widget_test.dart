@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:panenin/app/app.dart';
@@ -23,6 +25,8 @@ import 'package:panenin/features/profile/presentation/screens/profile_setup_scre
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
+import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
+import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
@@ -34,6 +38,8 @@ void main() {
     expect(RouteNames.kelolaPesanan, '/kelola-pesanan');
     expect(RouteNames.detailPesanan, '/detail-pesanan');
     expect(RouteNames.stokSaya, '/stok');
+    expect(RouteNames.fotoJualCepat, '/jual-cepat/foto');
+    expect(RouteNames.formStok, '/stok/form');
     expect(
       buildAppRoutes().keys,
       containsAll([
@@ -41,6 +47,8 @@ void main() {
         RouteNames.kelolaPesanan,
         RouteNames.detailPesanan,
         RouteNames.stokSaya,
+        RouteNames.fotoJualCepat,
+        RouteNames.formStok,
       ]),
     );
   });
@@ -356,6 +364,110 @@ void main() {
     expect(find.byType(StockScreen), findsOneWidget);
     expect(find.text('Bayam'), findsOneWidget);
     expect(find.text('4 Produk  •  23 Kg tersedia'), findsOneWidget);
+  });
+
+  testWidgets('jual cepat membuka kamera tanpa tombol galeri', (tester) async {
+    tester.view.physicalSize = const Size(428, 938);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.fotoJualCepat: (_) => QuickSellCameraScreen(
+            initializeCamera: () async => throw CameraException(
+              'CameraAccessDenied',
+              'Permission denied for test',
+            ),
+          ),
+        },
+        home: const Scaffold(bottomNavigationBar: PaneninBottomNavigation()),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('quick-sell-camera')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(QuickSellCameraScreen), findsOneWidget);
+    expect(find.text('Foto Produk Anda!'), findsOneWidget);
+    expect(find.byKey(const ValueKey('camera-back')), findsOneWidget);
+    expect(find.byKey(const ValueKey('take-picture')), findsOneWidget);
+    expect(find.byKey(const ValueKey('toggle-flash')), findsOneWidget);
+    expect(find.text('Flash'), findsOneWidget);
+    expect(find.text('Galeri'), findsNothing);
+    final previewSize = tester.getSize(
+      find.byKey(const ValueKey('camera-square-preview')),
+    );
+    expect(previewSize.width, previewSize.height);
+    expect(
+      find.text('Izin kamera diperlukan untuk memotret produk.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('camera-back')));
+    await tester.pumpAndSettle();
+    expect(find.byType(QuickSellCameraScreen), findsNothing);
+  });
+
+  testWidgets('foto jual cepat masuk ke form lalu tampil pada stok', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 938);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final photoPath = File('assets/images/stock/red_chili.png').absolute.path;
+
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.fotoJualCepat: (context) => Scaffold(
+            body: Center(
+              child: FilledButton(
+                key: const ValueKey('fake-take-picture'),
+                onPressed: () => Navigator.of(context).pop(photoPath),
+                child: const Text('Ambil Foto'),
+              ),
+            ),
+          ),
+          RouteNames.formStok: (context) => StockFormScreen(
+            capturedPhotoPath:
+                ModalRoute.settingsOf(context)!.arguments! as String,
+          ),
+          RouteNames.stokSaya: (context) => StockScreen(
+            initialItem:
+                ModalRoute.settingsOf(context)!.arguments! as StockItem,
+          ),
+        },
+        home: const Scaffold(bottomNavigationBar: PaneninBottomNavigation()),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('quick-sell-camera')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('fake-take-picture')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockFormScreen), findsOneWidget);
+    expect(find.byKey(const ValueKey('captured-stock-photo')), findsOneWidget);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-name-field')),
+      'Buncis',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-price-field')),
+      '14000',
+    );
+    await tester.ensureVisible(find.byKey(const ValueKey('increase-stock')));
+    await tester.tap(find.byKey(const ValueKey('increase-stock')));
+    await tester.ensureVisible(find.byKey(const ValueKey('save-stock')));
+    await tester.tap(find.byKey(const ValueKey('save-stock')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(StockScreen), findsOneWidget);
+    expect(find.text('Buncis'), findsOneWidget);
+    expect(find.byKey(const ValueKey('stock-file-photo')), findsOneWidget);
   });
 
   testWidgets('ikon pensil mengedit jumlah stok produk', (tester) async {
