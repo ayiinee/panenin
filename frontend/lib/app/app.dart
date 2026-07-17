@@ -16,8 +16,10 @@ import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dar
 import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
-import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/buyer_profile_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
 import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
@@ -48,6 +50,8 @@ Map<String, WidgetBuilder> buildAppRoutes({AppRepositories? repositories}) => {
     repository: repositories?.buyerHome,
     onOpenWhatsApp: repositories == null ? null : RouteNames.whatsapp,
   ),
+  RouteNames.buyerOrders: (_) => const BuyerOrdersScreen(),
+  RouteNames.buyerProfile: (_) => const BuyerProfileScreen(),
   RouteNames.productDetail: ProductDetailScreen.fromRoute,
   RouteNames.negotiationChat: NegotiationChatScreen.fromRoute,
   RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -25,11 +26,13 @@ import 'package:panenin/features/home/presentation/widgets/active_orders_section
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
+import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/farmer_profile_screen.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/buyer_profile_screen.dart';
 import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
 import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
@@ -1336,6 +1339,211 @@ void main() {
       const MaterialApp(home: BuyerHomeScreen(state: BuyerHomeViewState.error)),
     );
     expect(find.text('Gagal memuat beranda'), findsOneWidget);
+  });
+
+  testWidgets('transaction navigation opens the buyer orders page', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
+          RouteNames.buyerOrders: (_) => const BuyerOrdersScreen(),
+        },
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('transactions-navigation')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(BuyerOrdersScreen), findsOneWidget);
+    expect(find.text('Pesananku'), findsOneWidget);
+    expect(find.text('Tomat Segar'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('home-navigation')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuyerHomeScreen), findsOneWidget);
+  });
+
+  testWidgets('buyer orders follows the Figma layout and switches tabs', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerOrdersScreen()));
+
+    expect(find.text('Kacang Panjang'), findsOneWidget);
+    expect(find.text('Rp 250.000'), findsWidgets);
+    expect(find.text('Transaksi'), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('active-orders-tab')))
+          .flagsCollection
+          .isSelected,
+      ui.Tristate.isTrue,
+    );
+    await tester.tap(find.byKey(const ValueKey('order-history-tab')));
+    await tester.pump();
+    expect(find.text('Cabai Merah'), findsOneWidget);
+    expect(
+      tester
+          .getSemantics(find.byKey(const ValueKey('order-history-tab')))
+          .flagsCollection
+          .isSelected,
+      ui.Tristate.isTrue,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('buyer orders supports loading, empty, and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerOrdersScreen(state: BuyerOrdersViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerOrdersScreen(state: BuyerOrdersViewState.empty),
+      ),
+    );
+    expect(find.text('Belum ada pesanan'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerOrdersScreen(state: BuyerOrdersViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat pesanan'), findsOneWidget);
+  });
+
+  testWidgets('buyer orders handles empty success data on both tabs', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerOrdersScreen(orders: [], historyOrders: []),
+      ),
+    );
+
+    expect(find.text('Belum ada pesanan'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('order-history-tab')));
+    await tester.pumpAndSettle();
+    expect(find.text('Belum ada riwayat pesanan'), findsOneWidget);
+  });
+
+  testWidgets('buyer profile renders procurement-focused content', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerProfileScreen()));
+
+    expect(find.text('Profil Usaha'), findsOneWidget);
+    expect(find.text('Dapur Bu Ani'), findsOneWidget);
+    expect(find.text('Buyer terverifikasi'), findsOneWidget);
+    expect(find.text('WhatsApp Companion'), findsOneWidget);
+    expect(find.text('Komoditas rutin'), findsOneWidget);
+    expect(find.text('Profil'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('profile-navigation'))).height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('buyer profile supports loading empty and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerProfileScreen(state: BuyerProfileViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerProfileScreen(state: BuyerProfileViewState.empty),
+      ),
+    );
+    expect(find.text('Profil usaha belum lengkap'), findsOneWidget);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerProfileScreen(state: BuyerProfileViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat profil'), findsOneWidget);
+  });
+
+  testWidgets('buyer profile adapts to a narrow phone', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerProfileScreen()));
+
+    expect(find.text('Dapur Bu Ani'), findsOneWidget);
+    expect(find.text('Buyer terverifikasi'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('profile navigation opens the buyer profile page', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.buyerProfile: (_) => const BuyerProfileScreen()},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('profile-navigation')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuyerProfileScreen), findsOneWidget);
+  });
+
+  testWidgets('buyer order actions show detail and tracking information', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerOrdersScreen()));
+
+    await tester.tap(find.text('Detail').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Detail Pesanan'), findsOneWidget);
+    expect(find.text('Pak Ferdi · Kelompok Tani Ambarawa'), findsOneWidget);
+    expect(find.text('Rp 425.000'), findsWidgets);
+    await tester.tap(find.text('Tutup'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Lacak').first);
+    await tester.pumpAndSettle();
+    expect(find.text('Lacak Pesanan'), findsOneWidget);
+    expect(find.text('Dalam pengiriman'), findsOneWidget);
+    expect(find.text('18 Juli 2026'), findsOneWidget);
+  });
+
+  testWidgets('buyer orders adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerOrdersScreen()));
+
+    expect(find.text('Tomat Segar'), findsOneWidget);
+    expect(find.text('Rp 425.000'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.drag(
+      find.byKey(const ValueKey('buyer-orders-list')),
+      const Offset(0, -400),
+    );
+    await tester.pump();
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('buyer home adapts to a narrow screen', (tester) async {

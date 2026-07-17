@@ -21,4 +21,8 @@ abstract final class AppAssets {
       'assets/images/recurring_supply_price_background.png';
   static const reviewEsBuah = 'assets/images/review_es_buah.png';
   static const reviewTacibay = 'assets/images/review_tacibay.png';
+  static const orderChili = 'assets/images/order_chili.png';
+  static const orderLongBeans = 'assets/images/order_long_beans.png';
+  static const orderCherryTomato = 'assets/images/order_cherry_tomato.png';
+  static const orderCarrot = 'assets/images/order_carrot.png';
 }

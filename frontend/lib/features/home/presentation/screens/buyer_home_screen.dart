@@ -9,6 +9,7 @@ import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/features/home/data/buyer_home_fixture.dart';
 import 'package:panenin/features/home/data/buyer_home_repository.dart';
 import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
+import 'package:panenin/shared/widgets/buyer_bottom_navigation.dart';
 
 enum BuyerHomeViewState { loading, empty, error, success }
 
@@ -109,11 +110,22 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                           right: 0,
                           bottom: 0,
                           child: BuyerBottomNavigation(
-                            onWhatsApp: widget.onOpenWhatsApp == null
+                            selected: BuyerNavigationDestination.home,
+                            onHome: () {},
+                            onMessages: widget.onOpenWhatsApp == null
                                 ? null
                                 : () => Navigator.of(
                                     context,
                                   ).pushNamed(widget.onOpenWhatsApp!),
+                            onTransactions: () =>
+                                Navigator.pushReplacementNamed(
+                                  context,
+                                  RouteNames.buyerOrders,
+                                ),
+                            onProfile: () => Navigator.pushReplacementNamed(
+                              context,
+                              RouteNames.buyerProfile,
+                            ),
                             onUnavailable: (label) => _showMessage(
                               context,
                               '$label akan segera tersedia.',
@@ -741,154 +753,6 @@ class _ProductTag extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class BuyerBottomNavigation extends StatelessWidget {
-  const BuyerBottomNavigation({
-    required this.onUnavailable,
-    this.onWhatsApp,
-    super.key,
-  });
-
-  final ValueChanged<String> onUnavailable;
-  final VoidCallback? onWhatsApp;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 98,
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          Container(
-            height: 74,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Color(0xFFFFEDD5))),
-              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-              boxShadow: [
-                BoxShadow(
-                  color: Color(0x26E47A32),
-                  offset: Offset(0, -4),
-                  blurRadius: 10,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                const Expanded(
-                  child: _NavigationItem(
-                    icon: Icons.home_outlined,
-                    label: 'Beranda',
-                    selected: true,
-                  ),
-                ),
-                Expanded(
-                  child: _NavigationItem(
-                    icon: Icons.message_outlined,
-                    label: 'Pesan',
-                    onPressed: () => onUnavailable('Pesan'),
-                  ),
-                ),
-                const Expanded(child: SizedBox()),
-                Expanded(
-                  child: _NavigationItem(
-                    icon: Icons.receipt_long_outlined,
-                    label: 'Transaksi',
-                    onPressed: () => onUnavailable('Transaksi'),
-                  ),
-                ),
-                Expanded(
-                  child: _NavigationItem(
-                    icon: Icons.person_outline,
-                    label: 'Profil',
-                    onPressed: onWhatsApp ?? () => onUnavailable('Profil'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            top: 0,
-            child: Column(
-              children: [
-                Material(
-                  color: const Color(0xFF847C7C),
-                  elevation: 8,
-                  shadowColor: const Color(0xFFA8A29E),
-                  shape: const CircleBorder(
-                    side: BorderSide(color: Colors.white, width: 4),
-                  ),
-                  child: InkWell(
-                    key: const ValueKey('maps-navigation'),
-                    onTap: () => onUnavailable('Maps'),
-                    customBorder: const CircleBorder(),
-                    child: const SizedBox.square(
-                      dimension: 64,
-                      child: Icon(
-                        Icons.map_outlined,
-                        color: Colors.white,
-                        size: 40,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                const Text(
-                  'Maps',
-                  style: TextStyle(
-                    color: Color(0xFFA8A29E),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    height: 15 / 12,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NavigationItem extends StatelessWidget {
-  const _NavigationItem({
-    required this.icon,
-    required this.label,
-    this.selected = false,
-    this.onPressed,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : const Color(0xFFA8A29E);
-    return InkWell(
-      onTap: onPressed,
-      child: SizedBox.expand(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
