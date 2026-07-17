@@ -831,7 +831,6 @@ void main() {
       greaterThanOrEqualTo(44),
     );
 
-    final viewport = tester.getRect(find.byType(Scaffold));
     final farmerCard = tester.getRect(
       find.byKey(const ValueKey('farmer-role-card')),
     );
@@ -845,11 +844,13 @@ void main() {
       find.byKey(const ValueKey('buyer-role-image')),
     );
 
-    expect(buyerCard.bottom, lessThanOrEqualTo(viewport.bottom));
-    expect(farmerCard.height, lessThanOrEqualTo(164));
-    expect(buyerCard.height, lessThanOrEqualTo(164));
-    expect(farmerImage.top, lessThan(farmerCard.top));
-    expect(buyerImage.top, lessThan(buyerCard.top));
+    expect(farmerCard.height, 205);
+    expect(buyerCard.height, 205);
+    expect(farmerImage.top, farmerCard.top);
+    expect(farmerImage.bottom, farmerCard.bottom);
+    expect(buyerImage.top, buyerCard.top);
+    expect(buyerImage.bottom, buyerCard.bottom);
+    expect(buyerCard.top, greaterThan(farmerCard.bottom));
   });
 
   testWidgets('farmer role continues to farmer profile setup', (tester) async {
@@ -1205,33 +1206,53 @@ void main() {
     );
   });
 
-  testWidgets('role selection uses the spacious reference layout', (
+  testWidgets('role cards are accessible and entirely tappable', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
+    final semantics = tester.ensureSemantics();
 
-    await tester.pumpWidget(const MaterialApp(home: SelectRoleScreen()));
-
-    final viewport = tester.getRect(find.byType(Scaffold));
-    final farmerCard = tester.getRect(
-      find.byKey(const ValueKey('farmer-role-card')),
-    );
-    final buyerCard = tester.getRect(
-      find.byKey(const ValueKey('buyer-role-card')),
-    );
-    final farmerTitle = tester.getRect(
-      find.text('Saya ingin menjual\nhasil panen'),
-    );
-    final farmerImage = tester.getRect(
-      find.byKey(const ValueKey('farmer-role-image')),
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: const SelectRoleScreen(),
+      ),
     );
 
-    expect(farmerCard.top, 453);
-    expect(farmerCard.height, 185);
-    expect(farmerTitle.left - farmerCard.left, 15);
-    expect(farmerImage.top, lessThan(farmerCard.top));
-    expect(buyerCard.bottom, lessThanOrEqualTo(viewport.bottom));
+    expect(
+      find.bySemanticsLabel(
+        'Pilih peran petani. Menjual hasil panen kepada UMKM.',
+      ),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const ValueKey('buyer-role-card')));
+    await tester.tap(find.byKey(const ValueKey('buyer-role-card')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Kategori Produk UMKM'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('role selection supports landscape and large text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(700, 320));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(2)),
+        child: MaterialApp(home: SelectRoleScreen()),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('buyer-role-card')));
     expect(tester.takeException(), isNull);
   });
 
