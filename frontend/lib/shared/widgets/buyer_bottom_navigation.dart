@@ -10,6 +10,7 @@ class BuyerBottomNavigation extends StatelessWidget {
     required this.onTransactions,
     required this.onProfile,
     required this.onUnavailable,
+    this.onMessages,
     super.key,
   });
 
@@ -18,6 +19,7 @@ class BuyerBottomNavigation extends StatelessWidget {
   final VoidCallback onTransactions;
   final VoidCallback onProfile;
   final ValueChanged<String> onUnavailable;
+  final VoidCallback? onMessages;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +57,7 @@ class BuyerBottomNavigation extends StatelessWidget {
                   child: _NavigationItem(
                     icon: Icons.message_outlined,
                     label: 'Pesan',
-                    onPressed: () => onUnavailable('Pesan'),
+                    onPressed: onMessages ?? () => onUnavailable('Pesan'),
                   ),
                 ),
                 const Expanded(child: SizedBox()),
