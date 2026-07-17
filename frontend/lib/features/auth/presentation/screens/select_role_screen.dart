@@ -28,7 +28,6 @@ class SelectRoleScreen extends StatefulWidget {
 
 class _SelectRoleScreenState extends State<SelectRoleScreen> {
   static const _designWidth = 428.0;
-  static const _designHeight = 926.0;
 
   Future<void> _continueAs(BuildContext context, UserRole role) async {
     if (widget.flow == RoleSelectionFlow.login) {
@@ -73,12 +72,26 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
             final pageWidth = math.min(constraints.maxWidth, _designWidth);
             final horizontalPadding = pageWidth < 390 ? 16.0 : 19.0;
             final cardWidth = pageWidth - (horizontalPadding * 2);
-            final compact = cardWidth < 360;
-            final cardHeight = compact ? 250.0 : 205.0;
-            final secondCardTop = 453.0 + cardHeight + 18.0;
+            final referenceLayout = constraints.maxHeight >= 860;
+            final shortViewport = constraints.maxHeight < 760;
+            final narrowViewport = cardWidth < 360;
+            final cardHeight = referenceLayout
+                ? 185.0
+                : shortViewport
+                ? 148.0
+                : 164.0;
+            final firstCardTop = referenceLayout
+                ? 453.0
+                : math.min(
+                    370.0,
+                    math.max(276.0, constraints.maxHeight * 0.46),
+                  );
+            final cardGap = shortViewport ? 14.0 : 18.0;
+            final secondCardTop = firstCardTop + cardHeight + cardGap;
+            final contentBottom = secondCardTop + cardHeight;
             final pageHeight = math.max(
-              _designHeight,
-              secondCardTop + cardHeight + 85.0,
+              constraints.maxHeight,
+              contentBottom + 14.0,
             );
 
             return SingleChildScrollView(
@@ -96,8 +109,11 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
                       horizontalPadding: horizontalPadding,
                       cardWidth: cardWidth,
                       cardHeight: cardHeight,
+                      firstCardTop: firstCardTop,
                       secondCardTop: secondCardTop,
-                      compact: compact,
+                      referenceLayout: referenceLayout,
+                      shortViewport: shortViewport,
+                      narrowViewport: narrowViewport,
                       onFarmerPressed: () =>
                           _continueAs(context, UserRole.farmer),
                       onBuyerPressed: () =>
@@ -121,8 +137,11 @@ class _RoleSelectionCanvas extends StatelessWidget {
     required this.horizontalPadding,
     required this.cardWidth,
     required this.cardHeight,
+    required this.firstCardTop,
     required this.secondCardTop,
-    required this.compact,
+    required this.referenceLayout,
+    required this.shortViewport,
+    required this.narrowViewport,
     required this.onFarmerPressed,
     required this.onBuyerPressed,
   });
@@ -132,18 +151,31 @@ class _RoleSelectionCanvas extends StatelessWidget {
   final double horizontalPadding;
   final double cardWidth;
   final double cardHeight;
+  final double firstCardTop;
   final double secondCardTop;
-  final bool compact;
+  final bool referenceLayout;
+  final bool shortViewport;
+  final bool narrowViewport;
   final VoidCallback onFarmerPressed;
   final VoidCallback onBuyerPressed;
 
   @override
   Widget build(BuildContext context) {
+    final panelTop = referenceLayout
+        ? 148.0
+        : (firstCardTop - 225).clamp(64.0, 145.0);
+    final titleTop = referenceLayout
+        ? 244.0
+        : firstCardTop - (shortViewport ? 145 : 160);
+    final descriptionTop = referenceLayout
+        ? 375.0
+        : firstCardTop - (shortViewport ? 55 : 60);
+
     return Stack(
       clipBehavior: Clip.hardEdge,
       children: [
         Positioned.fill(
-          top: 42,
+          top: referenceLayout ? 42 : 24,
           child: Image.asset(
             AppAssets.authBackground,
             fit: BoxFit.cover,
@@ -151,7 +183,7 @@ class _RoleSelectionCanvas extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 148,
+          top: panelTop,
           left: 0,
           right: 0,
           bottom: 0,
@@ -169,45 +201,62 @@ class _RoleSelectionCanvas extends StatelessWidget {
                 ),
               ],
             ),
-            child: SizedBox(height: pageHeight - 148),
+            child: SizedBox(height: pageHeight - panelTop),
           ),
         ),
-        const Positioned(
-          top: 209,
-          right: -57,
+        Positioned(
+          top: referenceLayout ? 209 : panelTop + 20,
+          right: referenceLayout ? -57 : -44,
           child: DecoratedBox(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: Color(0xBFE3F0E4),
               shape: BoxShape.circle,
             ),
-            child: SizedBox.square(dimension: 212),
+            child: SizedBox.square(
+              dimension: referenceLayout
+                  ? 212
+                  : shortViewport
+                  ? 148
+                  : 170,
+            ),
           ),
         ),
-        const Positioned(
-          top: 166,
-          right: -137,
-          width: 298,
-          height: 258,
-          child: _HeroBasket(),
+        Positioned(
+          top: referenceLayout ? 166 : panelTop + 4,
+          right: referenceLayout
+              ? -137
+              : shortViewport
+              ? -82
+              : -92,
+          width: referenceLayout
+              ? 298
+              : shortViewport
+              ? 205
+              : 224,
+          height: referenceLayout
+              ? 258
+              : shortViewport
+              ? 168
+              : 184,
+          child: const _HeroBasket(),
         ),
         Positioned(
-          top: 182,
-          left: horizontalPadding,
-          child: const _PaneninBrand(),
-        ),
-        Positioned(
-          top: 244,
+          top: titleTop,
           left: horizontalPadding,
           right: horizontalPadding,
-          child: const Text.rich(
+          child: Text.rich(
             TextSpan(
               style: TextStyle(
                 color: AppColors.primary,
-                fontSize: 32,
+                fontSize: referenceLayout
+                    ? 32
+                    : shortViewport
+                    ? 24
+                    : 27,
                 fontWeight: FontWeight.w600,
-                height: 1.25,
+                height: referenceLayout ? 1.25 : 1.15,
               ),
-              children: [
+              children: const [
                 TextSpan(
                   text: 'Halo!\n',
                   style: TextStyle(color: AppColors.textPrimary),
@@ -218,32 +267,33 @@ class _RoleSelectionCanvas extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 375,
+          top: descriptionTop,
           left: horizontalPadding,
-          width: math.min(266, pageWidth - (horizontalPadding * 2)),
+          width: math.min(250, pageWidth - (horizontalPadding * 2)),
           child: const Text(
             'Silahkan Pilih Peran Berikut yang Paling '
             'Menggambarkan Dirimu',
             style: TextStyle(
               color: AppColors.textSecondary,
               fontSize: 14,
-              height: 1.45,
+              height: 1.35,
             ),
           ),
         ),
         Positioned(
-          top: 453,
+          top: firstCardTop,
           left: horizontalPadding,
           child: _RoleCard(
             key: const ValueKey('farmer-role-card'),
             width: cardWidth,
             height: cardHeight,
-            compact: compact,
+            compact: narrowViewport,
             title: 'Saya ingin menjual\nhasil panen',
             description:
                 'Tawarkan hasil panen dari\nkelompok tani Anda kepada\nUMKM.',
             action: 'Jual Hasil Panen',
             image: AppAssets.roleFarmer,
+            imageKey: const ValueKey('farmer-role-image'),
             buttonColor: AppColors.primary,
             buttonForeground: Colors.white,
             buttonKey: const ValueKey('farmer-role-button'),
@@ -257,12 +307,13 @@ class _RoleSelectionCanvas extends StatelessWidget {
             key: const ValueKey('buyer-role-card'),
             width: cardWidth,
             height: cardHeight,
-            compact: compact,
+            compact: narrowViewport,
             title: 'Saya ingin membeli\nhasil panen',
             description:
                 'Cari supplier terpercaya dan\ndapatkan pasokan bahan\nbaku segar dan rutin.',
             action: 'Beli Hasil Panen',
             image: AppAssets.roleBuyer,
+            imageKey: const ValueKey('buyer-role-image'),
             buttonColor: AppColors.accent,
             buttonForeground: AppColors.textPrimary,
             buttonKey: const ValueKey('buyer-role-button'),
@@ -286,42 +337,6 @@ class _HeroBasket extends StatelessWidget {
   }
 }
 
-class _PaneninBrand extends StatelessWidget {
-  const _PaneninBrand();
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 112,
-      height: 54,
-      child: Stack(
-        children: [
-          Positioned(
-            left: 0,
-            top: 0,
-            width: 54,
-            height: 54,
-            child: Image.asset(AppAssets.logo),
-          ),
-          const Positioned(
-            left: 39,
-            top: 28,
-            child: Text(
-              'anenin',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _RoleCard extends StatelessWidget {
   const _RoleCard({
     super.key,
@@ -332,6 +347,7 @@ class _RoleCard extends StatelessWidget {
     required this.description,
     required this.action,
     required this.image,
+    required this.imageKey,
     required this.buttonColor,
     required this.buttonForeground,
     required this.buttonKey,
@@ -345,6 +361,7 @@ class _RoleCard extends StatelessWidget {
   final String description;
   final String action;
   final String image;
+  final Key imageKey;
   final Color buttonColor;
   final Color buttonForeground;
   final Key buttonKey;
@@ -352,134 +369,161 @@ class _RoleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: ColoredBox(
-        color: Colors.white,
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double imageWidth = compact
-                  ? constraints.maxWidth * 0.47
-                  : math.min(203.0, constraints.maxWidth * 0.52);
-              final contentWidth = constraints.maxWidth - imageWidth;
-              final contentPadding = compact ? 12.0 : 15.0;
-              final double buttonWidth = math.min(
-                155.0,
-                contentWidth - (contentPadding * 2),
-              );
+    return SizedBox(
+      width: width,
+      height: height,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final spacious = constraints.maxHeight >= 180;
+          final contentWidth = constraints.maxWidth * (compact ? 0.57 : 0.49);
+          final imageWidth = constraints.maxWidth * (compact ? 0.53 : 0.52);
+          final contentPadding = spacious
+              ? 15.0
+              : compact
+              ? 12.0
+              : 14.0;
+          final buttonWidth = math.min(
+            155.0,
+            contentWidth - (contentPadding * 2),
+          );
 
-              return Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    width: imageWidth,
-                    height: constraints.maxHeight,
-                    child: Image.asset(image, fit: BoxFit.cover),
+          return Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x10000000),
+                        offset: Offset(0, 3),
+                        blurRadius: 10,
+                      ),
+                    ],
                   ),
-                  Positioned(
-                    top: compact ? 18 : 20,
-                    left: 0,
-                    width: contentWidth,
-                    bottom: 6,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: contentPadding),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: compact ? 3 : 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              height: 1.5,
-                            ),
+                ),
+              ),
+              Positioned(
+                top: spacious
+                    ? -28
+                    : compact
+                    ? -18
+                    : -22,
+                right: 0,
+                width: imageWidth,
+                height: constraints.maxHeight + (spacious ? 28 : 22),
+                child: Image.asset(
+                  image,
+                  key: imageKey,
+                  fit: BoxFit.cover,
+                  alignment: Alignment.bottomRight,
+                ),
+              ),
+              Positioned(
+                top: spacious
+                    ? 30
+                    : compact
+                    ? 8
+                    : 14,
+                left: 0,
+                width: contentWidth,
+                bottom: spacious
+                    ? 12
+                    : compact
+                    ? 8
+                    : 10,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: contentPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.textPrimary,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          height: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: spacious ? 6 : 2),
+                      Expanded(
+                        child: Text(
+                          description,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppColors.textMuted,
+                            fontSize: 14,
+                            height: 1.25,
                           ),
-                          const SizedBox(height: 4),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                description,
-                                maxLines: compact ? 5 : 4,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 14,
-                                  height: 20 / 14,
-                                ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: buttonWidth,
+                        height: 44,
+                        child: Semantics(
+                          button: true,
+                          excludeSemantics: true,
+                          label: action,
+                          child: Material(
+                            key: buttonKey,
+                            color: buttonColor,
+                            borderRadius: BorderRadius.circular(12),
+                            child: InkWell(
+                              onTap: onPressed,
+                              borderRadius: BorderRadius.circular(12),
+                              splashColor: buttonForeground.withValues(
+                                alpha: 0.18,
                               ),
-                            ),
-                          ),
-                          SizedBox(
-                            width: buttonWidth,
-                            height: 44,
-                            child: Semantics(
-                              button: true,
-                              excludeSemantics: true,
-                              label: action,
-                              child: Material(
-                                key: buttonKey,
-                                color: buttonColor,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
-                                  onTap: onPressed,
-                                  borderRadius: BorderRadius.circular(12),
-                                  splashColor: buttonForeground.withValues(
-                                    alpha: 0.18,
-                                  ),
-                                  highlightColor: buttonForeground.withValues(
-                                    alpha: 0.10,
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: compact ? 10 : 12,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: FittedBox(
-                                            alignment: Alignment.centerLeft,
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              action,
-                                              style: TextStyle(
-                                                color: buttonForeground,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                height: 16 / 12,
-                                              ),
-                                            ),
+                              highlightColor: buttonForeground.withValues(
+                                alpha: 0.10,
+                              ),
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: compact ? 8 : 12,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: FittedBox(
+                                        alignment: Alignment.centerLeft,
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          action,
+                                          style: TextStyle(
+                                            color: buttonForeground,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w700,
+                                            height: 16 / 12,
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
-                                        Icon(
-                                          Icons.arrow_forward,
-                                          size: 18,
-                                          color: buttonForeground,
-                                        ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
+                                    const SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_forward,
+                                      size: 17,
+                                      color: buttonForeground,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              );
-            },
-          ),
-        ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
