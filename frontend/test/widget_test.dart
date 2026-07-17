@@ -18,6 +18,7 @@ import 'package:panenin/features/auth/presentation/screens/select_role_screen.da
 import 'package:panenin/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
@@ -920,6 +921,136 @@ void main() {
     );
     await tester.pump();
     expect(find.text('Bawang Putih'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tapping a buyer product opens its detail page', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.productDetail: ProductDetailScreen.fromRoute},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    final product = find.byKey(const ValueKey('open-Cabai Merah Kering'));
+    await tester.ensureVisible(product);
+    await tester.tap(product);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProductDetailScreen), findsOneWidget);
+    expect(find.text('Detail Produk'), findsOneWidget);
+    expect(find.text('Cabai Merah Kering'), findsOneWidget);
+    expect(find.text('Tomat Segar'), findsNothing);
+    expect(
+      find.textContaining('Supplier: Kelompok Tani Makmur'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('buyer add action does not open the product detail', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.productDetail: ProductDetailScreen.fromRoute},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    final addButton = find.byKey(const ValueKey('add-Cabai Merah Kering'));
+    await tester.ensureVisible(addButton);
+    await tester.tap(addButton);
+    await tester.pump();
+
+    expect(find.byType(BuyerHomeScreen), findsOneWidget);
+    expect(find.byType(ProductDetailScreen), findsNothing);
+    expect(
+      find.text('Cabai Merah Kering ditambahkan ke keranjang.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('product detail switches from description to reviews', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1055));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProductDetailScreen()));
+
+    expect(find.text('Buat Kontrak Pasokan'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('product-reviews-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tambah Ulasan'), findsOneWidget);
+    expect(find.text('Es Buah Rosyidah'), findsOneWidget);
+    expect(find.text('Tacibay'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('review-filter-Semua'))).height,
+      greaterThanOrEqualTo(44),
+    );
+    await tester.drag(
+      find.byKey(const ValueKey('review-filter-scroll')),
+      const Offset(-500, 0),
+    );
+    await tester.pump();
+    expect(tester.getTopLeft(find.text('Bintang 1')).dx, lessThan(428));
+    await tester.ensureVisible(find.text('Bintang 4'));
+    await tester.tap(find.text('Bintang 4'));
+    await tester.pump();
+    expect(find.text('Belum ada ulasan untuk rating ini.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('product detail supports loading, empty, and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.empty),
+      ),
+    );
+    expect(find.text('Produk tidak ditemukan'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat produk'), findsOneWidget);
+  });
+
+  testWidgets('product detail adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProductDetailScreen()));
+
+    expect(find.text('Detail Produk'), findsOneWidget);
+    await tester.ensureVisible(find.text('Beli Sekarang'));
+    expect(tester.takeException(), isNull);
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('product-reviews-tab')),
+    );
+    await tester.tap(find.byKey(const ValueKey('product-reviews-tab')));
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byKey(const ValueKey('review-filter-scroll')),
+      const Offset(-500, 0),
+    );
+    await tester.pump();
+
+    expect(tester.getTopLeft(find.text('Bintang 1')).dx, lessThan(320));
     expect(tester.takeException(), isNull);
   });
 
