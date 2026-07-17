@@ -7,11 +7,18 @@ import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 
+typedef SaveProfileRole = Future<void> Function(UserRole role);
+
 /// Collects the role-specific basic profile after account registration.
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({this.role = UserRole.farmer, super.key});
+  const ProfileSetupScreen({
+    this.role = UserRole.farmer,
+    this.saveRole,
+    super.key,
+  });
 
   final UserRole role;
+  final SaveProfileRole? saveRole;
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -86,18 +93,24 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _submitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    if (widget.role == UserRole.buyer) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        RouteNames.buyerHome,
-        (_) => false,
-      );
+    try {
+      if (widget.saveRole case final saveRole?) {
+        await saveRole(widget.role);
+      } else {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      }
+    } on Object {
+      if (!mounted) return;
+      setState(() => _submitting = false);
+      _showMessage('Data diri gagal disimpan. Silakan coba lagi.');
       return;
     }
-    _showMessage('Data diri berhasil disimpan.');
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    final destination = widget.role == UserRole.buyer
+        ? RouteNames.buyerHome
+        : RouteNames.homePetani;
+    Navigator.pushNamedAndRemoveUntil(context, destination, (_) => false);
   }
 
   @override

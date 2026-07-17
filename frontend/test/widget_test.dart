@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:panenin/app/app.dart';
 import 'package:panenin/app/router/route_names.dart';
+import 'package:panenin/app/shell/farmer_shell.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/app/theme/app_theme.dart';
@@ -22,6 +23,7 @@ import 'package:panenin/features/auth/presentation/widgets/google_auth_button.da
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/farmer_profile_screen.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
@@ -35,6 +37,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() {
   test('route utama mengikuti nama branch UI', () {
     expect(RouteNames.homePetani, '/beranda');
+    expect(RouteNames.farmerProfile, '/petani/profile');
     expect(RouteNames.kelolaPesanan, '/kelola-pesanan');
     expect(RouteNames.detailPesanan, '/detail-pesanan');
     expect(RouteNames.stokSaya, '/stok');
@@ -44,6 +47,7 @@ void main() {
       buildAppRoutes().keys,
       containsAll([
         RouteNames.homePetani,
+        RouteNames.farmerProfile,
         RouteNames.kelolaPesanan,
         RouteNames.detailPesanan,
         RouteNames.stokSaya,
@@ -366,6 +370,32 @@ void main() {
     expect(find.text('4 Produk  •  23 Kg tersedia'), findsOneWidget);
   });
 
+  testWidgets('farmer shell berpindah ke seluruh tab tanpa menumpuk route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.light, home: const FarmerShell()),
+    );
+
+    await tester.tap(find.text('Stok'));
+    await tester.pump();
+    expect(find.text('Stok Saya'), findsOneWidget);
+
+    await tester.tap(find.text('Pesanan'));
+    await tester.pump();
+    expect(find.text('Kelola Pesanan'), findsOneWidget);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pump();
+    expect(find.byType(FarmerProfileScreen), findsOneWidget);
+    expect(find.text('Profile Petani'), findsOneWidget);
+
+    await tester.tap(find.text('Beranda'));
+    await tester.pump();
+    expect(find.text('Permintaan Baru'), findsOneWidget);
+    expect(find.byType(PaneninBottomNavigation), findsOneWidget);
+  });
+
   testWidgets('jual cepat membuka kamera tanpa tombol galeri', (tester) async {
     tester.view.physicalSize = const Size(428, 938);
     tester.view.devicePixelRatio = 1;
@@ -511,6 +541,14 @@ void main() {
     email: 'demo@panenin.id',
     name: 'Demo Panenin',
     provider: 'email',
+  );
+
+  const demoFarmer = AuthenticatedUser(
+    id: '22222222-2222-2222-2222-222222222222',
+    email: 'petani@panenin.id',
+    name: 'Pak Ferdi',
+    provider: 'email',
+    role: UserRole.farmer,
   );
 
   testWidgets('renders correctly typed create account fields', (tester) async {
@@ -723,6 +761,60 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(SelectRoleScreen), findsOneWidget);
+  });
+
+  testWidgets('akun dengan role petani langsung masuk ke home petani', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.homePetani: (_) => const FarmerShell()},
+        home: LoginScreen(emailSignIn: (_, _) async => demoFarmer),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'petani@panenin.id');
+    await tester.enterText(fields.at(1), 'password123');
+    await tester.ensureVisible(find.text('Masuk'));
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FarmerShell), findsOneWidget);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
+    expect(find.text('Permintaan Baru'), findsOneWidget);
+  });
+
+  testWidgets('login tanpa role dapat memilih petani lalu masuk ke home', (
+    tester,
+  ) async {
+    UserRole? savedRole;
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.selectRole: (context) => SelectRoleScreen(
+            flow:
+                ModalRoute.settingsOf(context)!.arguments! as RoleSelectionFlow,
+            saveSelectedRole: (role) async => savedRole = role,
+          ),
+          RouteNames.homePetani: (_) => const FarmerShell(),
+        },
+        home: LoginScreen(emailSignIn: (_, _) async => demoUser),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'demo@panenin.id');
+    await tester.enterText(fields.at(1), 'password123');
+    await tester.ensureVisible(find.text('Masuk'));
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Jual Hasil Panen'));
+    await tester.tap(find.text('Jual Hasil Panen'));
+    await tester.pumpAndSettle();
+
+    expect(savedRole, UserRole.farmer);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
   });
 
   testWidgets('forgot password sends a privacy-safe response', (tester) async {
@@ -1227,7 +1319,13 @@ void main() {
   testWidgets('profile setup submits a valid profile', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+    UserRole? savedRole;
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.homePetani: (_) => const FarmerShell()},
+        home: ProfileSetupScreen(saveRole: (role) async => savedRole = role),
+      ),
+    );
 
     await tester.enterText(
       find.byKey(const ValueKey('farmer-name-field')),
@@ -1246,9 +1344,10 @@ void main() {
     await tester.tap(find.text('Daftar Sekarang'));
     await tester.pump();
 
-    expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    await tester.pump(const Duration(milliseconds: 450));
-    expect(find.text('Data diri berhasil disimpan.'), findsOneWidget);
+    await tester.pumpAndSettle();
+    expect(savedRole, UserRole.farmer);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
+    expect(find.text('Permintaan Baru'), findsOneWidget);
   });
 
   testWidgets('profile setup validates required fields', (tester) async {

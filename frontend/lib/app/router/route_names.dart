@@ -8,6 +8,7 @@ abstract final class RouteNames {
   static const buyerHome = '/buyer/home';
   static const productDetail = '/buyer/products/detail';
   static const homePetani = '/beranda';
+  static const farmerProfile = '/petani/profile';
   static const kelolaPesanan = '/kelola-pesanan';
   static const detailPesanan = '/detail-pesanan';
   static const stokSaya = '/stok';

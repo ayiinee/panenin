@@ -12,7 +12,9 @@ const _progressCardTop = 120.0;
 const _progressCardHeight = 110.0;
 
 class ManageOrdersScreen extends StatefulWidget {
-  const ManageOrdersScreen({super.key});
+  const ManageOrdersScreen({this.embeddedInShell = false, super.key});
+
+  final bool embeddedInShell;
 
   @override
   State<ManageOrdersScreen> createState() => _ManageOrdersScreenState();
@@ -50,12 +52,21 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
       ),
       child: Scaffold(
         extendBody: true,
-        bottomNavigationBar: PaneninBottomNavigation(
-          selectedIndex: 2,
-          onDestinationSelected: (index) {
-            if (index == 0) Navigator.of(context).maybePop();
-          },
-        ),
+        bottomNavigationBar: widget.embeddedInShell
+            ? null
+            : PaneninBottomNavigation(
+                selectedIndex: 2,
+                onDestinationSelected: (index) {
+                  if (index == 2) return;
+                  final route = switch (index) {
+                    0 => RouteNames.homePetani,
+                    1 => RouteNames.stokSaya,
+                    3 => RouteNames.farmerProfile,
+                    _ => RouteNames.kelolaPesanan,
+                  };
+                  Navigator.of(context).pushReplacementNamed(route);
+                },
+              ),
         body: Column(
           children: [
             const _HeaderAndProgress(),

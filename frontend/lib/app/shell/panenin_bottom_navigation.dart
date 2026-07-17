@@ -7,11 +7,13 @@ class PaneninBottomNavigation extends StatelessWidget {
   const PaneninBottomNavigation({
     this.selectedIndex = 0,
     this.onDestinationSelected,
+    this.onQuickSell,
     super.key,
   });
 
   final int selectedIndex;
   final ValueChanged<int>? onDestinationSelected;
+  final VoidCallback? onQuickSell;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +76,7 @@ class PaneninBottomNavigation extends StatelessWidget {
               ),
             ),
           ),
-          const Positioned(top: -28, child: _QuickSellItem()),
+          Positioned(top: -28, child: _QuickSellItem(onTap: onQuickSell)),
         ],
       ),
     );
@@ -133,7 +135,9 @@ class _NavigationItem extends StatelessWidget {
 }
 
 class _QuickSellItem extends StatelessWidget {
-  const _QuickSellItem();
+  const _QuickSellItem({this.onTap});
+
+  final VoidCallback? onTap;
 
   Future<void> _openCamera(BuildContext context) async {
     final photoPath = await Navigator.of(
@@ -146,9 +150,11 @@ class _QuickSellItem extends StatelessWidget {
     ).pushNamed(RouteNames.formStok, arguments: photoPath);
     if (item is! StockItem || !context.mounted) return;
 
-    await Navigator.of(
-      context,
-    ).pushReplacementNamed(RouteNames.stokSaya, arguments: item);
+    await Navigator.of(context).pushNamedAndRemoveUntil(
+      RouteNames.stokSaya,
+      (route) => route.isFirst,
+      arguments: item,
+    );
   }
 
   @override
@@ -158,7 +164,7 @@ class _QuickSellItem extends StatelessWidget {
       label: 'Jual Cepat',
       child: InkWell(
         key: const ValueKey('quick-sell-camera'),
-        onTap: () => _openCamera(context),
+        onTap: onTap ?? () => _openCamera(context),
         borderRadius: BorderRadius.circular(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -7,14 +7,50 @@ import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 
-/// Lets a new user choose whether they sell or buy produce.
-class SelectRoleScreen extends StatelessWidget {
-  const SelectRoleScreen({super.key});
+enum RoleSelectionFlow { onboarding, login }
 
+typedef SaveSelectedRole = Future<void> Function(UserRole role);
+
+/// Lets a user choose whether they sell or buy produce.
+class SelectRoleScreen extends StatefulWidget {
+  const SelectRoleScreen({
+    this.flow = RoleSelectionFlow.onboarding,
+    this.saveSelectedRole,
+    super.key,
+  });
+
+  final RoleSelectionFlow flow;
+  final SaveSelectedRole? saveSelectedRole;
+
+  @override
+  State<SelectRoleScreen> createState() => _SelectRoleScreenState();
+}
+
+class _SelectRoleScreenState extends State<SelectRoleScreen> {
   static const _designWidth = 428.0;
   static const _designHeight = 926.0;
 
-  void _continueAs(BuildContext context, UserRole role) {
+  Future<void> _continueAs(BuildContext context, UserRole role) async {
+    if (widget.flow == RoleSelectionFlow.login) {
+      try {
+        await widget.saveSelectedRole?.call(role);
+      } on Object {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Peran gagal disimpan. Silakan coba lagi.'),
+          ),
+        );
+        return;
+      }
+      if (!context.mounted) return;
+      final destination = role == UserRole.farmer
+          ? RouteNames.homePetani
+          : RouteNames.buyerHome;
+      Navigator.pushNamedAndRemoveUntil(context, destination, (_) => false);
+      return;
+    }
+
     Navigator.pushReplacementNamed(
       context,
       RouteNames.profile,
