@@ -17,6 +17,8 @@ abstract final class AppAssets {
   static const productGarlic = 'assets/images/product_garlic.png';
   static const productDetailTomato = 'assets/images/product_detail_tomato.png';
   static const supplierMakmur = 'assets/images/supplier_makmur_avatar.png';
+  static const recurringSupplyPriceBackground =
+      'assets/images/recurring_supply_price_background.png';
   static const reviewEsBuah = 'assets/images/review_es_buah.png';
   static const reviewTacibay = 'assets/images/review_tacibay.png';
 }
