@@ -19,11 +19,17 @@ class FarmerHomeScreen extends StatefulWidget {
   const FarmerHomeScreen({
     this.demandRepository,
     this.orderRepository,
+    this.embeddedInShell = false,
+    this.onOpenStock,
+    this.onOpenOrders,
     super.key,
   });
 
   final DemandRepository? demandRepository;
   final OrderRepository? orderRepository;
+  final bool embeddedInShell;
+  final VoidCallback? onOpenStock;
+  final VoidCallback? onOpenOrders;
 
   @override
   State<FarmerHomeScreen> createState() => _FarmerHomeScreenState();
@@ -105,10 +111,18 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   void _openOrders() {
+    if (widget.onOpenOrders case final onOpenOrders?) {
+      onOpenOrders();
+      return;
+    }
     Navigator.of(context).pushNamed(RouteNames.kelolaPesanan);
   }
 
   void _openStock() {
+    if (widget.onOpenStock case final onOpenStock?) {
+      onOpenStock();
+      return;
+    }
     Navigator.of(context).pushNamed(RouteNames.stokSaya);
   }
 
@@ -171,15 +185,17 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
       ),
       child: Scaffold(
         extendBody: true,
-        bottomNavigationBar: PaneninBottomNavigation(
-          onDestinationSelected: (index) {
-            if (index == 1) _openStock();
-            if (index == 2) _openOrders();
-            if (index == 3) {
-              Navigator.of(context).pushNamed(RouteNames.whatsapp);
-            }
-          },
-        ),
+        bottomNavigationBar: widget.embeddedInShell
+            ? null
+            : PaneninBottomNavigation(
+                onDestinationSelected: (index) {
+                  if (index == 1) _openStock();
+                  if (index == 2) _openOrders();
+                  if (index == 3) {
+                    Navigator.of(context).pushNamed(RouteNames.farmerProfile);
+                  }
+                },
+              ),
         body: Stack(
           children: [
             SafeArea(

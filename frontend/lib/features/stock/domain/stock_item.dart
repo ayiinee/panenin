@@ -36,6 +36,7 @@ class StockItem {
     this.shelfLifeDays,
     this.reservations = const [],
     this.imagePath,
+    this.photoStoragePath,
   });
 
   final String id;
@@ -47,6 +48,7 @@ class StockItem {
   final int? shelfLifeDays;
   final List<InventoryReservation> reservations;
   final String? imagePath;
+  final String? photoStoragePath;
 
   DateTime? get expiresAt => harvestedAt == null || shelfLifeDays == null
       ? null
@@ -88,6 +90,7 @@ class StockItem {
       shelfLifeDays: shelfLifeDays,
       reservations: reservations,
       imagePath: imagePath,
+      photoStoragePath: photoStoragePath,
     );
   }
 }

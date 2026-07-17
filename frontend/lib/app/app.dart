@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:panenin/app/app_repositories.dart';
 import 'package:panenin/app/router/route_names.dart';
+import 'package:panenin/app/shell/farmer_shell.dart';
 import 'package:panenin/app/theme/app_theme.dart';
+import 'package:panenin/features/auth/data/auth_service.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -11,11 +13,12 @@ import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
-import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
-import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
-import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
+import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
+import 'package:panenin/features/stock/domain/stock_item.dart';
+import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 import 'package:panenin/features/whatsapp/presentation/whatsapp_link_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,31 +27,46 @@ Map<String, WidgetBuilder> buildAppRoutes({AppRepositories? repositories}) => {
   RouteNames.login: (_) => const LoginScreen(),
   RouteNames.forgotPassword: (_) => const ForgotPasswordScreen(),
   RouteNames.resetPassword: (_) => const ResetPasswordScreen(),
-  RouteNames.selectRole: (_) => const SelectRoleScreen(),
+  RouteNames.selectRole: (context) => SelectRoleScreen(
+    flow: switch (ModalRoute.settingsOf(context)?.arguments) {
+      RoleSelectionFlow flow => flow,
+      _ => RoleSelectionFlow.onboarding,
+    },
+    saveSelectedRole: (role) => AuthService.create().saveRole(role),
+  ),
   RouteNames.profile: (context) => ProfileSetupScreen(
     repository: repositories?.profile,
     role: switch (ModalRoute.of(context)?.settings.arguments) {
       UserRole role => role,
       _ => UserRole.farmer,
     },
+    saveRole: (role) => AuthService.create().saveRole(role),
   ),
   RouteNames.buyerHome: (_) => BuyerHomeScreen(
     repository: repositories?.buyerHome,
     onOpenWhatsApp: repositories == null ? null : RouteNames.whatsapp,
   ),
-  RouteNames.homePetani: (_) => FarmerHomeScreen(
-    demandRepository: repositories?.demands,
-    orderRepository: repositories?.orders,
-  ),
+  RouteNames.productDetail: ProductDetailScreen.fromRoute,
+  RouteNames.homePetani: (_) => FarmerShell(repositories: repositories),
+  RouteNames.farmerProfile: (_) =>
+      FarmerShell(initialIndex: 3, repositories: repositories),
   RouteNames.kelolaPesanan: (_) =>
-      ManageOrdersScreen(repository: repositories?.orders),
+      FarmerShell(initialIndex: 2, repositories: repositories),
   RouteNames.detailPesanan: (context) => OrderDetailScreen(
     order: ModalRoute.settingsOf(context)!.arguments! as OrderDetailData,
     enableLocalTransitions: repositories == null,
   ),
-  RouteNames.stokSaya: (_) => StockScreen(repository: repositories?.stock),
   RouteNames.whatsapp: (_) =>
       WhatsAppLinkScreen(repository: repositories?.whatsapp),
+  RouteNames.stokSaya: (context) => FarmerShell(
+    initialIndex: 1,
+    initialStockItem: ModalRoute.settingsOf(context)!.arguments as StockItem?,
+    repositories: repositories,
+  ),
+  RouteNames.fotoJualCepat: (_) => const QuickSellCameraScreen(),
+  RouteNames.formStok: (context) => StockFormScreen(
+    capturedPhotoPath: ModalRoute.settingsOf(context)!.arguments as String?,
+  ),
 };
 
 class PaneninApp extends StatefulWidget {

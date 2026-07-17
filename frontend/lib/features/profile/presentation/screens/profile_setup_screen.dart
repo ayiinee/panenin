@@ -8,16 +8,20 @@ import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/profile/data/profile_repository.dart';
 
+typedef SaveProfileRole = Future<void> Function(UserRole role);
+
 /// Collects the role-specific basic profile after account registration.
 class ProfileSetupScreen extends StatefulWidget {
   const ProfileSetupScreen({
     this.role = UserRole.farmer,
     this.repository,
+    this.saveRole,
     super.key,
   });
 
   final UserRole role;
   final ProfileRepository? repository;
+  final SaveProfileRole? saveRole;
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -88,11 +92,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     setState(() => _submitting = true);
     try {
-      if (widget.repository == null) {
-        await Future<void>.delayed(const Duration(milliseconds: 400));
-      } else {
+      if (widget.saveRole case final saveRole?) {
+        await saveRole(widget.role);
+      }
+      if (widget.repository case final repository?) {
         final organizationName = _organizationNameController.text.trim();
-        await widget.repository!.saveProfile(
+        await repository.saveProfile(
           ProfileInput(
             name: _nameController.text.trim(),
             organizationName: organizationName.isEmpty
@@ -103,30 +108,21 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
             commodityNames: _selectedCommodities.toList()..sort(),
           ),
         );
+      } else if (widget.saveRole == null) {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
       }
+    } on Object {
       if (!mounted) return;
-      if (widget.role == UserRole.buyer) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          RouteNames.buyerHome,
-          (_) => false,
-        );
-        return;
-      }
-      if (widget.repository != null) {
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          RouteNames.homePetani,
-          (_) => false,
-        );
-        return;
-      }
-      _showMessage('Data diri berhasil disimpan.');
-    } catch (error) {
-      if (mounted) _showMessage('Gagal menyimpan profil: $error');
-    } finally {
-      if (mounted) setState(() => _submitting = false);
+      setState(() => _submitting = false);
+      _showMessage('Data diri gagal disimpan. Silakan coba lagi.');
+      return;
     }
+    if (!mounted) return;
+    setState(() => _submitting = false);
+    final destination = widget.role == UserRole.buyer
+        ? RouteNames.buyerHome
+        : RouteNames.homePetani;
+    Navigator.pushNamedAndRemoveUntil(context, destination, (_) => false);
   }
 
   @override

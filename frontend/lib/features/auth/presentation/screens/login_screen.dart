@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/features/auth/data/auth_service.dart';
 import 'package:panenin/features/auth/data/models/authenticated_user.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/auth/presentation/auth_feedback.dart';
 import 'package:panenin/features/auth/presentation/auth_validators.dart';
+import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_brand_header.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_primary_button.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_switch_link.dart';
@@ -62,9 +64,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isEmailLoading = true);
     try {
-      await (widget.emailSignIn ?? _emailSignInWithService)(email, password);
+      final user = await (widget.emailSignIn ?? _emailSignInWithService)(
+        email,
+        password,
+      );
       if (!mounted) return;
-      _openRoleSelection();
+      _openAuthenticatedDestination(user);
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -89,9 +94,9 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithGoogle() async {
     setState(() => _isGoogleLoading = true);
     try {
-      await (widget.googleSignIn ?? _googleSignInWithService)();
+      final user = await (widget.googleSignIn ?? _googleSignInWithService)();
       if (!mounted) return;
-      _openRoleSelection();
+      _openAuthenticatedDestination(user);
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -111,11 +116,22 @@ class _LoginScreenState extends State<LoginScreen> {
     return _authService!.signInWithGoogle();
   }
 
-  void _openRoleSelection() {
+  void _openAuthenticatedDestination(AuthenticatedUser user) {
+    final destination = switch (user.role) {
+      UserRole.farmer => RouteNames.homePetani,
+      UserRole.buyer => RouteNames.buyerHome,
+      null => null,
+    };
+    if (destination != null) {
+      Navigator.pushNamedAndRemoveUntil(context, destination, (_) => false);
+      return;
+    }
+
     Navigator.pushNamedAndRemoveUntil(
       context,
       RouteNames.selectRole,
       (_) => false,
+      arguments: RoleSelectionFlow.login,
     );
   }
 

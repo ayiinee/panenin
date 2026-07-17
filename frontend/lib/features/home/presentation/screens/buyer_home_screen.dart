@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/features/home/data/buyer_home_fixture.dart';
 import 'package:panenin/features/home/data/buyer_home_repository.dart';
+import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
 
 enum BuyerHomeViewState { loading, empty, error, success }
 
@@ -283,6 +285,15 @@ class _BuyerHomeContent extends StatelessWidget {
             itemBuilder: (context, index) => _ProductCard(
               product: data.products[index],
               compact: compact,
+              onOpen: () => Navigator.pushNamed(
+                context,
+                RouteNames.productDetail,
+                arguments: ProductDetailRouteArguments(
+                  name: data.products[index].name,
+                  price: data.products[index].price,
+                  image: data.products[index].asset,
+                ),
+              ),
               onAdd: () => onAction(
                 '${data.products[index].name} ditambahkan ke keranjang.',
               ),
@@ -536,118 +547,129 @@ class _ProductCard extends StatelessWidget {
   const _ProductCard({
     required this.product,
     required this.compact,
+    required this.onOpen,
     required this.onAdd,
   });
 
   final BuyerHomeProduct product;
   final bool compact;
+  final VoidCallback onOpen;
   final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
+    return Semantics(
+      button: true,
+      label: 'Buka detail ${product.name}',
+      child: InkWell(
+        key: ValueKey('open-${product.name}'),
+        onTap: onOpen,
         borderRadius: BorderRadius.circular(10),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A000000),
-            offset: Offset(0, 4),
-            blurRadius: 4,
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Expanded(child: Image.asset(product.asset, fit: BoxFit.cover)),
-            Padding(
-              padding: EdgeInsets.fromLTRB(
-                compact ? 5 : 7,
-                6,
-                compact ? 5 : 7,
-                4,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1A000000),
+                offset: Offset(0, 4),
+                blurRadius: 4,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 14,
-                      height: 20 / 14,
-                    ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: Image.asset(product.asset, fit: BoxFit.cover)),
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    compact ? 5 : 7,
+                    6,
+                    compact ? 5 : 7,
+                    4,
                   ),
-                  Text(
-                    product.price,
-                    style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      height: 22 / 16,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  const Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _ProductTag(label: 'Bisa COD'),
-                      SizedBox(width: 3),
-                      Flexible(
-                        child: _ProductTag(
-                          label: 'Jakarta Utara',
-                          icon: Icons.location_on,
+                      Text(
+                        product.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 14,
+                          height: 20 / 14,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 44,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        key: ValueKey('add-${product.name}'),
-                        onTap: onAdd,
-                        borderRadius: BorderRadius.circular(8),
-                        child: Center(
-                          child: Container(
-                            height: 30,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: AppColors.primary),
-                              borderRadius: BorderRadius.circular(8),
+                      Text(
+                        product.price,
+                        style: const TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          height: 22 / 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Row(
+                        children: [
+                          _ProductTag(label: 'Bisa COD'),
+                          SizedBox(width: 3),
+                          Flexible(
+                            child: _ProductTag(
+                              label: 'Jakarta Utara',
+                              icon: Icons.location_on,
                             ),
-                            child: const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.shopping_cart_outlined,
-                                  color: Colors.black,
-                                  size: 23,
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 44,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            key: ValueKey('add-${product.name}'),
+                            onTap: onAdd,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Center(
+                              child: Container(
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: AppColors.primary),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Tambah',
-                                  style: TextStyle(
-                                    color: Colors.black,
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                child: const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.shopping_cart_outlined,
+                                      color: Colors.black,
+                                      size: 23,
+                                    ),
+                                    SizedBox(width: 5),
+                                    Text(
+                                      'Tambah',
+                                      style: TextStyle(
+                                        color: Colors.black,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

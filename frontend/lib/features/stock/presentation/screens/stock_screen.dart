@@ -1,16 +1,25 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/router/route_names.dart';
+import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
-import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/data/stock_repository.dart';
+import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 
 class StockScreen extends StatefulWidget {
-  const StockScreen({this.repository, super.key});
+  const StockScreen({
+    this.repository,
+    this.initialItem,
+    this.embeddedInShell = false,
+    super.key,
+  });
 
   final StockRepository? repository;
+  final StockItem? initialItem;
+  final bool embeddedInShell;
 
   @override
   State<StockScreen> createState() => _StockScreenState();
@@ -25,6 +34,8 @@ class _StockScreenState extends State<StockScreen> {
   void initState() {
     super.initState();
     _items = widget.repository == null ? List.of(demoStockItems) : [];
+    final item = widget.initialItem;
+    if (item != null) _upsertItem(item);
     if (widget.repository != null) _load();
   }
 
@@ -45,6 +56,23 @@ class _StockScreenState extends State<StockScreen> {
       if (mounted) setState(() => _error = '$error');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant StockScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final item = widget.initialItem;
+    if (item == null || identical(item, oldWidget.initialItem)) return;
+    _upsertItem(item);
+  }
+
+  void _upsertItem(StockItem item) {
+    final index = _items.indexWhere((current) => current.id == item.id);
+    if (index == -1) {
+      _items.add(item);
+    } else {
+      _items[index] = item;
     }
   }
 
@@ -81,12 +109,7 @@ class _StockScreenState extends State<StockScreen> {
     }
 
     setState(() {
-      final index = _items.indexWhere((item) => item.id == result.id);
-      if (index == -1) {
-        _items.add(result);
-      } else {
-        _items[index] = result;
-      }
+      _upsertItem(result);
     });
   }
 
@@ -99,15 +122,21 @@ class _StockScreenState extends State<StockScreen> {
       ),
       child: Scaffold(
         extendBody: true,
-        bottomNavigationBar: PaneninBottomNavigation(
-          selectedIndex: 1,
-          onDestinationSelected: (index) {
-            if (index == 0) Navigator.of(context).maybePop();
-            if (index == 3) {
-              Navigator.of(context).pushNamed(RouteNames.whatsapp);
-            }
-          },
-        ),
+        bottomNavigationBar: widget.embeddedInShell
+            ? null
+            : PaneninBottomNavigation(
+                selectedIndex: 1,
+                onDestinationSelected: (index) {
+                  if (index == 1) return;
+                  final route = switch (index) {
+                    0 => RouteNames.homePetani,
+                    2 => RouteNames.kelolaPesanan,
+                    3 => RouteNames.farmerProfile,
+                    _ => RouteNames.stokSaya,
+                  };
+                  Navigator.of(context).pushReplacementNamed(route);
+                },
+              ),
         body: Column(
           children: [
             _StockHeader(
@@ -336,7 +365,10 @@ class _StockCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ProductImage(path: item.imagePath),
+              _ProductImage(
+                assetPath: item.imagePath,
+                filePath: item.photoStoragePath,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -444,28 +476,36 @@ class _StockCard extends StatelessWidget {
 }
 
 class _ProductImage extends StatelessWidget {
-  const _ProductImage({required this.path});
+  const _ProductImage({required this.assetPath, required this.filePath});
 
-  final String? path;
+  final String? assetPath;
+  final String? filePath;
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: path == null
-          ? Container(
+      child: filePath != null
+          ? Image.file(
+              File(filePath!),
+              key: const ValueKey('stock-file-photo'),
               width: 68,
               height: 68,
-              color: AppColors.surfaceSubtle,
-              child: const Icon(
-                Icons.eco_outlined,
-                color: AppColors.primary,
-                size: 32,
-              ),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _placeholder(),
             )
-          : Image.asset(path!, width: 68, height: 68, fit: BoxFit.cover),
+          : assetPath != null
+          ? Image.asset(assetPath!, width: 68, height: 68, fit: BoxFit.cover)
+          : _placeholder(),
     );
   }
+
+  Widget _placeholder() => Container(
+    width: 68,
+    height: 68,
+    color: AppColors.surfaceSubtle,
+    child: const Icon(Icons.eco_outlined, color: AppColors.primary, size: 32),
+  );
 }
 
 class _StockMetric extends StatelessWidget {
