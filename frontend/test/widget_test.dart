@@ -87,7 +87,7 @@ void main() {
     await tester.tap(registerButton);
     await tester.pump();
 
-    expect(find.text('Formulir pendaftaran siap diproses.'), findsOneWidget);
+    expect(find.text('Nama pengguna wajib diisi.'), findsOneWidget);
   });
 
   testWidgets('login screen is separate and navigable', (tester) async {
@@ -119,7 +119,7 @@ void main() {
     await tester.tap(find.text('Masuk'));
     await tester.pump();
 
-    expect(find.text('Formulir login siap diproses.'), findsOneWidget);
+    expect(find.text('Email wajib diisi.'), findsOneWidget);
   });
 
   testWidgets('role selection adapts to a narrow screen', (tester) async {

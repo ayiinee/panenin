@@ -8,6 +8,11 @@ class AuthTextField extends StatelessWidget {
     this.obscureText = false,
     this.keyboardType,
     this.textInputAction = TextInputAction.next,
+    this.controller,
+    this.validator,
+    this.onFieldSubmitted,
+    this.autofillHints,
+    this.suffixIcon,
     super.key,
   });
 
@@ -16,6 +21,11 @@ class AuthTextField extends StatelessWidget {
   final bool obscureText;
   final TextInputType? keyboardType;
   final TextInputAction textInputAction;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
+  final ValueChanged<String>? onFieldSubmitted;
+  final Iterable<String>? autofillHints;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -35,12 +45,19 @@ class AuthTextField extends StatelessWidget {
           const SizedBox(height: 6),
           SizedBox(
             height: 48,
-            child: TextField(
+            child: TextFormField(
+              controller: controller,
               obscureText: obscureText,
               keyboardType: keyboardType,
               textInputAction: textInputAction,
               autocorrect: false,
               enableSuggestions: !obscureText,
+              validator: validator,
+              onFieldSubmitted: onFieldSubmitted,
+              autofillHints: autofillHints,
+              textCapitalization: keyboardType == TextInputType.emailAddress
+                  ? TextCapitalization.none
+                  : TextCapitalization.sentences,
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: const TextStyle(
@@ -51,6 +68,7 @@ class AuthTextField extends StatelessWidget {
                 filled: true,
                 fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14),
+                suffixIcon: suffixIcon,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: AppColors.border),
