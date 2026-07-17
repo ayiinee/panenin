@@ -386,6 +386,14 @@ void main() {
     expect(find.byType(QuickSellCameraScreen), findsOneWidget);
     expect(find.text('Foto Produk Anda!'), findsOneWidget);
     expect(find.byKey(const ValueKey('camera-back')), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('camera-back'))).dx,
+      inInclusiveRange(16, 32),
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('camera-back'))).dy,
+      lessThan(tester.getCenter(find.text('Foto Produk Anda!')).dy),
+    );
     expect(find.byKey(const ValueKey('take-picture')), findsOneWidget);
     expect(find.byKey(const ValueKey('toggle-flash')), findsOneWidget);
     expect(find.text('Flash'), findsOneWidget);
