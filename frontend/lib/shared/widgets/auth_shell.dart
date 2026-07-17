@@ -9,7 +9,9 @@ class AuthShell extends StatelessWidget {
   const AuthShell({required this.child, super.key});
 
   static const _designWidth = 428.0;
-  static const _designBodyHeight = 884.0;
+  // Account creation includes confirmation and consent controls, so the
+  // positioned content needs enough scroll extent on a reference-size phone.
+  static const _designBodyHeight = 1120.0;
 
   final Widget child;
 

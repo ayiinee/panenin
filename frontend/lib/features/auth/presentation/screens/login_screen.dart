@@ -34,6 +34,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   AuthService? _authService;
+  bool _showPassword = false;
   bool _isGoogleLoading = false;
   bool _isEmailLoading = false;
 
@@ -150,7 +151,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 controller: _emailController,
                 enabled: !_isBusy,
                 keyboardType: TextInputType.emailAddress,
-                autofillHints: const [AutofillHints.email],
+                autofillHints: const [
+                  AutofillHints.username,
+                  AutofillHints.email,
+                ],
                 validator: (value) => AuthValidators.email(value ?? ''),
               ),
               const SizedBox(height: 11),
@@ -159,11 +163,22 @@ class _LoginScreenState extends State<LoginScreen> {
                 hint: 'Masukkan sandi',
                 controller: _passwordController,
                 enabled: !_isBusy,
-                obscureText: true,
+                obscureText: !_showPassword,
                 textInputAction: TextInputAction.done,
                 autofillHints: const [AutofillHints.password],
                 validator: (value) => AuthValidators.password(value ?? ''),
                 onSubmitted: (_) => _signInWithEmail(),
+                suffixIcon: IconButton(
+                  tooltip: _showPassword
+                      ? 'Sembunyikan kata sandi'
+                      : 'Tampilkan kata sandi',
+                  onPressed: _isBusy
+                      ? null
+                      : () => setState(() => _showPassword = !_showPassword),
+                  icon: Icon(
+                    _showPassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                ),
               ),
               Align(
                 alignment: Alignment.centerRight,
@@ -202,10 +217,12 @@ class _LoginScreenState extends State<LoginScreen> {
               AuthSwitchLink(
                 question: 'Belum punya akun?',
                 action: 'Daftar',
-                onPressed: () => Navigator.pushReplacementNamed(
-                  context,
-                  RouteNames.register,
-                ),
+                onPressed: _isBusy
+                    ? () {}
+                    : () => Navigator.pushReplacementNamed(
+                        context,
+                        RouteNames.register,
+                      ),
               ),
             ],
           ),

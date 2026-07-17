@@ -5,9 +5,10 @@ class AuthPrimaryButton extends StatelessWidget {
   const AuthPrimaryButton({
     required this.label,
     required this.onPressed,
-    this.isLoading = false,
+    bool isLoading = false,
+    bool? loading,
     super.key,
-  });
+  }) : isLoading = loading ?? isLoading;
 
   final String label;
   final VoidCallback? onPressed;

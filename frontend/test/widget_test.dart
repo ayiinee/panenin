@@ -774,18 +774,20 @@ void main() {
     expect(find.text('Nama Pengguna'), findsOneWidget);
     expect(find.text('Alamat Email'), findsOneWidget);
     expect(find.text('Kata Sandi'), findsOneWidget);
+    expect(find.text('Konfirmasi Kata Sandi'), findsOneWidget);
     expect(find.byType(GoogleAuthButton), findsOneWidget);
 
     final fields = tester
         .widgetList<TextField>(find.byType(TextField))
         .toList();
-    expect(fields, hasLength(3));
+    expect(fields, hasLength(4));
     expect(fields[0].obscureText, isFalse);
     expect(fields[0].textCapitalization, TextCapitalization.words);
     expect(fields[1].obscureText, isFalse);
     expect(fields[1].keyboardType, TextInputType.emailAddress);
     expect(fields[2].obscureText, isTrue);
-    expect(fields[2].textInputAction, TextInputAction.done);
+    expect(fields[3].obscureText, isTrue);
+    expect(fields[3].textInputAction, TextInputAction.done);
   });
 
   testWidgets('melewati autentikasi dan membuka pemilihan role', (
@@ -948,6 +950,10 @@ void main() {
     await tester.enterText(fields.at(0), ' Demo Panenin ');
     await tester.enterText(fields.at(1), 'DEMO@PANENIN.ID');
     await tester.enterText(fields.at(2), 'password123');
+    await tester.enterText(fields.at(3), 'password123');
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.ensureVisible(find.text('Daftarkan Akun'));
     await tester.tap(find.text('Daftarkan Akun'));
     await tester.pumpAndSettle();
 
@@ -1264,6 +1270,10 @@ void main() {
     await tester.enterText(fields.at(0), 'Demo Panenin');
     await tester.enterText(fields.at(1), 'demo@panenin.id');
     await tester.enterText(fields.at(2), 'password123');
+    await tester.enterText(fields.at(3), 'password123');
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.ensureVisible(find.text('Daftarkan Akun'));
     await tester.tap(find.text('Daftarkan Akun'));
     await tester.pumpAndSettle();
 
@@ -1309,6 +1319,10 @@ void main() {
     await tester.enterText(fields.at(0), 'Demo Panenin');
     await tester.enterText(fields.at(1), 'demo@panenin.id');
     await tester.enterText(fields.at(2), 'password123');
+    await tester.enterText(fields.at(3), 'password123');
+    await tester.ensureVisible(find.byType(Checkbox));
+    await tester.tap(find.byType(Checkbox));
+    await tester.ensureVisible(find.text('Daftarkan Akun'));
     await tester.tap(find.text('Daftarkan Akun'));
     await tester.pumpAndSettle();
 

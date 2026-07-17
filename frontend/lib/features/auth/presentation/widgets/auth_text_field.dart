@@ -12,8 +12,10 @@ class AuthTextField extends StatelessWidget {
     this.autofillHints,
     this.controller,
     this.onSubmitted,
+    this.onFieldSubmitted,
     this.validator,
     this.enabled = true,
+    this.suffixIcon,
     super.key,
   });
 
@@ -26,8 +28,10 @@ class AuthTextField extends StatelessWidget {
   final Iterable<String>? autofillHints;
   final TextEditingController? controller;
   final ValueChanged<String>? onSubmitted;
+  final ValueChanged<String>? onFieldSubmitted;
   final FormFieldValidator<String>? validator;
   final bool enabled;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +55,7 @@ class AuthTextField extends StatelessWidget {
           textInputAction: textInputAction,
           textCapitalization: textCapitalization,
           autofillHints: autofillHints,
-          onFieldSubmitted: onSubmitted,
+          onFieldSubmitted: onFieldSubmitted ?? onSubmitted,
           validator: validator,
           autovalidateMode: AutovalidateMode.onUserInteraction,
           autocorrect: false,
@@ -69,6 +73,7 @@ class AuthTextField extends StatelessWidget {
               horizontal: 14,
               vertical: 14,
             ),
+            suffixIcon: suffixIcon,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(color: AppColors.border),

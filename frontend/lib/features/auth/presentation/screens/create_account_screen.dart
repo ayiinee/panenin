@@ -35,7 +35,11 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   AuthService? _authService;
+  bool _acceptedTerms = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
   bool _isGoogleLoading = false;
   bool _isEmailLoading = false;
 
@@ -46,6 +50,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -61,6 +66,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    if (!_acceptedTerms) {
+      _showMessage('Setujui Syarat & Ketentuan untuk melanjutkan.');
+      return;
+    }
 
     setState(() => _isEmailLoading = true);
     try {
@@ -151,7 +160,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const SizedBox(height: 39),
               AuthTextField(
                 label: 'Nama Pengguna',
-                hint: 'Masukkan Nama Pengguna',
+                hint: 'Masukkan nama pengguna',
                 controller: _nameController,
                 enabled: !_isBusy,
                 textCapitalization: TextCapitalization.words,
@@ -161,7 +170,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               const SizedBox(height: 11),
               AuthTextField(
                 label: 'Alamat Email',
-                hint: 'Masukkan Alamat Email',
+                hint: 'Masukkan alamat email',
                 controller: _emailController,
                 enabled: !_isBusy,
                 keyboardType: TextInputType.emailAddress,
@@ -174,13 +183,68 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 hint: 'Minimal 8 karakter',
                 controller: _passwordController,
                 enabled: !_isBusy,
-                obscureText: true,
-                textInputAction: TextInputAction.done,
+                obscureText: !_showPassword,
                 autofillHints: const [AutofillHints.newPassword],
                 validator: (value) => AuthValidators.password(value ?? ''),
-                onSubmitted: (_) => _registerWithEmail(),
+                suffixIcon: IconButton(
+                  tooltip: _showPassword
+                      ? 'Sembunyikan kata sandi'
+                      : 'Tampilkan kata sandi',
+                  onPressed: _isBusy
+                      ? null
+                      : () => setState(() => _showPassword = !_showPassword),
+                  icon: Icon(
+                    _showPassword ? Icons.visibility_off : Icons.visibility,
+                  ),
+                ),
               ),
-              const SizedBox(height: 27),
+              const SizedBox(height: 11),
+              AuthTextField(
+                label: 'Konfirmasi Kata Sandi',
+                hint: 'Ulangi kata sandi',
+                controller: _confirmPasswordController,
+                enabled: !_isBusy,
+                obscureText: !_showConfirmPassword,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (value) => AuthValidators.passwordConfirmation(
+                  _passwordController.text,
+                  value ?? '',
+                ),
+                onSubmitted: (_) => _registerWithEmail(),
+                suffixIcon: IconButton(
+                  tooltip: _showConfirmPassword
+                      ? 'Sembunyikan kata sandi'
+                      : 'Tampilkan kata sandi',
+                  onPressed: _isBusy
+                      ? null
+                      : () => setState(
+                          () => _showConfirmPassword = !_showConfirmPassword,
+                        ),
+                  icon: Icon(
+                    _showConfirmPassword
+                        ? Icons.visibility_off
+                        : Icons.visibility,
+                  ),
+                ),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: CheckboxListTile(
+                  value: _acceptedTerms,
+                  onChanged: _isBusy
+                      ? null
+                      : (value) =>
+                            setState(() => _acceptedTerms = value ?? false),
+                  contentPadding: EdgeInsets.zero,
+                  controlAffinity: ListTileControlAffinity.leading,
+                  title: const Text(
+                    'Saya menyetujui Syarat & Ketentuan dan Kebijakan Privasi.',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
               AuthPrimaryButton(
                 label: 'Daftarkan Akun',
                 isLoading: _isEmailLoading,
@@ -196,8 +260,12 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               AuthSwitchLink(
                 question: 'Sudah punya akun?',
                 action: 'Masuk',
-                onPressed: () =>
-                    Navigator.pushReplacementNamed(context, RouteNames.login),
+                onPressed: _isBusy
+                    ? () {}
+                    : () => Navigator.pushReplacementNamed(
+                        context,
+                        RouteNames.login,
+                      ),
               ),
             ],
           ),
