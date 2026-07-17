@@ -13,6 +13,7 @@ import 'package:panenin/features/auth/presentation/screens/reset_password_screen
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
@@ -41,6 +42,7 @@ Map<String, WidgetBuilder> buildAppRoutes() => {
   ),
   RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
   RouteNames.productDetail: ProductDetailScreen.fromRoute,
+  RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute,
   RouteNames.homePetani: (_) => const FarmerShell(),
   RouteNames.farmerProfile: (_) => const FarmerShell(initialIndex: 3),
   RouteNames.kelolaPesanan: (_) => const FarmerShell(initialIndex: 2),

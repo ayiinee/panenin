@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
 
@@ -126,7 +127,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ),
               )
             else
-              _DescriptionSection(data: widget.data, onAction: _showMessage),
+              _DescriptionSection(
+                data: widget.data,
+                onAction: _showMessage,
+                onSupplyContract: () => Navigator.pushNamed(
+                  context,
+                  RouteNames.recurringSupply,
+                  arguments: widget.data,
+                ),
+              ),
           ],
         ),
       ),
@@ -503,10 +512,15 @@ class _TabButton extends StatelessWidget {
 }
 
 class _DescriptionSection extends StatelessWidget {
-  const _DescriptionSection({required this.data, required this.onAction});
+  const _DescriptionSection({
+    required this.data,
+    required this.onAction,
+    required this.onSupplyContract,
+  });
 
   final ProductDetailData data;
   final ValueChanged<String> onAction;
+  final VoidCallback onSupplyContract;
 
   @override
   Widget build(BuildContext context) {
@@ -540,8 +554,7 @@ class _DescriptionSection extends StatelessWidget {
             height: 48,
             child: ElevatedButton(
               key: const ValueKey('supply-contract-button'),
-              onPressed: () =>
-                  onAction('Membuka permintaan kontrak pasokan...'),
+              onPressed: onSupplyContract,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: AppColors.accent,

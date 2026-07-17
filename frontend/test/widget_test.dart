@@ -23,6 +23,7 @@ import 'package:panenin/features/auth/presentation/widgets/google_auth_button.da
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/farmer_profile_screen.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
@@ -1349,6 +1350,282 @@ void main() {
     await tester.pump();
 
     expect(tester.getTopLeft(find.text('Bintang 1')).dx, lessThan(320));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('supply contract opens recurring supply with active product', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1056));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute},
+        home: const ProductDetailScreen(),
+      ),
+    );
+
+    await tester.ensureVisible(find.text('Buat Kontrak Pasokan'));
+    await tester.tap(find.text('Buat Kontrak Pasokan'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RecurringSupplyScreen), findsOneWidget);
+    expect(find.text('Atur Pasokan Rutin'), findsOneWidget);
+    expect(find.text('Tomat Segar • Grade Premium'), findsOneWidget);
+    expect(find.text('Rp 495.000'), findsWidgets);
+  });
+
+  testWidgets('recurring supply route falls back to official tomato fixture', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1056));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        initialRoute: RouteNames.recurringSupply,
+        routes: {RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute},
+      ),
+    );
+
+    expect(find.text('Kelompok Tani Ambarawa'), findsOneWidget);
+    expect(find.text('Tomat • Grade B'), findsOneWidget);
+    expect(find.text('Rp 85.000'), findsWidgets);
+    expect(
+      find.text('Harga mengikuti listing pemasok saat ini'),
+      findsOneWidget,
+    );
+    final activeDay = tester.widget<Ink>(
+      find.descendant(
+        of: find.byKey(const ValueKey('delivery-day-0')),
+        matching: find.byType(Ink),
+      ),
+    );
+    expect((activeDay.decoration! as BoxDecoration).color, AppColors.accent);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('recurring-supply-submit')))
+          .height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('recurring supply recalculates quantity and unit', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1056));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: RecurringSupplyScreen()));
+
+    await tester.enterText(
+      find.byKey(const ValueKey('recurring-quantity-field')),
+      '2',
+    );
+    await tester.tap(find.byKey(const ValueKey('delivery-unit-quintal')));
+    await tester.pump();
+
+    expect(
+      tester
+          .widget<Text>(find.byKey(const ValueKey('recurring-supply-estimate')))
+          .data,
+      'Rp 1.700.000',
+    );
+    expect(find.text('200 kg'), findsOneWidget);
+  });
+
+  testWidgets('recurring supply controls feed the confirmation summary', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1056));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: RecurringSupplyScreen()));
+
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-frequency-twiceWeekly')),
+    );
+    await tester.tap(find.byKey(const ValueKey('delivery-day-0')));
+    await tester.tap(find.byKey(const ValueKey('delivery-day-2')));
+    await tester.ensureVisible(find.byKey(const ValueKey('quality-dropdown')));
+    await tester.tap(find.byKey(const ValueKey('quality-dropdown')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Grade A (Premium)').last);
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('recurring-supply-submit')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Konfirmasi Pasokan Rutin'), findsOneWidget);
+    expect(find.textContaining('2 hari per minggu'), findsOneWidget);
+    expect(find.textContaining('Grade A (Premium)'), findsWidgets);
+    await tester.tap(find.text('Batal'));
+    await tester.pumpAndSettle();
+    expect(find.text('Konfirmasi Pasokan Rutin'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('recurring-supply-submit')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Konfirmasi'));
+    await tester.pump();
+    expect(find.text('Pasokan rutin berhasil dikonfirmasi.'), findsOneWidget);
+  });
+
+  testWidgets('recurring supply disables checkout for invalid quantity', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: RecurringSupplyScreen()));
+
+    await tester.enterText(
+      find.byKey(const ValueKey('recurring-quantity-field')),
+      '',
+    );
+    await tester.pump();
+
+    final button = tester.widget<ElevatedButton>(
+      find.byKey(const ValueKey('recurring-supply-submit')),
+    );
+    expect(button.onPressed, isNull);
+  });
+
+  testWidgets('recurring supply supports loading empty and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: RecurringSupplyScreen(state: RecurringSupplyViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: RecurringSupplyScreen(state: RecurringSupplyViewState.empty),
+      ),
+    );
+    expect(find.text('Pasokan belum tersedia'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: RecurringSupplyScreen(state: RecurringSupplyViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat pasokan'), findsOneWidget);
+    expect(find.byKey(const ValueKey('recurring-supply-submit')), findsNothing);
+    await tester.tap(find.text('Coba Lagi'));
+    await tester.pump();
+    expect(find.text('Mencoba memuat ulang pasokan...'), findsOneWidget);
+  });
+
+  testWidgets('recurring supply enforces schedule rules', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: RecurringSupplyScreen()));
+
+    expect(find.text('Pengiriman dilakukan setiap hari'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('delivery-day-0')));
+    await tester.pump();
+    expect(
+      find.text('Pengiriman harian berlaku untuk semua hari.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.byKey(const ValueKey('delivery-frequency-twiceWeekly')),
+    );
+    await tester.pump();
+    expect(find.text('Pilih tepat 2 hari pengiriman'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('delivery-day-2')));
+    await tester.pump();
+    expect(
+      find.text('Pilih maksimal 2 hari untuk frekuensi ini.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.byKey(const ValueKey('delivery-day-0')));
+    await tester.pump();
+    var button = tester.widget<ElevatedButton>(
+      find.byKey(const ValueKey('recurring-supply-submit')),
+    );
+    expect(button.onPressed, isNull);
+
+    await tester.tap(find.byKey(const ValueKey('delivery-day-2')));
+    await tester.tap(find.byKey(const ValueKey('delivery-frequency-weekly')));
+    await tester.pump();
+    expect(find.text('Pilih tepat 1 hari pengiriman'), findsOneWidget);
+    button = tester.widget<ElevatedButton>(
+      find.byKey(const ValueKey('recurring-supply-submit')),
+    );
+    expect(button.onPressed, isNotNull);
+  });
+
+  testWidgets('recurring supply limits quantity and exposes semantics', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(const MaterialApp(home: RecurringSupplyScreen()));
+
+    expect(find.bySemanticsLabel('Jumlah per pengiriman'), findsWidgets);
+    expect(find.bySemanticsLabel(RegExp('Satuan Kg')), findsOneWidget);
+
+    await tester.ensureVisible(find.byKey(const ValueKey('quality-dropdown')));
+    await tester.pumpAndSettle();
+    expect(find.bySemanticsLabel(RegExp('Kualitas produk')), findsWidgets);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('recurring-quantity-field')),
+      '123456789',
+    );
+    await tester.pump();
+    expect(
+      tester
+          .widget<TextField>(
+            find.byKey(const ValueKey('recurring-quantity-field')),
+          )
+          .controller
+          ?.text,
+      '123456',
+    );
+    semantics.dispose();
+  });
+
+  testWidgets('recurring supply back button returns to previous screen', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => TextButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute<void>(
+                builder: (_) => const RecurringSupplyScreen(),
+              ),
+            ),
+            child: const Text('Buka Pasokan'),
+          ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Buka Pasokan'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('recurring-supply-back')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Buka Pasokan'), findsOneWidget);
+    expect(find.byType(RecurringSupplyScreen), findsNothing);
+  });
+
+  testWidgets('recurring supply adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: RecurringSupplyScreen()));
+
+    expect(find.text('Atur Pasokan Rutin'), findsOneWidget);
+    expect(find.byKey(const ValueKey('delivery-day-scroll')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.drag(
+      find.byKey(const ValueKey('recurring-supply-scroll')),
+      const Offset(0, -600),
+    );
+    await tester.pump();
+    expect(find.text('Rincian Harga'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 

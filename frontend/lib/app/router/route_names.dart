@@ -7,7 +7,6 @@ abstract final class RouteNames {
 
   static const selectRole = '/select-role';
   static const profile = '/profile';
-
   static const homePetani = '/beranda';
   static const buyerHome = '/buyer-home';
 
@@ -19,5 +18,6 @@ abstract final class RouteNames {
   static const formStok = '/stok/form';
 
   static const productDetail = '/product-detail';
-  static const farmerProfile = '/farmer-profile';
+  static const recurringSupply = '/buyer/supply/recurring';
+  static const farmerProfile = '/petani/profile';
 }
