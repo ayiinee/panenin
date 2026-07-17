@@ -84,4 +84,24 @@ describe("Panenin Core integration client", () => {
     expect(error).toMatchObject({ code: "INVALID_LINK_CODE", status: 409 });
     expect(String(error)).not.toContain("secret-detail");
   });
+
+  it("menolak data sukses yang tidak sesuai kontrak", async () => {
+    const fetchFn = vi.fn<typeof fetch>().mockResolvedValue(
+      new Response(JSON.stringify({
+        data: { linked: "yes" },
+        error: null,
+        requestId: "request-3",
+      }), { status: 200 }),
+    );
+    const client = new PaneninCoreClient({
+      baseUrl: "http://127.0.0.1:8000",
+      serviceToken: "service-token",
+      fetchFn,
+    });
+
+    await expect(client.resolveIdentity(subject)).rejects.toMatchObject({
+      code: "INVALID_CORE_RESPONSE",
+      status: 502,
+    });
+  });
 });

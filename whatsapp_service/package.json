@@ -19,6 +19,7 @@
     "test:openclaw:rag": "tsx scripts/test-openclaw-rag.ts",
     "test:openclaw:conversation": "tsx scripts/test-openclaw-conversation.ts",
     "test:openclaw:natural": "tsx scripts/test-openclaw-natural.ts",
+    "test:core": "tsx scripts/test-panenin-core.ts",
     "openclaw:gateway": "tsx scripts/start-openclaw.ts",
     "demo": "tsx scripts/demo.ts",
     "demo:check": "tsx scripts/demo.ts --check",

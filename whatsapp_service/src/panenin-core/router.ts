@@ -34,6 +34,9 @@ export class PaneninCoreRouter implements ConversationRouterLike {
       ].join("\n");
     }
     const linkMatch = LINK_COMMAND.exec(normalized);
+    if (/^hubungkan\b/i.test(normalized) && !linkMatch) {
+      return "Format kode belum tepat. Kirim HUBUNGKAN diikuti kode dari aplikasi Panenin, misalnya HUBUNGKAN ABC123.";
+    }
     if (linkMatch) {
       const linkCode = linkMatch[1]?.toUpperCase() ?? "";
       if (!/^[A-Z0-9]{6,12}$/.test(linkCode)) {

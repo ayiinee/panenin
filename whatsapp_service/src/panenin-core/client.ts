@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
+import { z } from "zod";
 
 export interface PaneninIdentity {
   linked: boolean;
-  userId?: string;
-  organizationId?: string;
-  organizationType?: string;
-  organizationName?: string;
+  userId?: string | undefined;
+  organizationId?: string | undefined;
+  organizationType?: string | undefined;
+  organizationName?: string | undefined;
 }
 
 export interface PaneninCoreContext {
@@ -50,6 +51,43 @@ export interface PaneninCoreClientOptions {
   fetchFn?: typeof fetch;
 }
 
+const identitySchema: z.ZodType<PaneninIdentity> = z.object({
+  linked: z.boolean(),
+  userId: z.string().min(1).optional(),
+  organizationId: z.string().min(1).optional(),
+  organizationType: z.string().min(1).optional(),
+  organizationName: z.string().min(1).optional(),
+});
+
+const coreContextSchema: z.ZodType<PaneninCoreContext> = z.object({
+  identity: z.object({
+    organizationId: z.string().min(1),
+    organizationType: z.string().min(1),
+    organizationName: z.string().min(1),
+  }),
+  inventorySummary: z.object({
+    batchCount: z.number().int().nonnegative(),
+    availableQuantity: z.string(),
+  }),
+  listingSummary: z.object({
+    total: z.number().int().nonnegative(),
+    published: z.number().int().nonnegative(),
+  }),
+  demandSummary: z.object({
+    total: z.number().int().nonnegative(),
+    open: z.number().int().nonnegative(),
+  }),
+  orderSummary: z.object({
+    total: z.number().int().nonnegative(),
+    active: z.number().int().nonnegative(),
+  }),
+  pendingActions: z.array(z.object({
+    actionId: z.string().min(1),
+    intent: z.string().min(1),
+    expiresAt: z.string().min(1),
+  })),
+});
+
 export class PaneninCoreApiError extends Error {
   public constructor(
     public readonly code: string,
@@ -72,40 +110,50 @@ export class PaneninCoreClient implements PaneninCoreClientLike {
   }
 
   public async resolveIdentity(channelSubject: string): Promise<PaneninIdentity> {
-    return this.request<PaneninIdentity>("/api/v1/internal/agent/identity/resolve", {
-      method: "POST",
-      body: {
-        channel: "WHATSAPP",
-        channelSubject,
+    return this.request(
+      "/api/v1/internal/agent/identity/resolve",
+      {
+        method: "POST",
+        body: {
+          channel: "WHATSAPP",
+          channelSubject,
+        },
       },
-    });
+      identitySchema,
+    );
   }
 
   public async linkIdentity(
     channelSubject: string,
     linkCode: string,
   ): Promise<PaneninIdentity> {
-    return this.request<PaneninIdentity>("/api/v1/internal/agent/identity/link", {
-      method: "POST",
-      body: {
-        channel: "WHATSAPP",
-        channelSubject,
-        linkCode,
+    return this.request(
+      "/api/v1/internal/agent/identity/link",
+      {
+        method: "POST",
+        body: {
+          channel: "WHATSAPP",
+          channelSubject,
+          linkCode,
+        },
       },
-    });
+      identitySchema,
+    );
   }
 
   public async getContext(channelSubject: string): Promise<PaneninCoreContext> {
     const query = new URLSearchParams({ channelSubject });
-    return this.request<PaneninCoreContext>(
+    return this.request(
       `/api/v1/internal/agent/context?${query.toString()}`,
       { method: "GET" },
+      coreContextSchema,
     );
   }
 
   private async request<T>(
     path: string,
     input: { method: "GET" | "POST"; body?: Record<string, unknown> },
+    dataSchema: z.ZodType<T>,
   ): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -128,7 +176,11 @@ export class PaneninCoreClient implements PaneninCoreClientLike {
       if (!isSuccessEnvelope(payload)) {
         throw new PaneninCoreApiError("INVALID_CORE_RESPONSE", 502);
       }
-      return payload.data as T;
+      const data = dataSchema.safeParse(payload.data);
+      if (!data.success) {
+        throw new PaneninCoreApiError("INVALID_CORE_RESPONSE", 502);
+      }
+      return data.data;
     } catch (error) {
       if (error instanceof PaneninCoreApiError) throw error;
       if (error instanceof Error && error.name === "AbortError") {

@@ -68,6 +68,10 @@ describe("PaneninCoreRouter", () => {
       sender: "628123",
       text: "HUBUNGKAN 12",
     })).resolves.toContain("Format kode");
+    await expect(router.route({
+      sender: "628123",
+      text: "HUBUNGKAN ABC123 tambahan",
+    })).resolves.toContain("Format kode");
     expect(coreClient.linkIdentity).not.toHaveBeenCalled();
   });
 

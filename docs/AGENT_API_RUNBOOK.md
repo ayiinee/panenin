@@ -119,6 +119,16 @@ npm test
 npm run build
 ```
 
+With FastAPI, its database, and the Core integration environment active, run
+the safe identity smoke test:
+
+```powershell
+npm run test:core
+```
+
+It resolves a fixed synthetic opaque subject and prints
+`CORE_IDENTITY_OK`; it does not link an account or mutate business data.
+
 Run the complete local demo:
 
 ```powershell
