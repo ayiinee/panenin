@@ -20,6 +20,8 @@ frontend/config.local.json
 .idea/
 .vscode/
 *.md
+!docs/
+!docs/**/*.md
 # OS
 .DS_Store
 Thumbs.db
