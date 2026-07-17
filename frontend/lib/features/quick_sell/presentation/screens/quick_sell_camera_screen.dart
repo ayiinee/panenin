@@ -255,7 +255,8 @@ class _CameraHeader extends StatelessWidget {
             ),
           ),
           Positioned(
-            left: 8,
+            left: 16,
+            top: 12,
             child: IconButton(
               key: const ValueKey('camera-back'),
               onPressed: () => Navigator.of(context).maybePop(),

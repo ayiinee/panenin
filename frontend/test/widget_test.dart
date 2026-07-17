@@ -21,6 +21,7 @@ import 'package:panenin/features/auth/presentation/screens/select_role_screen.da
 import 'package:panenin/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
+import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/farmer_profile_screen.dart';
@@ -62,6 +63,18 @@ void main() {
 
     expect(find.text('IDR 150.000'), findsOneWidget);
     expect(find.text('Alvin!'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('home-message-icon'))).dy,
+      closeTo(tester.getTopLeft(find.text('Panenin')).dy, 1),
+    );
+    expect(find.byKey(const ValueKey('home-guest-avatar')), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('home-guest-pill')),
+        matching: find.byKey(const ValueKey('home-guest-avatar')),
+      ),
+      findsOneWidget,
+    );
     expect(find.text('Permintaan Baru'), findsOneWidget);
     expect(find.text('Terima Permintaan'), findsNWidgets(2));
     expect(find.text('Mbak Rina'), findsOneWidget);
@@ -73,6 +86,21 @@ void main() {
     expect(find.text('Warung Tegal Klojen'), findsOneWidget);
     expect(find.text('Warung Swimpit'), findsOneWidget);
     expect(find.byIcon(Icons.visibility_outlined), findsNothing);
+    expect(
+      demoOrders.singleWhere((order) => order.code == 'E841KG').statusColor,
+      AppColors.danger,
+    );
+
+    final detailButton = find.ancestor(
+      of: _inOrder('E841KG', 'Lihat Detail'),
+      matching: find.byType(OutlinedButton),
+    );
+    expect(
+      tester.getBottomRight(detailButton).dy,
+      lessThanOrEqualTo(
+        tester.getBottomRight(find.text('Kirim: 13 Juli 2026')).dy,
+      ),
+    );
 
     final scrollable = tester.state<ScrollableState>(
       find.byType(Scrollable).first,
@@ -252,6 +280,12 @@ void main() {
       RouteNames.kelolaPesanan,
     );
     expect(find.text('Pesanan Aktif'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('active-order-progress-line')))
+          .width,
+      greaterThan(300),
+    );
     expect(find.byKey(const ValueKey('order-filter-all')), findsOneWidget);
     expect(
       find.byKey(const ValueKey('order-filter-awaitingPayment')),
@@ -421,6 +455,14 @@ void main() {
     expect(find.byType(QuickSellCameraScreen), findsOneWidget);
     expect(find.text('Foto Produk Anda!'), findsOneWidget);
     expect(find.byKey(const ValueKey('camera-back')), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('camera-back'))).dx,
+      inInclusiveRange(16, 32),
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('camera-back'))).dy,
+      lessThan(tester.getCenter(find.text('Foto Produk Anda!')).dy),
+    );
     expect(find.byKey(const ValueKey('take-picture')), findsOneWidget);
     expect(find.byKey(const ValueKey('toggle-flash')), findsOneWidget);
     expect(find.text('Flash'), findsOneWidget);
@@ -500,9 +542,11 @@ void main() {
     expect(find.byKey(const ValueKey('stock-file-photo')), findsOneWidget);
   });
 
-  testWidgets('ikon pensil mengedit jumlah stok produk', (tester) async {
+  testWidgets('tiga titik vertikal membuka edit stok produk', (tester) async {
     await _pumpStock(tester);
 
+    expect(find.byIcon(Icons.more_vert_rounded), findsWidgets);
+    expect(find.byIcon(Icons.edit_outlined), findsNothing);
     await tester.tap(find.byKey(const ValueKey('edit-stock-cabai-merah')));
     await tester.pumpAndSettle();
 

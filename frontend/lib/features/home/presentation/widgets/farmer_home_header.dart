@@ -64,38 +64,39 @@ class _Greeting extends StatelessWidget {
                 style: TextStyle(color: Colors.white, fontSize: 13),
               ),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  ClipOval(
-                    child: Image.asset(
-                      'assets/images/home/farmer_avatar.png',
-                      width: 24,
-                      height: 24,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 6,
-                      vertical: 2,
-                    ),
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryDark,
-                      borderRadius: BorderRadius.horizontal(
-                        right: Radius.circular(10),
+              Container(
+                key: const ValueKey('home-guest-pill'),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryDark,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircleAvatar(
+                      key: ValueKey('home-guest-avatar'),
+                      radius: 12,
+                      backgroundColor: Colors.white,
+                      child: Icon(
+                        Icons.person_rounded,
+                        size: 17,
+                        color: AppColors.textMuted,
                       ),
                     ),
-                    child: const Text(
-                      'Alvin!',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 4),
+                    const Padding(
+                      padding: EdgeInsets.only(right: 6),
+                      child: Text(
+                        'Alvin!',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ),
@@ -104,8 +105,18 @@ class _Greeting extends StatelessWidget {
           button: true,
           label: 'Buka pesan',
           child: IconButton(
+            key: const ValueKey('home-message-button'),
             onPressed: () {},
-            icon: const Icon(Icons.chat_outlined, color: Colors.white),
+            padding: EdgeInsets.zero,
+            alignment: Alignment.topRight,
+            icon: Transform.translate(
+              offset: const Offset(0, -4),
+              child: const Icon(
+                Icons.chat_outlined,
+                key: ValueKey('home-message-icon'),
+                color: Colors.white,
+              ),
+            ),
             iconSize: 24,
             tooltip: 'Pesan',
           ),
@@ -185,7 +196,7 @@ class _BalanceSummaryCard extends StatelessWidget {
                 Expanded(
                   child: _SummaryItem(
                     icon: Icons.local_shipping_outlined,
-                    label: 'Menunggu Pesanan',
+                    label: 'Menunggu',
                     value: '3 pesanan',
                   ),
                 ),

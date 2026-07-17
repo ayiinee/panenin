@@ -324,13 +324,11 @@ class _StockCard extends StatelessWidget {
                           tooltip: 'Edit ${item.name}',
                           visualDensity: VisualDensity.compact,
                           style: IconButton.styleFrom(
-                            backgroundColor: AppColors.primary.withValues(
-                              alpha: 0.1,
-                            ),
-                            foregroundColor: AppColors.primary,
-                            minimumSize: const Size(40, 40),
+                            foregroundColor: AppColors.textSecondary,
+                            minimumSize: const Size(36, 36),
+                            padding: EdgeInsets.zero,
                           ),
-                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          icon: const Icon(Icons.more_vert_rounded, size: 24),
                         ),
                       ],
                     ),
@@ -338,6 +336,7 @@ class _StockCard extends StatelessWidget {
                     Row(
                       children: [
                         Expanded(
+                          flex: 9,
                           child: _StockMetric(
                             label: 'Sisa Stok',
                             value: '${item.quantity}${item.unit}',
@@ -345,6 +344,7 @@ class _StockCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
+                          flex: 11,
                           child: _StockMetric(
                             label: 'Harga',
                             value:
@@ -353,6 +353,7 @@ class _StockCard extends StatelessWidget {
                         ),
                         const SizedBox(width: 8),
                         Expanded(
+                          flex: 10,
                           child: _StockMetric(
                             label: 'Status',
                             value: _statusLabel(status),
@@ -419,20 +420,20 @@ class _ProductImage extends StatelessWidget {
           ? Image.file(
               File(filePath!),
               key: const ValueKey('stock-file-photo'),
-              width: 68,
-              height: 68,
+              width: 76,
+              height: 76,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => _placeholder(),
             )
           : assetPath != null
-          ? Image.asset(assetPath!, width: 68, height: 68, fit: BoxFit.cover)
+          ? Image.asset(assetPath!, width: 76, height: 76, fit: BoxFit.cover)
           : _placeholder(),
     );
   }
 
   Widget _placeholder() => Container(
-    width: 68,
-    height: 68,
+    width: 76,
+    height: 76,
     color: AppColors.surfaceSubtle,
     child: const Icon(Icons.eco_outlined, color: AppColors.primary, size: 32),
   );
@@ -459,11 +460,11 @@ class _StockMetric extends StatelessWidget {
         Text(
           label,
           maxLines: 1,
-          style: const TextStyle(fontSize: 11, height: 16 / 11),
+          style: const TextStyle(fontSize: 12, height: 16 / 12),
         ),
         const SizedBox(height: 3),
         Container(
-          height: 25,
+          height: 30,
           alignment: Alignment.center,
           padding: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
@@ -476,7 +477,7 @@ class _StockMetric extends StatelessWidget {
               value,
               style: TextStyle(
                 color: color,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
             ),
