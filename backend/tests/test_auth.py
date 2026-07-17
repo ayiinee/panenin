@@ -45,6 +45,39 @@ async def test_auth_service_returns_google_user() -> None:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("stored_role", "expected_role"),
+    [("FARM", "FARMER"), ("UMKM", "BUYER")],
+)
+async def test_auth_service_normalizes_legacy_role_values(
+    stored_role: str,
+    expected_role: str,
+) -> None:
+    transport = httpx.MockTransport(
+        lambda _: httpx.Response(
+            200,
+            json={
+                "id": "11111111-1111-1111-1111-111111111111",
+                "email": "user@example.com",
+                "user_metadata": {"role": stored_role},
+                "app_metadata": {"provider": "email"},
+            },
+        )
+    )
+    async with httpx.AsyncClient(transport=transport) as client:
+        service = SupabaseAuthService(
+            Settings(
+                supabase_url="https://example.supabase.co",
+                supabase_anon_key=SecretStr("public-key"),
+            ),
+            client,
+        )
+        user = await service.verify_access_token("valid-token")
+
+    assert user.role == expected_role
+
+
+@pytest.mark.asyncio
 async def test_auth_service_rejects_invalid_token() -> None:
     transport = httpx.MockTransport(lambda _: httpx.Response(401))
     async with httpx.AsyncClient(transport=transport) as client:

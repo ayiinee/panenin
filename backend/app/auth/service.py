@@ -52,7 +52,10 @@ class SupabaseAuthService:
         payload: dict[str, Any] = response.json()
         metadata = payload.get("user_metadata") or {}
         app_metadata = payload.get("app_metadata") or {}
-        role = metadata.get("role")
+        role = {
+            "FARM": "FARMER",
+            "UMKM": "BUYER",
+        }.get(metadata.get("role"), metadata.get("role"))
         if role not in {"FARMER", "BUYER"}:
             role = None
         return AuthenticatedUser(
