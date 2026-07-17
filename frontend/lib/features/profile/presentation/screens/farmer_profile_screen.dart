@@ -5,7 +5,6 @@ import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/auth/data/auth_service.dart';
-import 'package:panenin/features/profile/data/whatsapp_service.dart';
 
 typedef ProfileActionCallback = Future<void> Function();
 
@@ -13,13 +12,11 @@ class FarmerProfileScreen extends StatefulWidget {
   const FarmerProfileScreen({
     this.embeddedInShell = false,
     this.signOut,
-    this.openWhatsApp,
     super.key,
   });
 
   final bool embeddedInShell;
   final ProfileActionCallback? signOut;
-  final ProfileActionCallback? openWhatsApp;
 
   @override
   State<FarmerProfileScreen> createState() => _FarmerProfileScreenState();
@@ -27,7 +24,6 @@ class FarmerProfileScreen extends StatefulWidget {
 
 class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
   bool _isSigningOut = false;
-  bool _isOpeningWhatsApp = false;
 
   void _openDestination(BuildContext context, int index) {
     if (index == 3) return;
@@ -40,21 +36,8 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
     Navigator.of(context).pushReplacementNamed(route);
   }
 
-  Future<void> _connectWhatsApp() async {
-    if (_isOpeningWhatsApp) return;
-    setState(() => _isOpeningWhatsApp = true);
-    try {
-      await (widget.openWhatsApp ??
-          const WhatsAppService().openConnectionChat)();
-    } on WhatsAppLaunchException catch (error) {
-      if (mounted) _showMessage(error.message);
-    } catch (_) {
-      if (mounted) {
-        _showMessage('Gagal membuka WhatsApp. Silakan coba lagi.');
-      }
-    } finally {
-      if (mounted) setState(() => _isOpeningWhatsApp = false);
-    }
+  void _connectWhatsApp() {
+    Navigator.of(context).pushNamed(RouteNames.whatsapp);
   }
 
   Future<void> _confirmSignOut() async {
@@ -159,7 +142,6 @@ class _FarmerProfileScreenState extends State<FarmerProfileScreen> {
                     title: 'Hubungkan WhatsApp',
                     subtitle: 'Kelola panen dan pesanan lewat WhatsApp',
                     onTap: _connectWhatsApp,
-                    isLoading: _isOpeningWhatsApp,
                     foregroundColor: const Color(0xFF128C3E),
                   ),
                   _ProfileAction(

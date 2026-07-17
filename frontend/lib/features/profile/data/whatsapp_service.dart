@@ -10,8 +10,8 @@ class WhatsAppService {
   final String phoneNumber;
   final Future<bool> Function(Uri url, {LaunchMode mode}) launcher;
 
-  Future<void> openConnectionChat() async {
-    final uri = buildConnectionUri(phoneNumber);
+  Future<void> openConnectionChat({String? linkCode}) async {
+    final uri = buildConnectionUri(phoneNumber, linkCode: linkCode);
     final opened = await launcher(uri, mode: LaunchMode.externalApplication);
     if (!opened) {
       throw const WhatsAppLaunchException(
@@ -20,16 +20,25 @@ class WhatsAppService {
     }
   }
 
-  static Uri buildConnectionUri(String phoneNumber) {
+  static Uri buildConnectionUri(String phoneNumber, {String? linkCode}) {
     final normalizedPhone = phoneNumber.replaceAll(RegExp(r'[^0-9]'), '');
     if (normalizedPhone.isEmpty) {
       throw const WhatsAppLaunchException(
         'Nomor WhatsApp Panenin belum dikonfigurasi.',
       );
     }
+    final normalizedCode = linkCode?.trim().toUpperCase();
+    if (linkCode != null &&
+        (normalizedCode == null || normalizedCode.isEmpty)) {
+      throw const WhatsAppLaunchException(
+        'Kode penghubung WhatsApp tidak valid.',
+      );
+    }
 
     return Uri.https('wa.me', '/$normalizedPhone', {
-      'text': 'Halo Panenin, saya ingin menghubungkan akun petani saya.',
+      'text': normalizedCode == null
+          ? 'Halo Panenin, saya ingin menghubungkan akun petani saya.'
+          : 'HUBUNGKAN $normalizedCode',
     });
   }
 }

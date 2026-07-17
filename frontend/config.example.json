@@ -3,5 +3,6 @@
   "SUPABASE_URL": "https://replace-with-project.supabase.co",
   "SUPABASE_ANON_KEY": "replace-with-public-anon-or-publishable-key",
   "AUTH_REDIRECT_URL": "com.panenin.app://login-callback/",
-  "PASSWORD_RESET_REDIRECT_URL": "com.panenin.app://reset-password/"
+  "PASSWORD_RESET_REDIRECT_URL": "com.panenin.app://reset-password/",
+  "WHATSAPP_PHONE_NUMBER": "6281234567890"
 }

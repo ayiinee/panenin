@@ -16,9 +16,17 @@ void main() {
     );
   });
 
-  testWidgets('aksi WhatsApp membuka layanan koneksi', (tester) async {
-    var opened = false;
-    await _pumpProfile(tester, openWhatsApp: () async => opened = true);
+  test('tautan WhatsApp mengisi kode penghubung dari backend', () {
+    final uri = WhatsAppService.buildConnectionUri(
+      '+62 812-3456-7890',
+      linkCode: 'abc123',
+    );
+
+    expect(uri.queryParameters['text'], 'HUBUNGKAN ABC123');
+  });
+
+  testWidgets('aksi WhatsApp membuka halaman penghubung akun', (tester) async {
+    await _pumpProfile(tester);
     expect(find.byKey(const ValueKey('profile-guest-avatar')), findsOneWidget);
 
     final action = find.byKey(const ValueKey('connect-whatsapp-action'));
@@ -28,9 +36,9 @@ void main() {
       scrollable: find.byType(Scrollable).first,
     );
     await tester.tap(action);
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(opened, isTrue);
+    expect(find.text('Halaman Hubungkan WhatsApp'), findsOneWidget);
   });
 
   testWidgets('logout meminta konfirmasi lalu membersihkan navigasi', (
@@ -63,7 +71,6 @@ void main() {
 Future<void> _pumpProfile(
   WidgetTester tester, {
   ProfileActionCallback? signOut,
-  ProfileActionCallback? openWhatsApp,
 }) async {
   tester.view.physicalSize = const Size(428, 926);
   tester.view.devicePixelRatio = 1;
@@ -74,8 +81,10 @@ Future<void> _pumpProfile(
     MaterialApp(
       routes: {
         RouteNames.login: (_) => const Scaffold(body: Text('Halaman Login')),
+        RouteNames.whatsapp: (_) =>
+            const Scaffold(body: Text('Halaman Hubungkan WhatsApp')),
       },
-      home: FarmerProfileScreen(signOut: signOut, openWhatsApp: openWhatsApp),
+      home: FarmerProfileScreen(signOut: signOut),
     ),
   );
 }

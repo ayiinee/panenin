@@ -95,6 +95,7 @@ void main() {
   testWidgets('WhatsApp linking requests and renders one-time code', (
     tester,
   ) async {
+    String? openedLinkCode;
     final repository = WhatsAppRepository(
       _FakeApi(
         responses: {
@@ -108,7 +109,12 @@ void main() {
       ),
     );
     await tester.pumpWidget(
-      MaterialApp(home: WhatsAppLinkScreen(repository: repository)),
+      MaterialApp(
+        home: WhatsAppLinkScreen(
+          repository: repository,
+          openWhatsApp: (linkCode) async => openedLinkCode = linkCode,
+        ),
+      ),
     );
     await tester.pumpAndSettle();
 
@@ -117,6 +123,11 @@ void main() {
 
     expect(find.text('ABC123'), findsOneWidget);
     expect(find.textContaining('HUBUNGKAN ABC123'), findsOneWidget);
+
+    await tester.tap(find.byKey(const ValueKey('open-whatsapp-link')));
+    await tester.pumpAndSettle();
+
+    expect(openedLinkCode, 'ABC123');
   });
 }
 
