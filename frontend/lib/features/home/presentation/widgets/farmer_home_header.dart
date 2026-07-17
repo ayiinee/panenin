@@ -101,24 +101,27 @@ class _Greeting extends StatelessWidget {
             ],
           ),
         ),
-        Semantics(
-          button: true,
-          label: 'Buka pesan',
-          child: IconButton(
-            key: const ValueKey('home-message-button'),
-            onPressed: () {},
-            padding: EdgeInsets.zero,
-            alignment: Alignment.topRight,
-            icon: Transform.translate(
-              offset: const Offset(0, -4),
-              child: const Icon(
-                Icons.chat_outlined,
-                key: ValueKey('home-message-icon'),
-                color: Colors.white,
+        Padding(
+          padding: const EdgeInsets.only(top: 46),
+          child: Semantics(
+            button: true,
+            label: 'Buka pesan',
+            child: IconButton(
+              key: const ValueKey('home-message-button'),
+              onPressed: () {},
+              padding: EdgeInsets.zero,
+              alignment: Alignment.topRight,
+              icon: Transform.translate(
+                offset: const Offset(0, -4),
+                child: const Icon(
+                  Icons.chat_outlined,
+                  key: ValueKey('home-message-icon'),
+                  color: Colors.white,
+                ),
               ),
+              iconSize: 24,
+              tooltip: 'Pesan',
             ),
-            iconSize: 24,
-            tooltip: 'Pesan',
           ),
         ),
       ],

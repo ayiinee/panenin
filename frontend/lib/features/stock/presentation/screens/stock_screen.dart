@@ -277,16 +277,15 @@ class _StockCard extends StatelessWidget {
         color: isExpired
             ? AppColors.danger.withValues(alpha: 0.08)
             : Colors.white,
-        border: Border.all(
-          color: isExpired ? AppColors.danger : const Color(0x55000000),
-          width: isExpired ? 1.5 : 0.5,
-        ),
-        borderRadius: BorderRadius.circular(9),
+        border: isExpired
+            ? Border.all(color: AppColors.danger, width: 1.5)
+            : null,
+        borderRadius: BorderRadius.circular(10),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x12000000),
-            blurRadius: 5,
-            offset: Offset(0, 2),
+            color: Color(0x1A000000),
+            blurRadius: 4,
+            offset: Offset(0, 4),
           ),
         ],
       ),
@@ -296,74 +295,65 @@ class _StockCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _ProductImage(
+                key: ValueKey('stock-image-${item.id}'),
                 assetPath: item.imagePath,
                 filePath: item.photoStoragePath,
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            item.name,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              height: 24 / 16,
-                              fontWeight: FontWeight.w700,
+                child: SizedBox(
+                  height: 94,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                height: 22 / 16,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
-                        ),
-                        IconButton(
-                          key: ValueKey('edit-stock-${item.id}'),
-                          onPressed: onEdit,
-                          tooltip: 'Edit ${item.name}',
-                          visualDensity: VisualDensity.compact,
-                          style: IconButton.styleFrom(
-                            foregroundColor: AppColors.textSecondary,
-                            minimumSize: const Size(36, 36),
-                            padding: EdgeInsets.zero,
+                          IconButton(
+                            key: ValueKey('edit-stock-${item.id}'),
+                            onPressed: onEdit,
+                            tooltip: 'Edit ${item.name}',
+                            visualDensity: VisualDensity.compact,
+                            style: IconButton.styleFrom(
+                              foregroundColor: AppColors.textSecondary,
+                              minimumSize: const Size(32, 32),
+                              padding: EdgeInsets.zero,
+                            ),
+                            icon: const Icon(Icons.more_vert_rounded, size: 22),
                           ),
-                          icon: const Icon(Icons.more_vert_rounded, size: 24),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        Expanded(
-                          flex: 9,
-                          child: _StockMetric(
-                            label: 'Sisa Stok',
-                            value: '${item.quantity}${item.unit}',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 11,
-                          child: _StockMetric(
-                            label: 'Harga',
-                            value:
-                                'Rp${_formatNumber(item.price)}/${item.unit}',
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          flex: 10,
-                          child: _StockMetric(
-                            label: 'Status',
-                            value: _statusLabel(status),
-                            color: _statusColor(status),
-                            backgroundColor: _statusBackground(status),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                      _StockMetric(
+                        key: ValueKey('stock-quantity-${item.id}'),
+                        label: 'Sisa Stok',
+                        value: '${item.quantity}${item.unit}',
+                      ),
+                      _StockMetric(
+                        key: ValueKey('stock-price-${item.id}'),
+                        label: 'Harga',
+                        value: 'Rp${_formatNumber(item.price)}/${item.unit}',
+                      ),
+                      _StockMetric(
+                        key: ValueKey('stock-status-${item.id}'),
+                        label: 'Status',
+                        value: _statusLabel(status),
+                        color: _statusColor(status),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -407,7 +397,11 @@ class _StockCard extends StatelessWidget {
 }
 
 class _ProductImage extends StatelessWidget {
-  const _ProductImage({required this.assetPath, required this.filePath});
+  const _ProductImage({
+    required this.assetPath,
+    required this.filePath,
+    super.key,
+  });
 
   final String? assetPath;
   final String? filePath;
@@ -420,20 +414,20 @@ class _ProductImage extends StatelessWidget {
           ? Image.file(
               File(filePath!),
               key: const ValueKey('stock-file-photo'),
-              width: 76,
-              height: 76,
+              width: 94,
+              height: 94,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) => _placeholder(),
             )
           : assetPath != null
-          ? Image.asset(assetPath!, width: 76, height: 76, fit: BoxFit.cover)
+          ? Image.asset(assetPath!, width: 94, height: 94, fit: BoxFit.cover)
           : _placeholder(),
     );
   }
 
   Widget _placeholder() => Container(
-    width: 76,
-    height: 76,
+    width: 94,
+    height: 94,
     color: AppColors.surfaceSubtle,
     child: const Icon(Icons.eco_outlined, color: AppColors.primary, size: 32),
   );
@@ -444,46 +438,45 @@ class _StockMetric extends StatelessWidget {
     required this.label,
     required this.value,
     this.color = Colors.black,
-    this.backgroundColor = const Color(0xFFE5E5E5),
+    this.fontWeight = FontWeight.w400,
+    super.key,
   });
 
   final String label;
   final String value;
   final Color color;
-  final Color backgroundColor;
+  final FontWeight fontWeight;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          maxLines: 1,
-          style: const TextStyle(fontSize: 12, height: 16 / 12),
-        ),
-        const SizedBox(height: 3),
-        Container(
-          height: 30,
-          alignment: Alignment.center,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(5),
+    return SizedBox(
+      height: 18,
+      child: Row(
+        children: [
+          SizedBox(
+            width: 62,
+            child: Text(
+              label,
+              maxLines: 1,
+              style: const TextStyle(fontSize: 12, height: 16 / 12),
+            ),
           ),
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
+          const SizedBox(width: 8),
+          Expanded(
             child: Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+                fontSize: 13,
+                height: 18 / 13,
+                fontWeight: fontWeight,
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -506,6 +499,3 @@ Color _statusColor(StockStatus status) => switch (status) {
   StockStatus.empty => AppColors.danger,
   StockStatus.expired => AppColors.danger,
 };
-
-Color _statusBackground(StockStatus status) =>
-    _statusColor(status).withValues(alpha: 0.1);

@@ -36,9 +36,7 @@ class AppButton extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           textStyle: TextStyle(
             fontSize: variant == AppButtonVariant.primary ? 14 : 13,
-            fontWeight: variant == AppButtonVariant.primary
-                ? FontWeight.w700
-                : FontWeight.w500,
+            fontWeight: FontWeight.w700,
           ),
         ),
         child: Text(label),
