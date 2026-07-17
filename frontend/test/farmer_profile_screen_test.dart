@@ -19,6 +19,7 @@ void main() {
   testWidgets('aksi WhatsApp membuka layanan koneksi', (tester) async {
     var opened = false;
     await _pumpProfile(tester, openWhatsApp: () async => opened = true);
+    expect(find.byKey(const ValueKey('profile-guest-avatar')), findsOneWidget);
 
     final action = find.byKey(const ValueKey('connect-whatsapp-action'));
     await tester.scrollUntilVisible(

@@ -251,12 +251,14 @@ class _FarmerIdentityCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          ClipOval(
-            child: Image.asset(
-              'assets/images/home/farmer_avatar.png',
-              width: 68,
-              height: 68,
-              fit: BoxFit.cover,
+          const CircleAvatar(
+            key: ValueKey('profile-guest-avatar'),
+            radius: 34,
+            backgroundColor: AppColors.surfaceSubtle,
+            child: Icon(
+              Icons.person_rounded,
+              size: 42,
+              color: AppColors.textMuted,
             ),
           ),
           const SizedBox(width: 16),

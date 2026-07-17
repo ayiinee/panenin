@@ -274,6 +274,7 @@ class _OrderActions extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: 10),
       ],
     );
   }
@@ -356,7 +357,7 @@ class OrderListItem {
   };
 
   Color get statusColor => switch (status) {
-    OrderStatus.awaitingPayment => const Color(0xFFDC2626),
+    OrderStatus.awaitingPayment => AppColors.danger,
     OrderStatus.processing => AppColors.accent,
     OrderStatus.completed => AppColors.primary,
   };

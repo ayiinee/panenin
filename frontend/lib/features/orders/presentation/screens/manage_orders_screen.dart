@@ -193,10 +193,14 @@ class _ActiveOrderProgress extends StatelessWidget {
               alignment: Alignment.center,
               children: [
                 const Positioned(
-                  left: 100,
-                  right: 100,
+                  left: 0,
+                  right: 0,
                   top: 28,
-                  child: Divider(height: 1, color: AppColors.textMuted),
+                  child: ColoredBox(
+                    key: ValueKey('active-order-progress-line'),
+                    color: AppColors.textMuted,
+                    child: SizedBox(height: 1),
+                  ),
                 ),
                 Row(
                   children: const [
