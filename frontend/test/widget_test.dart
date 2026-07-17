@@ -312,6 +312,59 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('garis progress tersambung dan label tahap proporsional', (
+    tester,
+  ) async {
+    await _pumpManageOrders(tester, size: const Size(320, 700));
+
+    final awaiting = find.byKey(const ValueKey('progress-awaiting-payment'));
+    final firstConnector = find.byKey(
+      const ValueKey('progress-connector-first'),
+    );
+    final ready = find.byKey(const ValueKey('progress-ready-to-ship'));
+    final secondConnector = find.byKey(
+      const ValueKey('progress-connector-second'),
+    );
+    final completed = find.byKey(const ValueKey('progress-completed'));
+
+    expect(
+      tester.getRect(awaiting).right,
+      closeTo(tester.getRect(firstConnector).left, 0.1),
+    );
+    expect(
+      tester.getRect(firstConnector).right,
+      closeTo(tester.getRect(ready).left, 0.1),
+    );
+    expect(
+      tester.getRect(ready).right,
+      closeTo(tester.getRect(secondConnector).left, 0.1),
+    );
+    expect(
+      tester.getRect(secondConnector).right,
+      closeTo(tester.getRect(completed).left, 0.1),
+    );
+
+    final label = tester.widget<Text>(
+      find.descendant(of: awaiting, matching: find.text('Menunggu DP')),
+    );
+    expect(label.style!.fontSize, 10.5);
+  });
+
+  testWidgets('tipografi seluruh kartu pesanan memiliki hierarki rapi', (
+    tester,
+  ) async {
+    await _pumpManageOrders(tester);
+
+    expect(tester.widget<Text>(find.text('Tacibay')).style!.fontSize, 15);
+    expect(tester.widget<Text>(find.text('Tomat')).style!.fontSize, 13);
+    expect(tester.widget<Text>(find.text('Rp15.000/Kg')).style!.fontSize, 14);
+    expect(
+      tester.widget<Text>(find.text('Kirim: 09 Juli 2026')).style!.fontSize,
+      12,
+    );
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('navbar stok membuka halaman stok dan form tanpa navbar', (
     tester,
   ) async {

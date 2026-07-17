@@ -178,38 +178,30 @@ class _ActiveOrderProgress extends StatelessWidget {
           ),
           const SizedBox(height: 7),
           Expanded(
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                const Positioned(
-                  left: 100,
-                  right: 100,
-                  top: 28,
-                  child: Divider(height: 1, color: AppColors.textMuted),
+            child: Row(
+              children: const [
+                Expanded(
+                  child: _ProgressStep(
+                    key: ValueKey('progress-awaiting-payment'),
+                    icon: Icons.currency_exchange_rounded,
+                    label: 'Menunggu DP',
+                  ),
                 ),
-                Row(
-                  children: const [
-                    Expanded(
-                      child: _ProgressStep(
-                        icon: Icons.currency_exchange_rounded,
-                        label: 'Menunggu DP',
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: _ProgressStep(
-                        icon: Icons.local_shipping,
-                        label: 'Siap Dikirim',
-                      ),
-                    ),
-                    SizedBox(width: 20),
-                    Expanded(
-                      child: _ProgressStep(
-                        icon: Icons.check_circle,
-                        label: 'Selesai',
-                      ),
-                    ),
-                  ],
+                _ProgressConnector(key: ValueKey('progress-connector-first')),
+                Expanded(
+                  child: _ProgressStep(
+                    key: ValueKey('progress-ready-to-ship'),
+                    icon: Icons.local_shipping,
+                    label: 'Siap Dikirim',
+                  ),
+                ),
+                _ProgressConnector(key: ValueKey('progress-connector-second')),
+                Expanded(
+                  child: _ProgressStep(
+                    key: ValueKey('progress-completed'),
+                    icon: Icons.check_circle,
+                    label: 'Selesai',
+                  ),
                 ),
               ],
             ),
@@ -221,7 +213,7 @@ class _ActiveOrderProgress extends StatelessWidget {
 }
 
 class _ProgressStep extends StatelessWidget {
-  const _ProgressStep({required this.icon, required this.label});
+  const _ProgressStep({required this.icon, required this.label, super.key});
 
   final IconData icon;
   final String label;
@@ -244,11 +236,23 @@ class _ProgressStep extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 12, height: 18 / 12),
+              style: const TextStyle(fontSize: 10.5, height: 14 / 10.5),
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ProgressConnector extends StatelessWidget {
+  const _ProgressConnector({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(
+      width: 20,
+      child: Divider(height: 1, thickness: 1, color: AppColors.textMuted),
     );
   }
 }

@@ -121,8 +121,8 @@ class OrderCard extends StatelessWidget {
           onTap: onTap,
           borderRadius: BorderRadius.circular(9),
           child: Container(
-            constraints: const BoxConstraints(minHeight: 116),
-            padding: const EdgeInsets.all(10),
+            constraints: const BoxConstraints(minHeight: 120),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(color: const Color(0x33000000), width: 0.5),
               borderRadius: BorderRadius.circular(9),
@@ -144,16 +144,16 @@ class OrderCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                       child: Image.asset(
                         order.imagePath,
-                        width: compact ? 64 : 70,
-                        height: compact ? 68 : 74,
+                        width: compact ? 60 : 72,
+                        height: compact ? 72 : 78,
                         fit: BoxFit.cover,
                       ),
                     ),
-                    const SizedBox(width: 10),
+                    SizedBox(width: compact ? 8 : 12),
                     Expanded(child: _OrderDetails(order: order)),
-                    const SizedBox(width: 8),
+                    SizedBox(width: compact ? 6 : 8),
                     SizedBox(
-                      width: compact ? 92 : 105,
+                      width: compact ? 82 : 96,
                       height: 96,
                       child: _OrderActions(order: order, onTap: onTap),
                     ),
@@ -177,6 +177,7 @@ class _OrderDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -185,8 +186,8 @@ class _OrderDetails extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(
             color: Colors.black,
-            fontSize: 14,
-            height: 18 / 14,
+            fontSize: 15,
+            height: 20 / 15,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -195,20 +196,34 @@ class _OrderDetails extends StatelessWidget {
           order.product,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, height: 18 / 14),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 13,
+            height: 18 / 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         Text(
           order.price,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, height: 18 / 14),
+          style: const TextStyle(
+            color: AppColors.textPrimary,
+            fontSize: 14,
+            height: 18 / 14,
+            fontWeight: FontWeight.w600,
+          ),
         ),
-        const SizedBox(height: 3),
+        const SizedBox(height: 4),
         Text(
           order.deliveryDate,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 12, height: 17 / 12),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 12,
+            height: 16 / 12,
+          ),
         ),
       ],
     );
@@ -229,7 +244,11 @@ class _OrderActions extends StatelessWidget {
         Text(
           order.code,
           textAlign: TextAlign.right,
-          style: const TextStyle(fontSize: 9, height: 1.2),
+          style: const TextStyle(
+            color: AppColors.textSecondary,
+            fontSize: 10,
+            height: 1.2,
+          ),
         ),
         const Spacer(),
         Container(
