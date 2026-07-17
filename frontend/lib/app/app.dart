@@ -16,6 +16,7 @@ import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dar
 import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
+import 'package:panenin/features/messages/presentation/screens/buyer_messages_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/buyer_profile_screen.dart';
@@ -46,10 +47,9 @@ Map<String, WidgetBuilder> buildAppRoutes({AppRepositories? repositories}) => {
     },
     saveRole: (role) => AuthService.create().saveRole(role),
   ),
-  RouteNames.buyerHome: (_) => BuyerHomeScreen(
-    repository: repositories?.buyerHome,
-    onOpenWhatsApp: repositories == null ? null : RouteNames.whatsapp,
-  ),
+  RouteNames.buyerHome: (_) =>
+      BuyerHomeScreen(repository: repositories?.buyerHome),
+  RouteNames.buyerMessages: (_) => const BuyerMessagesScreen(),
   RouteNames.buyerOrders: (_) => const BuyerOrdersScreen(),
   RouteNames.buyerProfile: (_) => const BuyerProfileScreen(),
   RouteNames.productDetail: ProductDetailScreen.fromRoute,

@@ -15,18 +15,11 @@ enum BuyerHomeViewState { loading, empty, error, success }
 
 /// Buyer landing page shown after the UMKM profile is completed.
 class BuyerHomeScreen extends StatefulWidget {
-  const BuyerHomeScreen({
-    this.state,
-    this.data,
-    this.repository,
-    this.onOpenWhatsApp,
-    super.key,
-  });
+  const BuyerHomeScreen({this.state, this.data, this.repository, super.key});
 
   final BuyerHomeViewState? state;
   final BuyerHomeData? data;
   final BuyerHomeRepository? repository;
-  final String? onOpenWhatsApp;
 
   @override
   State<BuyerHomeScreen> createState() => _BuyerHomeScreenState();
@@ -112,11 +105,10 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                           child: BuyerBottomNavigation(
                             selected: BuyerNavigationDestination.home,
                             onHome: () {},
-                            onMessages: widget.onOpenWhatsApp == null
-                                ? null
-                                : () => Navigator.of(
-                                    context,
-                                  ).pushNamed(widget.onOpenWhatsApp!),
+                            onMessages: () => Navigator.pushReplacementNamed(
+                              context,
+                              RouteNames.buyerMessages,
+                            ),
                             onTransactions: () =>
                                 Navigator.pushReplacementNamed(
                                   context,
@@ -125,10 +117,6 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
                             onProfile: () => Navigator.pushReplacementNamed(
                               context,
                               RouteNames.buyerProfile,
-                            ),
-                            onUnavailable: (label) => _showMessage(
-                              context,
-                              '$label akan segera tersedia.',
                             ),
                           ),
                         ),

@@ -25,6 +25,7 @@ import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dar
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
+import 'package:panenin/features/messages/presentation/screens/buyer_messages_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
@@ -54,6 +55,7 @@ void main() {
       containsAll([
         RouteNames.homePetani,
         RouteNames.farmerProfile,
+        RouteNames.buyerMessages,
         RouteNames.kelolaPesanan,
         RouteNames.detailPesanan,
         RouteNames.stokSaya,
@@ -1291,7 +1293,8 @@ void main() {
     expect(find.text('Cabai Merah Kering'), findsOneWidget);
     expect(find.text('Rp 49.500'), findsOneWidget);
     expect(find.text('Beranda'), findsOneWidget);
-    expect(find.text('Maps'), findsOneWidget);
+    expect(find.text('Maps'), findsNothing);
+    expect(find.byKey(const ValueKey('messages-navigation')), findsOneWidget);
     expect(
       tester
           .getSize(find.byKey(const ValueKey('find-commodities-button')))
@@ -2195,6 +2198,87 @@ void main() {
     await tester.pump();
 
     expect(find.text('Bagian ini wajib diisi.'), findsNWidgets(3));
+  });
+
+  testWidgets('buyer messages renders fixture and filters conversations', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(375, 812));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerMessagesScreen()));
+
+    expect(find.text('Pesan'), findsNWidgets(2));
+    expect(find.text('Pak Ferdi'), findsOneWidget);
+    expect(find.text('3 baru'), findsOneWidget);
+    expect(find.byKey(const ValueKey('unread-Pak Ferdi')), findsOneWidget);
+    expect(find.byKey(const ValueKey('buyer-messages-list')), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.enterText(
+      find.byKey(const ValueKey('messages-search-field')),
+      'kentang',
+    );
+    await tester.pump();
+
+    expect(find.text('Bu Rini'), findsOneWidget);
+    expect(find.text('Pak Ferdi'), findsNothing);
+
+    await tester.tap(find.byKey(const ValueKey('clear-messages-search')));
+    await tester.pump();
+    expect(find.text('Pak Ferdi'), findsOneWidget);
+  });
+
+  testWidgets('buyer messages shows helpful no-result and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: BuyerMessagesScreen()));
+    await tester.enterText(
+      find.byKey(const ValueKey('messages-search-field')),
+      'tidak ada',
+    );
+    await tester.pump();
+    expect(find.text('Percakapan tidak ditemukan'), findsOneWidget);
+    expect(find.text('Hapus Pencarian'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerMessagesScreen(state: BuyerMessagesViewState.error),
+      ),
+    );
+    expect(find.text('Pesan gagal dimuat'), findsOneWidget);
+    expect(find.text('Coba Lagi'), findsOneWidget);
+  });
+
+  testWidgets('buyer messages opens existing negotiation chat', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: const BuyerMessagesScreen(),
+        routes: {RouteNames.negotiationChat: NegotiationChatScreen.fromRoute},
+      ),
+    );
+
+    await tester.tap(find.text('Pak Ferdi'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(NegotiationChatScreen), findsOneWidget);
+    expect(find.text('Pak Ferdi'), findsOneWidget);
+  });
+
+  testWidgets('buyer home message navigation opens the inbox', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: const BuyerHomeScreen(),
+        routes: {RouteNames.buyerMessages: (_) => const BuyerMessagesScreen()},
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('messages-navigation')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuyerMessagesScreen), findsOneWidget);
   });
 }
 

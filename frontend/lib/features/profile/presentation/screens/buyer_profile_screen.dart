@@ -58,13 +58,15 @@ class BuyerProfileScreen extends StatelessWidget {
                             context,
                             RouteNames.buyerHome,
                           ),
+                          onMessages: () => Navigator.pushReplacementNamed(
+                            context,
+                            RouteNames.buyerMessages,
+                          ),
                           onTransactions: () => Navigator.pushReplacementNamed(
                             context,
                             RouteNames.buyerOrders,
                           ),
                           onProfile: () {},
-                          onUnavailable: (label) =>
-                              _message(context, '$label akan segera tersedia.'),
                         ),
                       ),
                     ],

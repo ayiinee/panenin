@@ -10,6 +10,7 @@ abstract final class RouteNames {
 
   static const homePetani = '/beranda';
   static const buyerHome = '/buyer-home';
+  static const buyerMessages = '/buyer/messages';
   static const buyerOrders = '/buyer/orders';
   static const buyerProfile = '/buyer/profile';
 
