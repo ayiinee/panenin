@@ -1,6 +1,6 @@
 enum UserRole {
-  farmer('FARMER', 'Petani'),
-  buyer('BUYER', 'UMKM');
+  farmer('FARM', 'Petani'),
+  buyer('UMKM', 'UMKM');
 
   const UserRole(this.apiValue, this.label);
 

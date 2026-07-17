@@ -6,12 +6,18 @@ import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
+import 'package:panenin/features/profile/data/profile_repository.dart';
 
 /// Collects the role-specific basic profile after account registration.
 class ProfileSetupScreen extends StatefulWidget {
-  const ProfileSetupScreen({this.role = UserRole.farmer, super.key});
+  const ProfileSetupScreen({
+    this.role = UserRole.farmer,
+    this.repository,
+    super.key,
+  });
 
   final UserRole role;
+  final ProfileRepository? repository;
 
   @override
   State<ProfileSetupScreen> createState() => _ProfileSetupScreenState();
@@ -21,16 +27,11 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   static const _designWidth = 428.0;
   static const _designHeight = 926.0;
   static const _commodities = [
-    'Cabai',
-    'Bayam',
-    'Kangkung',
+    'Cabai Merah',
     'Tomat',
     'Kentang',
-    'Brokoli',
-    'Wortel',
-    'Terong',
-    'Paprika',
-    'Selada',
+    'Bawang Merah',
+    'Kacang Panjang',
   ];
 
   final _formKey = GlobalKey<FormState>();
@@ -86,18 +87,46 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _submitting = true);
-    await Future<void>.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
-    setState(() => _submitting = false);
-    if (widget.role == UserRole.buyer) {
-      Navigator.pushNamedAndRemoveUntil(
-        context,
-        RouteNames.buyerHome,
-        (_) => false,
-      );
-      return;
+    try {
+      if (widget.repository == null) {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      } else {
+        final organizationName = _organizationNameController.text.trim();
+        await widget.repository!.saveProfile(
+          ProfileInput(
+            name: _nameController.text.trim(),
+            organizationName: organizationName.isEmpty
+                ? 'Usaha ${_nameController.text.trim()}'
+                : organizationName,
+            role: widget.role,
+            address: _addressController.text.trim(),
+            commodityNames: _selectedCommodities.toList()..sort(),
+          ),
+        );
+      }
+      if (!mounted) return;
+      if (widget.role == UserRole.buyer) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouteNames.buyerHome,
+          (_) => false,
+        );
+        return;
+      }
+      if (widget.repository != null) {
+        Navigator.pushNamedAndRemoveUntil(
+          context,
+          RouteNames.homePetani,
+          (_) => false,
+        );
+        return;
+      }
+      _showMessage('Data diri berhasil disimpan.');
+    } catch (error) {
+      if (mounted) _showMessage('Gagal menyimpan profil: $error');
+    } finally {
+      if (mounted) setState(() => _submitting = false);
     }
-    _showMessage('Data diri berhasil disimpan.');
   }
 
   @override
@@ -449,16 +478,11 @@ class _CommodityChip extends StatelessWidget {
   final VoidCallback onPressed;
 
   double get _designWidth => switch (label) {
-    'Cabai' => 57,
-    'Bayam' => 65,
-    'Kangkung' => 82,
+    'Cabai Merah' => 94,
     'Tomat' => 61,
     'Kentang' => 77,
-    'Brokoli' => 69,
-    'Wortel' => 65,
-    'Terong' => 67,
-    'Paprika' => 76,
-    'Selada' => 65,
+    'Bawang Merah' => 104,
+    'Kacang Panjang' => 112,
     _ => 72,
   };
 

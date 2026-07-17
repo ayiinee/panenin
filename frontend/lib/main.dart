@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:panenin/app/app_repositories.dart';
 import 'package:panenin/app/app.dart' as app;
 import 'package:panenin/core/config/app_config.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -13,6 +14,9 @@ Future<void> main() async {
     publishableKey: AppConfig.supabaseAnonKey,
   );
   runApp(
-    app.PaneninApp(authEvents: Supabase.instance.client.auth.onAuthStateChange),
+    app.PaneninApp(
+      authEvents: Supabase.instance.client.auth.onAuthStateChange,
+      repositories: AppRepositories.production(),
+    ),
   );
 }

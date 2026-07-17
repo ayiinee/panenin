@@ -1,0 +1,1322 @@
+openapi: 3.1.0
+info:
+  title: Panenin Internal Agent API
+  version: 0.1.0
+  description: Narrow service-to-service contract used by the WhatsApp AI Service. Panenin Core remains
+    the only business and database authority.
+paths:
+  /api/v1/internal/agent/identity/resolve:
+    post:
+      tags:
+      - internal-agent
+      summary: Resolve Identity
+      operationId: resolve_identity_api_v1_internal_agent_identity_resolve_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityResolveRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/identity/link:
+    post:
+      tags:
+      - internal-agent
+      summary: Link Identity
+      operationId: link_identity_api_v1_internal_agent_identity_link_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IdentityLinkRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/context:
+    get:
+      tags:
+      - internal-agent
+      summary: Context
+      operationId: context_api_v1_internal_agent_context_get
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: channelSubject
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/v1/internal/agent/inventory:
+    get:
+      tags:
+      - internal-agent
+      summary: Inventory
+      operationId: inventory_api_v1_internal_agent_inventory_get
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: channelSubject
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/v1/internal/agent/demands:
+    get:
+      tags:
+      - internal-agent
+      summary: Demands
+      operationId: demands_api_v1_internal_agent_demands_get
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: channelSubject
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/v1/internal/agent/orders:
+    get:
+      tags:
+      - internal-agent
+      summary: Orders
+      operationId: orders_api_v1_internal_agent_orders_get
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: channelSubject
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/v1/internal/agent/control/overview:
+    get:
+      tags:
+      - internal-agent
+      summary: Control Overview
+      operationId: control_overview_api_v1_internal_agent_control_overview_get
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: channelSubject
+        in: query
+        required: true
+        schema:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/v1/internal/agent/catalog/search:
+    post:
+      tags:
+      - internal-agent
+      summary: Catalog Search
+      operationId: catalog_search_api_v1_internal_agent_catalog_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CatalogSearchRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/sell/preview:
+    post:
+      tags:
+      - internal-agent
+      summary: Sell Preview
+      operationId: sell_preview_api_v1_internal_agent_sell_preview_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SellPreviewRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/buy/preview:
+    post:
+      tags:
+      - internal-agent
+      summary: Buy Preview
+      operationId: buy_preview_api_v1_internal_agent_buy_preview_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BuyPreviewRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/orders/preview:
+    post:
+      tags:
+      - internal-agent
+      summary: Order Preview
+      operationId: order_preview_api_v1_internal_agent_orders_preview_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderPreviewRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/control/preview:
+    post:
+      tags:
+      - internal-agent
+      summary: Control Preview
+      operationId: control_preview_api_v1_internal_agent_control_preview_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ControlPreviewRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+      security:
+      - AgentBearer: []
+  /api/v1/internal/agent/actions/{action_id}/confirm:
+    post:
+      tags:
+      - internal-agent
+      summary: Confirm Action
+      operationId: confirm_action_api_v1_internal_agent_actions__action_id__confirm_post
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Action Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfirmActionRequest'
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /api/v1/internal/agent/actions/{action_id}/cancel:
+    post:
+      tags:
+      - internal-agent
+      summary: Cancel Action
+      operationId: cancel_action_api_v1_internal_agent_actions__action_id__cancel_post
+      security:
+      - AgentBearer: []
+      parameters:
+      - name: action_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Action Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelActionRequest'
+      responses:
+        '200':
+          description: Successful Panenin Core response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessEnvelope'
+        '422':
+          description: Request validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '401':
+          description: Missing or invalid service credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Resolved identity is not authorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '409':
+          description: Business state or idempotency conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+components:
+  schemas:
+    AuthMeResponse:
+      properties:
+        data:
+          $ref: '#/components/schemas/AuthenticatedUser'
+        error:
+          type: 'null'
+          title: Error
+        requestId:
+          type: string
+          title: Requestid
+      type: object
+      required:
+      - data
+      - requestId
+      title: AuthMeResponse
+    AuthenticatedUser:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          anyOf:
+          - type: string
+            format: email
+          - type: 'null'
+          title: Email
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+        provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Provider
+      type: object
+      required:
+      - id
+      title: AuthenticatedUser
+    BuyPreviewRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        commodity:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Commodity
+        quantity:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Quantity
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Unit
+        gradeTolerance:
+          items:
+            type: string
+          type: array
+          maxItems: 10
+          title: Gradetolerance
+        maxPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          title: Maxprice
+        neededAt:
+          type: string
+          format: date-time
+          title: Neededat
+        deliveryMethod:
+          type: string
+          enum:
+          - PICKUP
+          - SELLER_DELIVERY
+          - THIRD_PARTY
+          title: Deliverymethod
+      type: object
+      required:
+      - channelSubject
+      - commodity
+      - quantity
+      - unit
+      - maxPrice
+      - neededAt
+      - deliveryMethod
+      title: BuyPreviewRequest
+    CancelActionRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      type: object
+      required:
+      - channelSubject
+      title: CancelActionRequest
+    CatalogSearchRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        commodity:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Commodity
+        quantity:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Quantity
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Unit
+        maxPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          title: Maxprice
+        neededAt:
+          type: string
+          format: date-time
+          title: Neededat
+      type: object
+      required:
+      - channelSubject
+      - commodity
+      - quantity
+      - unit
+      - maxPrice
+      - neededAt
+      title: CatalogSearchRequest
+    ConfirmActionRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        confirmationCode:
+          type: string
+          maxLength: 12
+          minLength: 6
+          pattern: ^[A-Za-z0-9]+$
+          title: Confirmationcode
+        idempotencyKey:
+          type: string
+          maxLength: 36
+          minLength: 36
+          title: Idempotencykey
+      type: object
+      required:
+      - channelSubject
+      - confirmationCode
+      - idempotencyKey
+      title: ConfirmActionRequest
+    ControlPreviewRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        action:
+          type: string
+          enum:
+          - ACCEPT_ORDER
+          - REJECT_ORDER
+          - MARK_ORDER_READY
+          - CANCEL_ORDER
+          - COMPLETE_ORDER
+          - PAUSE_LISTING
+          - PUBLISH_LISTING
+          - ADJUST_INVENTORY
+          title: Action
+        targetId:
+          type: string
+          format: uuid
+          title: Targetid
+        reason:
+          anyOf:
+          - type: string
+            maxLength: 300
+          - type: 'null'
+          title: Reason
+        quantity:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          - type: 'null'
+          title: Quantity
+      type: object
+      required:
+      - channelSubject
+      - action
+      - targetId
+      title: ControlPreviewRequest
+    DemandCreateRequest:
+      properties:
+        commodity:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Commodity
+        quantity:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Quantity
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Unit
+        gradeTolerance:
+          items:
+            type: string
+          type: array
+          maxItems: 10
+          title: Gradetolerance
+        maxPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          title: Maxprice
+        neededAt:
+          type: string
+          format: date-time
+          title: Neededat
+        deliveryAddress:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Deliveryaddress
+        deliveryLatitude:
+          anyOf:
+          - type: number
+            maximum: 90.0
+            minimum: -90.0
+          - type: 'null'
+          title: Deliverylatitude
+        deliveryLongitude:
+          anyOf:
+          - type: number
+            maximum: 180.0
+            minimum: -180.0
+          - type: 'null'
+          title: Deliverylongitude
+      type: object
+      required:
+      - commodity
+      - quantity
+      - unit
+      - maxPrice
+      - neededAt
+      title: DemandCreateRequest
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    IdentityLinkRequest:
+      properties:
+        channel:
+          type: string
+          const: WHATSAPP
+          title: Channel
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        linkCode:
+          type: string
+          maxLength: 12
+          minLength: 6
+          pattern: ^[A-Za-z0-9]+$
+          title: Linkcode
+      type: object
+      required:
+      - channel
+      - channelSubject
+      - linkCode
+      title: IdentityLinkRequest
+    IdentityResolveRequest:
+      properties:
+        channel:
+          type: string
+          const: WHATSAPP
+          title: Channel
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+      type: object
+      required:
+      - channel
+      - channelSubject
+      title: IdentityResolveRequest
+    InventoryCreateRequest:
+      properties:
+        commodity:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Commodity
+        quantity:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Quantity
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Unit
+        grade:
+          anyOf:
+          - type: string
+            maxLength: 30
+          - type: 'null'
+          title: Grade
+        harvestedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Harvestedat
+        availableAt:
+          type: string
+          format: date-time
+          title: Availableat
+        minimumPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          title: Minimumprice
+      type: object
+      required:
+      - commodity
+      - quantity
+      - unit
+      - availableAt
+      - minimumPrice
+      title: InventoryCreateRequest
+    InventoryPatchRequest:
+      properties:
+        quantityAvailable:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          - type: 'null'
+          title: Quantityavailable
+        grade:
+          anyOf:
+          - type: string
+            maxLength: 30
+          - type: 'null'
+          title: Grade
+        minimumPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          - type: 'null'
+          title: Minimumprice
+        status:
+          anyOf:
+          - type: string
+            enum:
+            - AVAILABLE
+            - INACTIVE
+          - type: 'null'
+          title: Status
+      type: object
+      title: InventoryPatchRequest
+    OrderPreviewRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        listingId:
+          type: string
+          format: uuid
+          title: Listingid
+        demandId:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Demandid
+        quantity:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Quantity
+        deliveryMethod:
+          type: string
+          enum:
+          - PICKUP
+          - SELLER_DELIVERY
+          - THIRD_PARTY
+          title: Deliverymethod
+        deliveryDate:
+          type: string
+          format: date
+          title: Deliverydate
+      type: object
+      required:
+      - channelSubject
+      - listingId
+      - quantity
+      - deliveryMethod
+      - deliveryDate
+      title: OrderPreviewRequest
+    ProfileUpsertRequest:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Name
+        organizationName:
+          type: string
+          maxLength: 160
+          minLength: 2
+          title: Organizationname
+        organizationType:
+          type: string
+          enum:
+          - FARM
+          - UMKM
+          title: Organizationtype
+        address:
+          type: string
+          maxLength: 500
+          minLength: 3
+          title: Address
+        commodityNames:
+          items:
+            type: string
+          type: array
+          maxItems: 30
+          minItems: 1
+          title: Commoditynames
+        latitude:
+          anyOf:
+          - type: number
+            maximum: 90.0
+            minimum: -90.0
+          - type: 'null'
+          title: Latitude
+        longitude:
+          anyOf:
+          - type: number
+            maximum: 180.0
+            minimum: -180.0
+          - type: 'null'
+          title: Longitude
+      type: object
+      required:
+      - name
+      - organizationName
+      - organizationType
+      - address
+      - commodityNames
+      title: ProfileUpsertRequest
+    SellPreviewRequest:
+      properties:
+        channelSubject:
+          type: string
+          pattern: ^wa:v1:[0-9a-f]{16,128}$
+          title: Channelsubject
+        commodity:
+          type: string
+          maxLength: 120
+          minLength: 2
+          title: Commodity
+        quantity:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Quantity
+        unit:
+          type: string
+          maxLength: 20
+          minLength: 1
+          title: Unit
+        grade:
+          anyOf:
+          - type: string
+            maxLength: 30
+          - type: 'null'
+          title: Grade
+        harvestedAt:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Harvestedat
+        availableAt:
+          type: string
+          format: date-time
+          title: Availableat
+        minimumPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          title: Minimumprice
+        listingPrice:
+          anyOf:
+          - type: number
+            minimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,14}|(?=[\d.]{1,17}0*$)\d{0,14}\.\d{0,2}0*$)
+          title: Listingprice
+        minimumOrder:
+          anyOf:
+          - type: number
+            exclusiveMinimum: 0.0
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*(?:\d{0,11}|(?=[\d.]{1,15}0*$)\d{0,11}\.\d{0,3}0*$)
+          title: Minimumorder
+        listingType:
+          type: string
+          enum:
+          - NORMAL
+          - RESCUE
+          title: Listingtype
+      type: object
+      required:
+      - channelSubject
+      - commodity
+      - quantity
+      - unit
+      - availableAt
+      - minimumPrice
+      - listingPrice
+      - minimumOrder
+      - listingType
+      title: SellPreviewRequest
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ErrorEnvelope:
+      type: object
+      required:
+      - data
+      - error
+      - requestId
+      properties:
+        data:
+          type: 'null'
+        error:
+          type: object
+          required:
+          - code
+          - message
+          properties:
+            code:
+              type: string
+              example: STABLE_CODE
+            message:
+              type: string
+              example: Pesan aman.
+        requestId:
+          type: string
+          format: uuid
+    SuccessEnvelope:
+      type: object
+      required:
+      - data
+      - error
+      - requestId
+      properties:
+        data: {}
+        error:
+          type: 'null'
+        requestId:
+          type: string
+          format: uuid
+  securitySchemes:
+    HTTPBearer:
+      type: http
+      scheme: bearer
+    AgentBearer:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque service token
+      description: Compared in constant time against PANENIN_AI_SERVICE_TOKEN_HASH.
+servers:
+- url: http://localhost:8000
+x-panenin-contract-version: 0.1.0

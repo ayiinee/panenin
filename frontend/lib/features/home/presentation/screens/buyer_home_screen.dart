@@ -5,21 +5,72 @@ import 'package:flutter/services.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/home/data/buyer_home_fixture.dart';
+import 'package:panenin/features/home/data/buyer_home_repository.dart';
 
 enum BuyerHomeViewState { loading, empty, error, success }
 
 /// Buyer landing page shown after the UMKM profile is completed.
-class BuyerHomeScreen extends StatelessWidget {
+class BuyerHomeScreen extends StatefulWidget {
   const BuyerHomeScreen({
-    this.state = BuyerHomeViewState.success,
-    this.data = BuyerHomeFixture.design,
+    this.state,
+    this.data,
+    this.repository,
+    this.onOpenWhatsApp,
     super.key,
   });
 
-  static const _designWidth = 428.0;
+  final BuyerHomeViewState? state;
+  final BuyerHomeData? data;
+  final BuyerHomeRepository? repository;
+  final String? onOpenWhatsApp;
 
-  final BuyerHomeViewState state;
-  final BuyerHomeData data;
+  @override
+  State<BuyerHomeScreen> createState() => _BuyerHomeScreenState();
+}
+
+class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
+  static const _designWidth = 428.0;
+  late BuyerHomeViewState _state;
+  late BuyerHomeData _data;
+
+  @override
+  void initState() {
+    super.initState();
+    _state =
+        widget.state ??
+        (widget.repository == null
+            ? BuyerHomeViewState.success
+            : BuyerHomeViewState.loading);
+    _data = widget.data ?? BuyerHomeFixture.design;
+    if (widget.repository != null && widget.state == null) _load();
+  }
+
+  @override
+  void didUpdateWidget(covariant BuyerHomeScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.state != oldWidget.state && widget.state != null) {
+      _state = widget.state!;
+    }
+    if (widget.data != oldWidget.data && widget.data != null) {
+      _data = widget.data!;
+    }
+  }
+
+  Future<void> _load() async {
+    setState(() => _state = BuyerHomeViewState.loading);
+    try {
+      final data = await widget.repository!.load();
+      if (!mounted) return;
+      setState(() {
+        _data = data;
+        _state = data.products.isEmpty
+            ? BuyerHomeViewState.empty
+            : BuyerHomeViewState.success;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _state = BuyerHomeViewState.error);
+    }
+  }
 
   void _showMessage(BuildContext context, String message) {
     ScaffoldMessenger.of(context)
@@ -55,6 +106,11 @@ class BuyerHomeScreen extends StatelessWidget {
                           right: 0,
                           bottom: 0,
                           child: BuyerBottomNavigation(
+                            onWhatsApp: widget.onOpenWhatsApp == null
+                                ? null
+                                : () => Navigator.of(
+                                    context,
+                                  ).pushNamed(widget.onOpenWhatsApp!),
                             onUnavailable: (label) => _showMessage(
                               context,
                               '$label akan segera tersedia.',
@@ -74,7 +130,7 @@ class BuyerHomeScreen extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context, double pageWidth) {
-    return switch (state) {
+    return switch (_state) {
       BuyerHomeViewState.loading => const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
@@ -83,17 +139,21 @@ class BuyerHomeScreen extends StatelessWidget {
         title: 'Komoditas belum tersedia',
         message: 'Coba kembali sebentar lagi untuk melihat pasokan terbaru.',
         action: 'Muat Ulang',
-        onPressed: () => _showMessage(context, 'Memuat ulang komoditas...'),
+        onPressed: widget.repository == null
+            ? () => _showMessage(context, 'Memuat ulang komoditas...')
+            : _load,
       ),
       BuyerHomeViewState.error => _HomeStateView(
         icon: Icons.wifi_off_rounded,
         title: 'Gagal memuat beranda',
         message: 'Periksa koneksi internet Anda, lalu coba lagi.',
         action: 'Coba Lagi',
-        onPressed: () => _showMessage(context, 'Mencoba memuat beranda...'),
+        onPressed: widget.repository == null
+            ? () => _showMessage(context, 'Mencoba memuat beranda...')
+            : _load,
       ),
       BuyerHomeViewState.success => _BuyerHomeContent(
-        data: data,
+        data: _data,
         compact: pageWidth < 390,
         onAction: (message) => _showMessage(context, message),
       ),
@@ -633,9 +693,14 @@ class _ProductTag extends StatelessWidget {
 }
 
 class BuyerBottomNavigation extends StatelessWidget {
-  const BuyerBottomNavigation({required this.onUnavailable, super.key});
+  const BuyerBottomNavigation({
+    required this.onUnavailable,
+    this.onWhatsApp,
+    super.key,
+  });
 
   final ValueChanged<String> onUnavailable;
+  final VoidCallback? onWhatsApp;
 
   @override
   Widget build(BuildContext context) {
@@ -686,7 +751,7 @@ class BuyerBottomNavigation extends StatelessWidget {
                   child: _NavigationItem(
                     icon: Icons.person_outline,
                     label: 'Profil',
-                    onPressed: () => onUnavailable('Profil'),
+                    onPressed: onWhatsApp ?? () => onUnavailable('Profil'),
                   ),
                 ),
               ],

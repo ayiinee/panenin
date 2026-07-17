@@ -2,17 +2,22 @@ from collections.abc import Awaitable, Callable
 from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 
 from app.api.router import api_router
 from app.core.config import get_settings
+from app.core.database import check_database_connection
+from app.core.errors import DomainError
+from app.core.schemas import error_envelope
 
 settings = get_settings()
 
 app = FastAPI(
     title=settings.app_name,
     version="0.1.0",
+    debug=settings.app_debug,
 )
 
 app.add_middleware(
@@ -53,6 +58,34 @@ async def http_exception_handler(request: Request, exc: HTTPException) -> JSONRe
     )
 
 
+@app.exception_handler(DomainError)
+async def domain_error_handler(request: Request, exc: DomainError) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=error_envelope(
+            request,
+            code=exc.code,
+            message=exc.message,
+        ),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_error_handler(
+    request: Request,
+    exc: RequestValidationError,
+) -> JSONResponse:
+    del exc
+    return JSONResponse(
+        status_code=422,
+        content=error_envelope(
+            request,
+            code="VALIDATION_ERROR",
+            message="Data permintaan tidak valid.",
+        ),
+    )
+
+
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 
 
@@ -61,4 +94,13 @@ async def health_check() -> dict[str, str]:
     return {
         "status": "ok",
         "service": "panenin-api",
+    }
+
+
+@app.get("/api/v1/health/database")
+async def database_health_check() -> dict[str, str]:
+    await check_database_connection()
+    return {
+        "status": "ok",
+        "service": "panenin-database",
     }
