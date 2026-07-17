@@ -69,6 +69,10 @@ class _BuyerOrdersScreenState extends State<BuyerOrdersScreen> {
                             RouteNames.buyerHome,
                           ),
                           onTransactions: () {},
+                          onProfile: () => Navigator.pushReplacementNamed(
+                            context,
+                            RouteNames.buyerProfile,
+                          ),
                           onUnavailable: (label) =>
                               _message('$label akan segera tersedia.'),
                         ),

@@ -11,6 +11,7 @@ import 'package:panenin/features/marketplace/presentation/screens/negotiation_ch
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/buyer_profile_screen.dart';
 
 class PaneninApp extends StatelessWidget {
   const PaneninApp({super.key});
@@ -34,6 +35,7 @@ class PaneninApp extends StatelessWidget {
         ),
         RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
         RouteNames.buyerOrders: (_) => const BuyerOrdersScreen(),
+        RouteNames.buyerProfile: (_) => const BuyerProfileScreen(),
         RouteNames.productDetail: ProductDetailScreen.fromRoute,
         RouteNames.negotiationChat: NegotiationChatScreen.fromRoute,
         RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute,

@@ -5,6 +5,7 @@ abstract final class RouteNames {
   static const profile = '/profile';
   static const buyerHome = '/buyer/home';
   static const buyerOrders = '/buyer/orders';
+  static const buyerProfile = '/buyer/profile';
   static const productDetail = '/buyer/products/detail';
   static const negotiationChat = '/buyer/negotiation';
   static const recurringSupply = '/buyer/supply/recurring';

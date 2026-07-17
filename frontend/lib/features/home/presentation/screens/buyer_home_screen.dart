@@ -65,6 +65,10 @@ class BuyerHomeScreen extends StatelessWidget {
                                   context,
                                   RouteNames.buyerOrders,
                                 ),
+                            onProfile: () => Navigator.pushReplacementNamed(
+                              context,
+                              RouteNames.buyerProfile,
+                            ),
                             onUnavailable: (label) => _showMessage(
                               context,
                               '$label akan segera tersedia.',

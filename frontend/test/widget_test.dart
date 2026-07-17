@@ -15,6 +15,7 @@ import 'package:panenin/features/marketplace/presentation/screens/negotiation_ch
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/buyer_profile_screen.dart';
 
 void main() {
   testWidgets('renders the role selection screen', (tester) async {
@@ -347,6 +348,76 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('order-history-tab')));
     await tester.pumpAndSettle();
     expect(find.text('Belum ada riwayat pesanan'), findsOneWidget);
+  });
+
+  testWidgets('buyer profile renders procurement-focused content', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerProfileScreen()));
+
+    expect(find.text('Profil Usaha'), findsOneWidget);
+    expect(find.text('Dapur Bu Ani'), findsOneWidget);
+    expect(find.text('Buyer terverifikasi'), findsOneWidget);
+    expect(find.text('WhatsApp Companion'), findsOneWidget);
+    expect(find.text('Komoditas rutin'), findsOneWidget);
+    expect(find.text('Profil'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('profile-navigation'))).height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('buyer profile supports loading empty and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerProfileScreen(state: BuyerProfileViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerProfileScreen(state: BuyerProfileViewState.empty),
+      ),
+    );
+    expect(find.text('Profil usaha belum lengkap'), findsOneWidget);
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerProfileScreen(state: BuyerProfileViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat profil'), findsOneWidget);
+  });
+
+  testWidgets('buyer profile adapts to a narrow phone', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerProfileScreen()));
+
+    expect(find.text('Dapur Bu Ani'), findsOneWidget);
+    expect(find.text('Buyer terverifikasi'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('profile navigation opens the buyer profile page', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.buyerProfile: (_) => const BuyerProfileScreen()},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('profile-navigation')));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuyerProfileScreen), findsOneWidget);
   });
 
   testWidgets('buyer order actions show detail and tracking information', (
