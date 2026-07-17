@@ -33,10 +33,22 @@ class _StockScreenState extends State<StockScreen> {
   @override
   void initState() {
     super.initState();
-    _items = widget.repository == null ? List.of(demoStockItems) : [];
-    final item = widget.initialItem;
-    if (item != null) _upsertItem(item);
+    _items = _fallbackItems();
     if (widget.repository != null) _load();
+  }
+
+  List<StockItem> _fallbackItems() {
+    final items = List<StockItem>.of(demoStockItems);
+    final initialItem = widget.initialItem;
+    if (initialItem == null) return items;
+
+    final index = items.indexWhere((item) => item.id == initialItem.id);
+    if (index == -1) {
+      items.add(initialItem);
+    } else {
+      items[index] = initialItem;
+    }
+    return items;
   }
 
   Future<void> _load() async {
@@ -50,7 +62,7 @@ class _StockScreenState extends State<StockScreen> {
       setState(() {
         _items
           ..clear()
-          ..addAll(items);
+          ..addAll(items.isEmpty ? _fallbackItems() : items);
       });
     } catch (error) {
       if (mounted) setState(() => _error = '$error');

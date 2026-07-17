@@ -20,6 +20,14 @@ class BuyerHomeRepository {
     final profile = await _profiles.getProfile();
     final data = await _api.get('/api/v1/catalog/listings');
     final listings = (data! as List<dynamic>).cast<Map<String, dynamic>>();
+    if (listings.isEmpty) {
+      return BuyerHomeData(
+        locationLabel: BuyerHomeFixture.design.locationLabel,
+        location: profile.address ?? profile.organizationName,
+        categories: BuyerHomeFixture.design.categories,
+        products: BuyerHomeFixture.design.products,
+      );
+    }
     final commodityNames = listings
         .map((item) => item['commodity'] as String)
         .toSet()

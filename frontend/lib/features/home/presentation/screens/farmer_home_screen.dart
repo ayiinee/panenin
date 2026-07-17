@@ -59,6 +59,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   late List<_DemandView> _demands;
   late List<OrderListItem> _orders;
   late Set<String> _activeDemandIds;
+  bool _usingDemoDemands = true;
   bool _showNotification = false;
 
   @override
@@ -83,23 +84,28 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
       if (!mounted) return;
       setState(() {
         if (widget.demandRepository != null) {
-          _demands = demandRecords
-              .map(
-                (item) => _DemandView(
-                  id: item.id,
-                  buyerName: item.buyerName,
-                  businessName: item.buyerName,
-                  requestText:
-                      'Membutuhkan ${item.commodity} ${item.quantityRemaining}${item.unit} '
-                      'maks. Rp${item.maxPrice.round()}/${item.unit}',
-                  avatarPath: 'assets/images/home/buyer_avatar.png',
-                ),
-              )
-              .toList();
+          _usingDemoDemands = demandRecords.isEmpty;
+          _demands = demandRecords.isEmpty
+              ? List.of(_demoDemands)
+              : demandRecords
+                    .map(
+                      (item) => _DemandView(
+                        id: item.id,
+                        buyerName: item.buyerName,
+                        businessName: item.buyerName,
+                        requestText:
+                            'Membutuhkan ${item.commodity} ${item.quantityRemaining}${item.unit} '
+                            'maks. Rp${item.maxPrice.round()}/${item.unit}',
+                        avatarPath: 'assets/images/home/buyer_avatar.png',
+                      ),
+                    )
+                    .toList();
           _activeDemandIds = _demands.map((item) => item.id).toSet();
         }
         if (widget.orderRepository != null) {
-          _orders = orderRecords.map(mapOrderToListItem).toList();
+          _orders = orderRecords.isEmpty
+              ? List.of(demoOrders)
+              : orderRecords.map(mapOrderToListItem).toList();
         }
       });
     } catch (error) {
@@ -127,7 +133,7 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   void _completeDemand(String id, _DemandAction action) {
-    if (widget.demandRepository != null) {
+    if (widget.demandRepository != null && !_usingDemoDemands) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(

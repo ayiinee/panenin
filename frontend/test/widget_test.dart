@@ -11,6 +11,7 @@ import 'package:panenin/app/shell/farmer_shell.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/app/theme/app_theme.dart';
+import 'package:panenin/core/network/api_client.dart';
 import 'package:panenin/features/auth/data/models/authenticated_user.dart';
 import 'package:panenin/features/auth/data/models/email_sign_up_result.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
@@ -29,6 +30,7 @@ import 'package:panenin/features/messages/presentation/screens/buyer_messages_sc
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/buyer_orders_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/profile/data/profile_repository.dart';
 import 'package:panenin/features/profile/presentation/screens/farmer_profile_screen.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
@@ -439,19 +441,22 @@ void main() {
       find.byKey(const ValueKey('stock-price-field')),
       '12000',
     );
-    await tester.tap(find.byKey(const ValueKey('increase-stock')));
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-quantity-field')),
+      '25',
+    );
     await tester.tap(find.byKey(const ValueKey('save-stock')));
     await tester.pumpAndSettle();
 
     expect(find.text('Konfirmasi Inventaris'), findsOneWidget);
     expect(find.text('Bayam'), findsNWidgets(2));
-    expect(find.text('1 Kg'), findsOneWidget);
+    expect(find.text('25 Kg'), findsOneWidget);
     await tester.tap(find.byKey(const ValueKey('confirm-inventory')));
     await tester.pumpAndSettle();
 
     expect(find.byType(StockScreen), findsOneWidget);
     expect(find.text('Bayam'), findsOneWidget);
-    expect(find.text('4 Produk  •  23 Kg tersedia'), findsOneWidget);
+    expect(find.text('4 Produk  •  47 Kg tersedia'), findsOneWidget);
   });
 
   testWidgets('farmer shell berpindah ke seluruh tab tanpa menumpuk route', (
@@ -495,7 +500,7 @@ void main() {
 
     expect(find.text('Nama produk wajib diisi.'), findsOneWidget);
     expect(find.text('Harga jual wajib diisi.'), findsOneWidget);
-    expect(find.text('Jumlah stok harus lebih dari 0.'), findsOneWidget);
+    expect(find.text('Jumlah stok wajib diisi.'), findsOneWidget);
     expect(find.text('Konfirmasi Inventaris'), findsNothing);
   });
 
@@ -654,8 +659,10 @@ void main() {
       find.byKey(const ValueKey('stock-price-field')),
       '14000',
     );
-    await tester.ensureVisible(find.byKey(const ValueKey('increase-stock')));
-    await tester.tap(find.byKey(const ValueKey('increase-stock')));
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-quantity-field')),
+      '8',
+    );
     await tester.ensureVisible(find.byKey(const ValueKey('save-stock')));
     await tester.tap(find.byKey(const ValueKey('save-stock')));
     await tester.pumpAndSettle();
@@ -722,7 +729,10 @@ void main() {
     expect(find.byType(PaneninBottomNavigation), findsNothing);
     expect(find.text('12'), findsOneWidget);
 
-    await tester.tap(find.byKey(const ValueKey('increase-stock')));
+    await tester.enterText(
+      find.byKey(const ValueKey('stock-quantity-field')),
+      '20',
+    );
     await tester.tap(find.byKey(const ValueKey('save-stock')));
     await tester.pumpAndSettle();
 
@@ -731,7 +741,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byType(StockScreen), findsOneWidget);
-    expect(find.text('13Kg'), findsOneWidget);
+    expect(find.text('20Kg'), findsOneWidget);
     expect(find.text('Ubah Stok'), findsNothing);
     expect(find.text('Ubah Harga'), findsNothing);
     expect(find.text('Jual'), findsNothing);
@@ -790,31 +800,12 @@ void main() {
     expect(fields[3].textInputAction, TextInputAction.done);
   });
 
-  testWidgets('melewati autentikasi dan membuka pemilihan role', (
-    tester,
-  ) async {
+  testWidgets('aplikasi dimulai dari halaman login', (tester) async {
     await tester.pumpWidget(const PaneninApp());
 
-    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    expect(find.byType(LoginScreen), findsOneWidget);
     expect(find.byType(CreateAccountScreen), findsNothing);
-    expect(find.byType(LoginScreen), findsNothing);
-    expect(
-      tester.widget<SelectRoleScreen>(find.byType(SelectRoleScreen)).flow,
-      RoleSelectionFlow.skipAuth,
-    );
-
-    final farmerAction = find.text('Jual Hasil Panen');
-    await tester.ensureVisible(farmerAction);
-    await tester.tap(farmerAction);
-    await tester.pumpAndSettle();
-
-    expect(find.byType(ProfileSetupScreen), findsOneWidget);
-    expect(
-      tester
-          .widget<ProfileSetupScreen>(find.byType(ProfileSetupScreen))
-          .saveRole,
-      isNull,
-    );
+    expect(find.byType(SelectRoleScreen), findsNothing);
   });
 
   testWidgets('renders the role selection screen', (tester) async {
@@ -1047,19 +1038,19 @@ void main() {
     expect(find.text('Permintaan Baru'), findsOneWidget);
   });
 
-  testWidgets('login tanpa role dapat memilih petani lalu masuk ke home', (
+  testWidgets('login tanpa role melanjutkan ke pengisian profil petani', (
     tester,
   ) async {
-    UserRole? savedRole;
     await tester.pumpWidget(
       MaterialApp(
         routes: {
           RouteNames.selectRole: (context) => SelectRoleScreen(
             flow:
                 ModalRoute.settingsOf(context)!.arguments! as RoleSelectionFlow,
-            saveSelectedRole: (role) async => savedRole = role,
           ),
-          RouteNames.homePetani: (_) => const FarmerShell(),
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.settingsOf(context)!.arguments! as UserRole,
+          ),
         },
         home: LoginScreen(emailSignIn: (_, _) async => demoUser),
       ),
@@ -1075,8 +1066,8 @@ void main() {
     await tester.tap(find.text('Jual Hasil Panen'));
     await tester.pumpAndSettle();
 
-    expect(savedRole, UserRole.farmer);
-    expect(find.byType(FarmerHomeScreen), findsOneWidget);
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Petani'), findsOneWidget);
   });
 
   testWidgets('forgot password sends a privacy-safe response', (tester) async {
@@ -2275,6 +2266,42 @@ void main() {
     expect(find.text('Permintaan Baru'), findsOneWidget);
   });
 
+  testWidgets('profile is persisted before auth role is saved', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    final events = <String>[];
+    final repository = ProfileRepository(_RecordingProfileApi(events));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.homePetani: (_) => const FarmerShell()},
+        home: ProfileSetupScreen(
+          repository: repository,
+          saveRole: (role) async => events.add('role:${role.authValue}'),
+        ),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('farmer-name-field')),
+      'Pak Ferdi',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('farmer-group-field')),
+      'Kelompok Tani Makmur',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('address-field')),
+      'Garut, Jawa Barat',
+    );
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pumpAndSettle();
+
+    expect(events, ['profile:FARM', 'role:FARMER']);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
+  });
+
   testWidgets('profile setup validates required fields', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -2441,4 +2468,34 @@ Future<void> _pumpStock(WidgetTester tester) async {
       home: const StockScreen(),
     ),
   );
+}
+
+class _RecordingProfileApi implements ApiTransport {
+  _RecordingProfileApi(this.events);
+
+  final List<String> events;
+
+  @override
+  Future<Object?> get(String path) => throw UnimplementedError();
+
+  @override
+  Future<Object?> patch(String path, {Object? body}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Object?> post(String path, {Object? body}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Object?> put(String path, {Object? body}) async {
+    final payload = body! as Map<String, Object>;
+    events.add('profile:${payload['organizationType']}');
+    return {
+      'name': payload['name'],
+      'organizationName': payload['organizationName'],
+      'organizationType': payload['organizationType'],
+      'address': payload['address'],
+      'commodityNames': payload['commodityNames'],
+    };
+  }
 }

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/core/network/api_exception.dart';
 import 'package:panenin/core/validation/input_validators.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/profile/data/profile_repository.dart';
@@ -95,9 +96,6 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
 
     setState(() => _submitting = true);
     try {
-      if (widget.saveRole case final saveRole?) {
-        await saveRole(widget.role);
-      }
       if (widget.repository case final repository?) {
         final organizationName = _organizationNameController.text.trim();
         await repository.saveProfile(
@@ -114,10 +112,17 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
       } else if (widget.saveRole == null) {
         await Future<void>.delayed(const Duration(milliseconds: 400));
       }
-    } on Object {
+      if (widget.saveRole case final saveRole?) {
+        await saveRole(widget.role);
+      }
+    } on Object catch (error) {
       if (!mounted) return;
       setState(() => _submitting = false);
-      _showMessage('Data diri gagal disimpan. Silakan coba lagi.');
+      _showMessage(
+        error is ApiException
+            ? error.message
+            : 'Data diri gagal disimpan. Silakan coba lagi.',
+      );
       return;
     }
     if (!mounted) return;

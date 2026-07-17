@@ -9,6 +9,15 @@ import 'package:panenin/features/whatsapp/data/whatsapp_repository.dart';
 import 'package:panenin/features/whatsapp/presentation/whatsapp_link_screen.dart';
 
 void main() {
+  test('user roles separate auth metadata from organization type', () {
+    expect(UserRole.farmer.authValue, 'FARMER');
+    expect(UserRole.farmer.organizationType, 'FARM');
+    expect(UserRole.buyer.authValue, 'BUYER');
+    expect(UserRole.buyer.organizationType, 'UMKM');
+    expect(UserRole.fromApiValue('FARMER'), UserRole.farmer);
+    expect(UserRole.fromApiValue('BUYER'), UserRole.buyer);
+  });
+
   test('profile repository sends canonical organization role', () async {
     final api = _FakeApi(
       responses: {

@@ -35,22 +35,15 @@ Map<String, WidgetBuilder> buildAppRoutes({AppRepositories? repositories}) => {
   RouteNames.selectRole: (context) => SelectRoleScreen(
     flow: switch (ModalRoute.settingsOf(context)?.arguments) {
       RoleSelectionFlow flow => flow,
-      _ => RoleSelectionFlow.skipAuth,
+      _ => RoleSelectionFlow.onboarding,
     },
-    saveSelectedRole: (role) => AuthService.create().saveRole(role),
   ),
   RouteNames.profile: (context) {
     final arguments = ModalRoute.of(context)?.settings.arguments;
     return ProfileSetupScreen(
       repository: repositories?.profile,
-      role: switch (arguments) {
-        ProfileSetupRouteArguments arguments => arguments.role,
-        UserRole role => role,
-        _ => UserRole.farmer,
-      },
-      saveRole: arguments is ProfileSetupRouteArguments
-          ? null
-          : (role) => AuthService.create().saveRole(role),
+      role: arguments is UserRole ? arguments : UserRole.farmer,
+      saveRole: (role) => AuthService.create().saveRole(role),
     );
   },
   RouteNames.buyerHome: (_) =>
@@ -135,7 +128,7 @@ class _PaneninAppState extends State<PaneninApp> {
       title: 'Panenin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: RouteNames.selectRole,
+      initialRoute: RouteNames.login,
       routes: buildAppRoutes(repositories: widget.repositories),
     );
   }

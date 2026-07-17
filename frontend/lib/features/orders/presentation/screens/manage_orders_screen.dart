@@ -36,7 +36,7 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
   @override
   void initState() {
     super.initState();
-    _orders = widget.repository == null ? List.of(demoOrders) : [];
+    _orders = List.of(demoOrders);
     if (widget.repository != null) _load();
   }
 
@@ -48,7 +48,11 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
     try {
       final records = await widget.repository!.list();
       if (!mounted) return;
-      setState(() => _orders = records.map(mapOrderToListItem).toList());
+      setState(() {
+        _orders = records.isEmpty
+            ? List.of(demoOrders)
+            : records.map(mapOrderToListItem).toList();
+      });
     } catch (error) {
       if (mounted) setState(() => _error = '$error');
     } finally {

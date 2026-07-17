@@ -20,7 +20,7 @@ class ProfileInput {
   Map<String, Object> toJson() => {
     'name': name,
     'organizationName': organizationName,
-    'organizationType': role.apiValue,
+    'organizationType': role.organizationType,
     'address': address,
     'commodityNames': commodityNames,
   };

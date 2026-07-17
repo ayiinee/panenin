@@ -85,7 +85,7 @@ class AuthService {
 
   Future<void> saveRole(UserRole role) async {
     await _supabase.auth.updateUser(
-      UserAttributes(data: {'role': role.apiValue}),
+      UserAttributes(data: {'role': role.authValue}),
     );
   }
 

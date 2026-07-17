@@ -22,32 +22,33 @@ class _StockFormScreenState extends State<StockFormScreen> {
   late final _priceController = TextEditingController(
     text: widget.item?.price.toString(),
   );
-  late int _quantity = widget.item?.quantity ?? 0;
+  late final _quantityController = TextEditingController(
+    text: widget.item?.quantity.toString(),
+  );
   late String _unit = widget.item?.unit ?? 'Kg';
   late DateTime _harvestedAt = widget.item?.harvestedAt ?? DateTime.now();
   late final String? _photoStoragePath =
       widget.capturedPhotoPath ?? widget.item?.photoStoragePath;
-  bool _quantityTouched = false;
 
   bool get _isEditing => widget.item != null;
 
   @override
   void dispose() {
     _nameController.dispose();
+    _quantityController.dispose();
     _priceController.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
     FocusManager.instance.primaryFocus?.unfocus();
-    setState(() => _quantityTouched = true);
-    if (!_formKey.currentState!.validate() || _quantity <= 0) return;
+    if (!_formKey.currentState!.validate()) return;
 
     final existing = widget.item;
     final item = StockItem(
       id: existing?.id ?? DateTime.now().microsecondsSinceEpoch.toString(),
       name: _nameController.text.trim(),
-      quantity: _quantity,
+      quantity: int.parse(_quantityController.text.trim()),
       unit: _unit,
       price: int.parse(_priceController.text),
       harvestedAt: _harvestedAt,
@@ -63,14 +64,6 @@ class _StockFormScreenState extends State<StockFormScreen> {
     );
     if (confirmed != true || !mounted) return;
     Navigator.of(context).pop(item);
-  }
-
-  void _changeQuantity(int delta) {
-    final next = (_quantity + delta).clamp(0, 999999);
-    setState(() {
-      _quantity = next;
-      _quantityTouched = true;
-    });
   }
 
   @override
@@ -161,26 +154,22 @@ class _StockFormScreenState extends State<StockFormScreen> {
                       const SizedBox(height: 26),
                       _FieldLabel(text: 'Jumlah Stok'),
                       const SizedBox(height: 8),
-                      _QuantityStepper(
-                        quantity: _quantity,
-                        onDecrease: _quantity == 0
-                            ? null
-                            : () => _changeQuantity(-1),
-                        onIncrease: _quantity >= 999999
-                            ? null
-                            : () => _changeQuantity(1),
-                      ),
-                      if (_quantityTouched && _quantity <= 0) ...[
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Jumlah stok harus lebih dari 0.',
-                          key: ValueKey('stock-quantity-error'),
-                          style: TextStyle(
-                            color: AppColors.danger,
-                            fontSize: 12,
-                          ),
+                      TextFormField(
+                        key: const ValueKey('stock-quantity-field'),
+                        controller: _quantityController,
+                        keyboardType: TextInputType.number,
+                        textInputAction: TextInputAction.next,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(6),
+                        ],
+                        decoration: _inputDecoration('Contoh: 25'),
+                        validator: (value) => InputValidators.positiveInteger(
+                          value,
+                          label: 'Jumlah stok',
+                          maxValue: 999999,
                         ),
-                      ],
+                      ),
                       const SizedBox(height: 26),
                       _FieldLabel(text: 'Satuan'),
                       const SizedBox(height: 8),
@@ -416,79 +405,6 @@ class _FieldLabel extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
-    );
-  }
-}
-
-class _QuantityStepper extends StatelessWidget {
-  const _QuantityStepper({
-    required this.quantity,
-    required this.onDecrease,
-    required this.onIncrease,
-  });
-
-  final int quantity;
-  final VoidCallback? onDecrease;
-  final VoidCallback? onIncrease;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 66,
-      padding: const EdgeInsets.symmetric(horizontal: 34),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: AppColors.textSecondary, width: 0.5),
-        borderRadius: BorderRadius.circular(9),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x18000000),
-            blurRadius: 4,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _RoundAction(
-            key: const ValueKey('decrease-stock'),
-            icon: Icons.remove,
-            onTap: onDecrease,
-          ),
-          Text(
-            '$quantity',
-            key: const ValueKey('stock-quantity'),
-            style: const TextStyle(fontSize: 32, height: 40 / 32),
-          ),
-          _RoundAction(
-            key: const ValueKey('increase-stock'),
-            icon: Icons.add,
-            onTap: onIncrease,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RoundAction extends StatelessWidget {
-  const _RoundAction({required this.icon, required this.onTap, super.key});
-
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return IconButton.filled(
-      onPressed: onTap,
-      style: IconButton.styleFrom(
-        backgroundColor: AppColors.primary,
-        disabledBackgroundColor: AppColors.textMuted,
-        foregroundColor: Colors.white,
-        minimumSize: const Size(44, 44),
-      ),
-      icon: Icon(icon, size: 20),
     );
   }
 }

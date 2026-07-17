@@ -51,8 +51,21 @@ class _FarmerShellState extends State<FarmerShell> {
     ).pushNamed(RouteNames.formStok, arguments: photoPath);
     if (item is! StockItem || !mounted) return;
 
+    var savedItem = item;
+    if (widget.repositories case final repositories?) {
+      try {
+        savedItem = await repositories.stock.create(item);
+      } catch (error) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Gagal menyimpan stok: $error')));
+        return;
+      }
+    }
+    if (!mounted) return;
     setState(() {
-      _incomingStockItem = item;
+      _incomingStockItem = savedItem;
       _selectedIndex = 1;
     });
   }

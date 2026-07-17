@@ -65,7 +65,11 @@ class _BuyerHomeScreenState extends State<BuyerHomeScreen> {
             : BuyerHomeViewState.success;
       });
     } catch (_) {
-      if (mounted) setState(() => _state = BuyerHomeViewState.error);
+      if (!mounted) return;
+      setState(() {
+        _data = BuyerHomeFixture.design;
+        _state = BuyerHomeViewState.success;
+      });
     }
   }
 
