@@ -77,8 +77,6 @@ class _BuyerOrdersScreenState extends State<BuyerOrdersScreen> {
                             context,
                             RouteNames.buyerProfile,
                           ),
-                          onUnavailable: (label) =>
-                              _message('$label akan segera tersedia.'),
                         ),
                       ),
                     ],

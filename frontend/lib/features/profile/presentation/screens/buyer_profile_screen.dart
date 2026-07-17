@@ -67,8 +67,6 @@ class BuyerProfileScreen extends StatelessWidget {
                             RouteNames.buyerOrders,
                           ),
                           onProfile: () {},
-                          onUnavailable: (label) =>
-                              _message(context, '$label akan segera tersedia.'),
                         ),
                       ),
                     ],
