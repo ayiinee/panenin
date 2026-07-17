@@ -245,6 +245,9 @@ class _RejectDemandDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      key: const ValueKey('reject-request-dialog'),
+      backgroundColor: Colors.white,
+      surfaceTintColor: Colors.white,
       insetPadding: const EdgeInsets.symmetric(horizontal: 16),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
@@ -304,10 +307,12 @@ class _RejectDemandDialog extends StatelessWidget {
                     child: SizedBox(
                       height: 44,
                       child: FilledButton(
+                        key: const ValueKey('cancel-reject-request'),
                         onPressed: () => Navigator.pop(context, false),
                         style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.surfaceSubtle,
-                          foregroundColor: AppColors.textPrimary,
+                          backgroundColor: Colors.white,
+                          foregroundColor: AppColors.danger,
+                          side: const BorderSide(color: AppColors.danger),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

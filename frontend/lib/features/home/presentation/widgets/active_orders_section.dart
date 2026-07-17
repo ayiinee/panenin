@@ -116,21 +116,22 @@ class OrderCard extends StatelessWidget {
       label: '${order.customer}, ${order.product}, ${order.statusLabel}',
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(10),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(9),
+          borderRadius: BorderRadius.circular(10),
           child: Container(
+            key: ValueKey('order-card-surface-${order.code}'),
             constraints: const BoxConstraints(minHeight: 116),
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              border: Border.all(color: const Color(0x33000000), width: 0.5),
-              borderRadius: BorderRadius.circular(9),
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(10),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x14000000),
-                  blurRadius: 6,
-                  offset: Offset(0, 2),
+                  color: Color(0x1A000000),
+                  blurRadius: 4,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
@@ -195,13 +196,13 @@ class _OrderDetails extends StatelessWidget {
           order.product,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, height: 18 / 14),
+          style: const TextStyle(fontSize: 13, height: 17 / 13),
         ),
         Text(
           order.price,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 14, height: 18 / 14),
+          style: const TextStyle(fontSize: 13, height: 17 / 13),
         ),
         const SizedBox(height: 3),
         Text(
@@ -274,7 +275,7 @@ class _OrderActions extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 11),
       ],
     );
   }

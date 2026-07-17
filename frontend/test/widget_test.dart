@@ -66,8 +66,11 @@ void main() {
     expect(find.text('IDR 150.000'), findsOneWidget);
     expect(find.text('Alvin!'), findsOneWidget);
     expect(
-      tester.getTopLeft(find.byKey(const ValueKey('home-message-icon'))).dy,
-      closeTo(tester.getTopLeft(find.text('Panenin')).dy, 1),
+      tester.getCenter(find.byKey(const ValueKey('home-message-icon'))).dy,
+      closeTo(
+        tester.getCenter(find.byKey(const ValueKey('home-guest-avatar'))).dy,
+        1,
+      ),
     );
     expect(find.byKey(const ValueKey('home-guest-avatar')), findsOneWidget);
     expect(
@@ -87,7 +90,25 @@ void main() {
     expect(find.text('Rumah Makan Suhat'), findsNothing);
     expect(find.text('Warung Tegal Klojen'), findsOneWidget);
     expect(find.text('Warung Swimpit'), findsOneWidget);
+    final orderCard = tester.widget<Container>(
+      find.byKey(const ValueKey('order-card-surface-E841KG')),
+    );
+    final orderDecoration = orderCard.decoration! as BoxDecoration;
+    expect(orderDecoration.color, Colors.white);
+    expect(orderDecoration.border, isNull);
+    expect(
+      tester.widget<Text>(find.text('Kacang Panjang')).style?.fontSize,
+      13,
+    );
     expect(find.byIcon(Icons.visibility_outlined), findsNothing);
+    for (final label in const ['Terima Permintaan', 'Negosiasi', 'Tolak']) {
+      final button = tester.widget<FilledButton>(
+        find
+            .ancestor(of: find.text(label), matching: find.byType(FilledButton))
+            .first,
+      );
+      expect(button.style?.textStyle?.resolve({})?.fontWeight, FontWeight.w700);
+    }
     expect(
       demoOrders.singleWhere((order) => order.code == 'E841KG').statusColor,
       AppColors.danger,
@@ -145,6 +166,21 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Mbak Rina'), findsOneWidget);
+      final cancelButton = tester.widget<FilledButton>(
+        find.byKey(const ValueKey('cancel-reject-request')),
+      );
+      expect(cancelButton.style?.backgroundColor?.resolve({}), Colors.white);
+      expect(
+        cancelButton.style?.foregroundColor?.resolve({}),
+        AppColors.danger,
+      );
+      expect(cancelButton.style?.side?.resolve({})?.color, AppColors.danger);
+      expect(
+        tester
+            .widget<Dialog>(find.byKey(const ValueKey('reject-request-dialog')))
+            .backgroundColor,
+        Colors.white,
+      );
 
       await tester.tap(find.text('Batalkan'));
       await tester.pumpAndSettle();
@@ -282,6 +318,7 @@ void main() {
       RouteNames.kelolaPesanan,
     );
     expect(find.text('Pesanan Aktif'), findsOneWidget);
+    expect(tester.widget<Text>(find.text('Tomat')).style?.fontSize, 13);
     expect(
       tester
           .getSize(find.byKey(const ValueKey('active-order-progress-line')))
@@ -549,6 +586,47 @@ void main() {
 
     expect(find.byIcon(Icons.more_vert_rounded), findsWidgets);
     expect(find.byIcon(Icons.edit_outlined), findsNothing);
+    final card = tester.widget<Container>(
+      find.byKey(const ValueKey('stock-card-surface-cabai-merah')),
+    );
+    final decoration = card.decoration! as BoxDecoration;
+    expect(decoration.color, Colors.white);
+    expect(decoration.border, isNull);
+    for (final field in const ['quantity', 'price', 'status']) {
+      expect(
+        find.descendant(
+          of: find.byKey(ValueKey('stock-$field-cabai-merah')),
+          matching: find.byType(Container),
+        ),
+        findsNothing,
+      );
+    }
+    final quantityY = tester
+        .getTopLeft(find.byKey(const ValueKey('stock-quantity-cabai-merah')))
+        .dy;
+    final priceY = tester
+        .getTopLeft(find.byKey(const ValueKey('stock-price-cabai-merah')))
+        .dy;
+    final statusY = tester
+        .getTopLeft(find.byKey(const ValueKey('stock-status-cabai-merah')))
+        .dy;
+    expect(quantityY, lessThan(priceY));
+    expect(priceY, lessThan(statusY));
+    expect(
+      tester
+          .getBottomRight(
+            find.byKey(const ValueKey('stock-status-cabai-merah')),
+          )
+          .dy,
+      closeTo(
+        tester
+            .getBottomRight(
+              find.byKey(const ValueKey('stock-image-cabai-merah')),
+            )
+            .dy,
+        1,
+      ),
+    );
     await tester.tap(find.byKey(const ValueKey('edit-stock-cabai-merah')));
     await tester.pumpAndSettle();
 
