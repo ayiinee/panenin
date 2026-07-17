@@ -22,6 +22,8 @@ frontend/config.local.json
 *.md
 !docs/
 !docs/**/*.md
+!whatsapp_service/*.md
+!whatsapp_service/**/*.md
 # OS
 .DS_Store
 Thumbs.db

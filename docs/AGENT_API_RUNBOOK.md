@@ -69,21 +69,45 @@ Use `127.0.0.1` for web and `10.0.2.2` for an Android emulator when the backend 
 
 ## Demo WhatsApp dan remote control
 
-The WhatsApp provider adapter is isolated in `whatsapp_service/`. It receives
-the raw Fonnte sender only in memory, derives an HMAC channel subject, and calls
-the narrow internal-agent API. It never forwards or stores the raw number in
-Panenin Core.
+`whatsapp_service/` is a byte-for-byte import of
+`farelfhr/panenin-whatsapp-rag-lab` branch
+`feat/panenin-core-business-tools` at commit
+`d77ea505d2367b2faa44092b8e95d46195b00a94`. It is a standalone Node.js and
+TypeScript service containing the Fonnte gateway, Groq/Gemini RAG pipeline,
+isolated Supabase lab schema, OpenClaw runtime, local knowledge base, and its
+own test suite.
 
-Start Core on port 8001 and the WhatsApp service on port 8000:
+Install the exact locked dependencies and create the local environment file:
 
 ```powershell
-.\scripts\start_whatsapp_demo.ps1
+cd whatsapp_service
+npm ci
+Copy-Item .env.example .env
 ```
 
-Open `http://127.0.0.1:8000/demo` for a provider-independent demo. The demo
-flow is `HUBUNGKAN DEMO12`, `STOK`, `UBAH STOK 1 32`, then
-`KONFIRMASI 123456`. The browser simulator uses isolated in-memory data and
-cannot mutate Supabase.
+Fill `whatsapp_service/.env` according to
+`whatsapp_service/docs/MANUAL_SETUP_CHECKLIST.md`. Do not reuse the backend
+service-role key unless the isolated lab schema and its security boundary have
+been reviewed.
+
+Run the quality gates:
+
+```powershell
+npm run typecheck
+npm test
+npm run build
+```
+
+Run the complete local demo:
+
+```powershell
+npm run demo
+```
+
+The launcher starts or reuses the internal RAG tool, OpenClaw gateway, and
+webhook service. Only the webhook port may be exposed publicly. Never expose
+the OpenClaw gateway on port `18789` or the internal tool server on port
+`3001`.
 
 For a real Fonnte device, first start a temporary public tunnel:
 
@@ -91,47 +115,25 @@ For a real Fonnte device, first start a temporary public tunnel:
 cloudflared tunnel --url http://127.0.0.1:8000 --no-autoupdate
 ```
 
-Copy the generated `https://...trycloudflare.com` URL into `.env`:
+Copy the generated `https://...trycloudflare.com` URL into
+`whatsapp_service/.env`, including the webhook route and URL-encoded secret:
 
 ```env
-PUBLIC_WEBHOOK_URL=https://...trycloudflare.com/webhook/fonnte
+PUBLIC_WEBHOOK_URL=https://...trycloudflare.com/webhook/fonnte?token=...
 ```
 
 Register the secure webhook and recommended device settings:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\configure_fonnte_webhook.ps1
+npm run fonnte:activate
+npm run demo:check
 ```
 
-The script derives a one-way URL token from `FONNTE_WEBHOOK_SECRET`, then
-enables auto-read and personal chat. The gateway also accepts Fonnte's official
-webhook secret payload when the dashboard Secret Key is set to the exact same
-value. Test from a different WhatsApp number because self chat is intentionally
-disabled.
-
-The real provider path uses Panenin Core and therefore requires the database
-migrations, `PANENIN_AI_SERVICE_TOKEN`, its matching SHA-256 hash in
-`PANENIN_AI_SERVICE_TOKEN_HASH`, and a non-empty `WHATSAPP_SUBJECT_PEPPER`.
-
-Before a live-number demo, verify the device token without printing it:
-
-```powershell
-$token = ((Get-Content .env | Where-Object { $_ -match '^FONNTE_TOKEN=' }) -split '=', 2)[1]
-$profile = Invoke-RestMethod -Method Post -Uri https://api.fonnte.com/device -Headers @{ Authorization = $token }
-$profile.status
-```
-
-The result must be `True` and `device_status` should be `connect`.
-
-Supported deterministic commands:
-
-- `HUBUNGKAN <kode>`
-- `STATUS`
-- `STOK`
-- `UBAH STOK <nomor> <jumlah>`
-- `PESANAN`
-- `TERIMA|TOLAK|SIAP|BATAL|SELESAI <nomor>`
-- `KONFIRMASI <kode>` or `BATALKAN`
+Despite the reference branch name, that snapshot does not implement the
+Panenin Core business tools or the `HUBUNGKAN` identity flow. Its own
+`docs/PANENIN_CORE_INTEGRATION_PLAN.md` marks those capabilities as blocked
+pending the canonical Core contract. The imported service therefore remains
+read-only/draft-only and must not be presented as a transaction gateway.
 
 ## Export and validate contract
 
