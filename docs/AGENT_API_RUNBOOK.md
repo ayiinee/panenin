@@ -85,18 +85,33 @@ flow is `HUBUNGKAN DEMO12`, `STOK`, `UBAH STOK 1 32`, then
 `KONFIRMASI 123456`. The browser simulator uses isolated in-memory data and
 cannot mutate Supabase.
 
-For a real Fonnte device, set its POST webhook to:
+For a real Fonnte device, first start a temporary public tunnel:
 
-```text
-https://your-public-host.example/webhook/fonnte
+```powershell
+cloudflared tunnel --url http://127.0.0.1:8000 --no-autoupdate
 ```
 
-Configure Fonnte's webhook secret to exactly match
-`FONNTE_WEBHOOK_SECRET`. Enable auto-read as required by Fonnte. The real
-provider path uses Panenin Core and therefore requires the database migrations,
-`PANENIN_AI_SERVICE_TOKEN`, its matching SHA-256 hash in
-`PANENIN_AI_SERVICE_TOKEN_HASH`, and a non-empty
-`WHATSAPP_SUBJECT_PEPPER`.
+Copy the generated `https://...trycloudflare.com` URL into `.env`:
+
+```env
+PUBLIC_WEBHOOK_URL=https://...trycloudflare.com/webhook/fonnte
+```
+
+Register the secure webhook and recommended device settings:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\configure_fonnte_webhook.ps1
+```
+
+The script derives a one-way URL token from `FONNTE_WEBHOOK_SECRET`, then
+enables auto-read and personal chat. The gateway also accepts Fonnte's official
+webhook secret payload when the dashboard Secret Key is set to the exact same
+value. Test from a different WhatsApp number because self chat is intentionally
+disabled.
+
+The real provider path uses Panenin Core and therefore requires the database
+migrations, `PANENIN_AI_SERVICE_TOKEN`, its matching SHA-256 hash in
+`PANENIN_AI_SERVICE_TOKEN_HASH`, and a non-empty `WHATSAPP_SUBJECT_PEPPER`.
 
 Before a live-number demo, verify the device token without printing it:
 

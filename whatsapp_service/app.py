@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
+import hashlib
 from typing import Any
 
 import httpx
@@ -19,6 +22,27 @@ engine = ConversationEngine(PaneninAgentClient(settings))
 demo_engine = ConversationEngine(DemoAgentClient())
 
 
+@dataclass
+class GatewayDiagnostics:
+    started_at: str
+    webhook_requests: int = 0
+    webhook_rejected: int = 0
+    messages_accepted: int = 0
+    messages_ignored: int = 0
+    replies_sent: int = 0
+    send_failures: int = 0
+    last_inbound_at: str | None = None
+    last_reply_at: str | None = None
+    last_error: str | None = None
+    last_payload_keys: list[str] | None = None
+    last_auth_source: str | None = None
+    last_rejected_payload_keys: list[str] | None = None
+    last_rejected_auth_source: str | None = None
+
+
+diagnostics = GatewayDiagnostics(started_at=datetime.now(UTC).isoformat())
+
+
 class DemoMessage(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -36,28 +60,69 @@ async def health() -> dict[str, str]:
     return {"status": "ok", "service": "panenin-whatsapp"}
 
 
+@app.get("/health/diagnostics")
+async def health_diagnostics() -> dict[str, Any]:
+    return {
+        "status": "ok",
+        "service": "panenin-whatsapp",
+        "diagnostics": asdict(diagnostics),
+    }
+
+
 @app.post("/webhook/fonnte")
+@app.post("/webhook/fonnte/{path_token}")
 async def fonnte_webhook(
     request: Request,
     background_tasks: BackgroundTasks,
+    path_token: str | None = None,
 ) -> dict[str, Any]:
+    diagnostics.webhook_requests += 1
     payload = await _read_payload(request)
-    presented_secret = str(
-        payload.get("secret")
-        or request.headers.get("X-Webhook-Secret")
-        or request.query_params.get("secret")
-        or ""
+    diagnostics.last_payload_keys = sorted(str(key) for key in payload)[:30]
+    secret_candidates = (
+        ("payload.secret", payload.get("secret")),
+        ("payload.secret_key", payload.get("secret_key")),
+        ("payload.webhook_secret", payload.get("webhook_secret")),
+        ("header", request.headers.get("X-Webhook-Secret")),
+        ("query", request.query_params.get("secret")),
+        ("path", path_token),
     )
+    auth_source, candidate = next(
+        (
+            (source, value)
+            for source, value in secret_candidates
+            if value is not None and str(value).strip()
+        ),
+        ("missing", ""),
+    )
+    diagnostics.last_auth_source = auth_source
+    presented_secret = str(candidate)
     configured_secret = settings.fonnte_webhook_secret.get_secret_value()
-    if not verify_webhook_secret(presented_secret, configured_secret):
+    expected_secret = (
+        hashlib.sha256(configured_secret.encode("utf-8")).hexdigest()
+        if auth_source == "path"
+        else configured_secret
+    )
+    if not verify_webhook_secret(presented_secret, expected_secret):
+        diagnostics.webhook_rejected += 1
+        diagnostics.last_error = "WEBHOOK_UNAUTHORIZED"
+        diagnostics.last_rejected_payload_keys = diagnostics.last_payload_keys
+        diagnostics.last_rejected_auth_source = auth_source
         raise HTTPException(status_code=401, detail="Webhook tidak valid.")
+    diagnostics.last_error = None
     sender = str(payload.get("sender", "")).strip()
     message = str(payload.get("message") or payload.get("text") or "").strip()
     if not sender or not message:
+        diagnostics.messages_ignored += 1
         return {"status": True, "ignored": True}
     if sender.endswith("@g.us"):
+        diagnostics.messages_ignored += 1
         return {"status": True, "ignored": True}
-    inbox_id = str(payload.get("inboxid", "")).strip() or None
+    raw_inbox_id = str(payload.get("inboxid", "")).strip()
+    inbox_id = raw_inbox_id if raw_inbox_id.isdigit() else None
+    diagnostics.messages_accepted += 1
+    diagnostics.last_inbound_at = datetime.now(UTC).isoformat()
+    diagnostics.last_error = None
     background_tasks.add_task(_process_and_reply, sender, message, inbox_id)
     return {"status": True}
 
@@ -93,9 +158,14 @@ async def _process_and_reply(
         reply = "Maaf, layanan Panenin sedang mengalami gangguan. Coba lagi sebentar."
     try:
         await _send_fonnte(sender, reply, inbox_id)
-    except httpx.HTTPError:
+        diagnostics.replies_sent += 1
+        diagnostics.last_reply_at = datetime.now(UTC).isoformat()
+        diagnostics.last_error = None
+    except Exception:
         # Fonnte retries the inbound webhook independently. A failed outbound
         # send must not leak provider details or crash the worker.
+        diagnostics.send_failures += 1
+        diagnostics.last_error = "FONNTE_SEND_FAILED"
         return
 
 
@@ -121,6 +191,13 @@ async def _send_fonnte(
             data=data,
         )
         response.raise_for_status()
+        try:
+            body = response.json()
+        except ValueError as exc:
+            raise RuntimeError("Fonnte response tidak valid.") from exc
+        provider_status = body.get("status") if isinstance(body, dict) else None
+        if provider_status not in {True, "true", "True", 1, "1"}:
+            raise RuntimeError("Fonnte menolak pengiriman pesan.")
 
 
 async def _read_payload(request: Request) -> dict[str, Any]:
