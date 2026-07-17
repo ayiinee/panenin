@@ -45,6 +45,13 @@ class CreateAccountScreen extends StatelessWidget {
       child: Column(
         children: [
           AuthBrandHeader(title: 'Buat Akun Anda', subtitle: subtitle),
+          if (selectedRole != null)
+            TextButton.icon(
+              key: const ValueKey('change-role-button'),
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back, size: 18),
+              label: const Text('Ubah peran'),
+            ),
           const SizedBox(height: 39),
           const AuthTextField(
             label: 'Nama Pengguna',

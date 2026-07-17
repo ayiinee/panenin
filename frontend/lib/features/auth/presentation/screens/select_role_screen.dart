@@ -11,15 +11,9 @@ import 'package:panenin/features/auth/domain/user_role.dart';
 class SelectRoleScreen extends StatelessWidget {
   const SelectRoleScreen({super.key});
 
-  static const _designWidth = 428.0;
-  static const _designHeight = 926.0;
-
   void _continueAs(BuildContext context, UserRole role) {
-    Navigator.pushReplacementNamed(
-      context,
-      RouteNames.register,
-      arguments: role,
-    );
+    // Keep this screen in the stack so a user can review or change their role.
+    Navigator.pushNamed(context, RouteNames.register, arguments: role);
   }
 
   @override
@@ -27,41 +21,22 @@ class SelectRoleScreen extends StatelessWidget {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.white,
-        systemNavigationBarColor: const Color(0xFFF5F7EE),
+        systemNavigationBarColor: AppColors.pageBackground,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: const Color(0xFFF5F7EE),
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final pageWidth = math.min(constraints.maxWidth, _designWidth);
-            final horizontalPadding = pageWidth < 390 ? 16.0 : 19.0;
-            final cardWidth = pageWidth - (horizontalPadding * 2);
-            final compact = cardWidth < 360;
-            final cardHeight = compact ? 250.0 : 205.0;
-            final secondCardTop = 453.0 + cardHeight + 18.0;
-            final pageHeight = math.max(
-              _designHeight,
-              secondCardTop + cardHeight + 85.0,
-            );
-
-            return SingleChildScrollView(
-              child: SizedBox(
-                width: constraints.maxWidth,
-                height: math.max(constraints.maxHeight, pageHeight),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: SizedBox(
-                    width: pageWidth,
-                    height: pageHeight,
-                    child: _RoleSelectionCanvas(
-                      pageWidth: pageWidth,
-                      pageHeight: pageHeight,
-                      horizontalPadding: horizontalPadding,
-                      cardWidth: cardWidth,
-                      cardHeight: cardHeight,
-                      secondCardTop: secondCardTop,
-                      compact: compact,
+        backgroundColor: AppColors.pageBackground,
+        body: SafeArea(
+          bottom: true,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final width = math.min(constraints.maxWidth, 428.0);
+              return Center(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: width),
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.only(bottom: 32),
+                    child: _RoleContent(
                       onFarmerPressed: () =>
                           _continueAs(context, UserRole.farmer),
                       onBuyerPressed: () =>
@@ -69,183 +44,132 @@ class SelectRoleScreen extends StatelessWidget {
                     ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
   }
 }
 
-class _RoleSelectionCanvas extends StatelessWidget {
-  const _RoleSelectionCanvas({
-    required this.pageWidth,
-    required this.pageHeight,
-    required this.horizontalPadding,
-    required this.cardWidth,
-    required this.cardHeight,
-    required this.secondCardTop,
-    required this.compact,
+class _RoleContent extends StatelessWidget {
+  const _RoleContent({
     required this.onFarmerPressed,
     required this.onBuyerPressed,
   });
 
-  final double pageWidth;
-  final double pageHeight;
-  final double horizontalPadding;
-  final double cardWidth;
-  final double cardHeight;
-  final double secondCardTop;
-  final bool compact;
   final VoidCallback onFarmerPressed;
   final VoidCallback onBuyerPressed;
 
   @override
   Widget build(BuildContext context) {
+    final horizontal = MediaQuery.sizeOf(context).width < 390 ? 16.0 : 19.0;
     return Stack(
-      clipBehavior: Clip.hardEdge,
       children: [
-        Positioned.fill(
-          top: 42,
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 205,
           child: Image.asset(
             AppAssets.authBackground,
             fit: BoxFit.cover,
             alignment: Alignment.topCenter,
+            excludeFromSemantics: true,
           ),
         ),
-        Positioned(
-          top: 148,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: AppColors.card,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(29),
+        Container(
+          margin: const EdgeInsets.only(top: 106),
+          padding: EdgeInsets.fromLTRB(horizontal, 34, horizontal, 0),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(29)),
+            boxShadow: const [
+              BoxShadow(
+                color: AppColors.surfaceShadow,
+                offset: Offset(0, -3),
+                blurRadius: 4,
               ),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x40000000),
-                  offset: Offset(0, -3),
-                  blurRadius: 4,
-                ),
-              ],
-            ),
-            child: SizedBox(height: pageHeight - 148),
+            ],
           ),
-        ),
-        const Positioned(
-          top: 209,
-          right: -57,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Color(0xBFE3F0E4),
-              shape: BoxShape.circle,
-            ),
-            child: SizedBox.square(dimension: 212),
-          ),
-        ),
-        const Positioned(
-          top: 166,
-          right: -137,
-          width: 298,
-          height: 258,
-          child: _HeroBasket(),
-        ),
-        Positioned(
-          top: 182,
-          left: horizontalPadding,
-          child: const _PaneninBrand(),
-        ),
-        Positioned(
-          top: 244,
-          left: horizontalPadding,
-          right: horizontalPadding,
-          child: const Text.rich(
-            TextSpan(
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 32,
-                fontWeight: FontWeight.w600,
-                height: 1.25,
-              ),
-              children: [
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const _PaneninBrand(),
+              const SizedBox(height: 8),
+              const Text.rich(
                 TextSpan(
-                  text: 'Halo!\n',
-                  style: TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w600,
+                    height: 1.25,
+                  ),
+                  children: [
+                    TextSpan(
+                      text: 'Halo!\n',
+                      style: TextStyle(color: AppColors.textPrimary),
+                    ),
+                    TextSpan(text: 'Selamat Datang\ndi Panenin!'),
+                  ],
                 ),
-                TextSpan(text: 'Selamat Datang\ndi Panenin!'),
-              ],
+              ),
+              const SizedBox(height: 22),
+              const Text(
+                'Silakan pilih peran yang paling menggambarkan dirimu.',
+                style: TextStyle(
+                  color: AppColors.textSecondary,
+                  fontSize: 14,
+                  height: 1.45,
+                ),
+              ),
+              const SizedBox(height: 24),
+              _RoleCard(
+                key: const ValueKey('farmer-role-card'),
+                title: 'Saya ingin menjual\nhasil panen',
+                description:
+                    'Tawarkan hasil panen dari kelompok tani kepada UMKM.',
+                action: 'Jual Hasil Panen',
+                image: AppAssets.roleFarmer,
+                buttonColor: AppColors.primary,
+                buttonForeground: Colors.white,
+                buttonKey: const ValueKey('farmer-role-button'),
+                semanticLabel:
+                    'Pilih peran petani. Menjual hasil panen kepada UMKM.',
+                onPressed: onFarmerPressed,
+              ),
+              const SizedBox(height: 18),
+              _RoleCard(
+                key: const ValueKey('buyer-role-card'),
+                title: 'Saya ingin membeli\nhasil panen',
+                description:
+                    'Cari supplier terpercaya dan dapatkan pasokan bahan baku segar.',
+                action: 'Beli Hasil Panen',
+                image: AppAssets.roleBuyer,
+                buttonColor: AppColors.accent,
+                buttonForeground: AppColors.textPrimary,
+                buttonKey: const ValueKey('buyer-role-button'),
+                semanticLabel:
+                    'Pilih peran UMKM. Membeli hasil panen dari supplier.',
+                onPressed: onBuyerPressed,
+              ),
+            ],
+          ),
+        ),
+        Positioned(
+          top: 18,
+          right: -110,
+          child: ExcludeSemantics(
+            child: Image.asset(
+              AppAssets.roleHeroBasket,
+              width: 270,
+              height: 235,
+              fit: BoxFit.contain,
             ),
-          ),
-        ),
-        Positioned(
-          top: 375,
-          left: horizontalPadding,
-          width: math.min(266, pageWidth - (horizontalPadding * 2)),
-          child: const Text(
-            'Silahkan Pilih Peran Berikut yang Paling '
-            'Menggambarkan Dirimu',
-            style: TextStyle(
-              color: AppColors.textSecondary,
-              fontSize: 14,
-              height: 1.45,
-            ),
-          ),
-        ),
-        Positioned(
-          top: 453,
-          left: horizontalPadding,
-          child: _RoleCard(
-            key: const ValueKey('farmer-role-card'),
-            width: cardWidth,
-            height: cardHeight,
-            compact: compact,
-            title: 'Saya ingin menjual\nhasil panen',
-            description:
-                'Tawarkan hasil panen dari\nkelompok tani Anda kepada\nUMKM.',
-            action: 'Jual Hasil Panen',
-            image: AppAssets.roleFarmer,
-            buttonColor: AppColors.primary,
-            buttonForeground: Colors.white,
-            buttonKey: const ValueKey('farmer-role-button'),
-            onPressed: onFarmerPressed,
-          ),
-        ),
-        Positioned(
-          top: secondCardTop,
-          left: horizontalPadding,
-          child: _RoleCard(
-            key: const ValueKey('buyer-role-card'),
-            width: cardWidth,
-            height: cardHeight,
-            compact: compact,
-            title: 'Saya ingin membeli\nhasil panen',
-            description:
-                'Cari supplier terpercaya dan\ndapatkan pasokan bahan\nbaku segar dan rutin.',
-            action: 'Beli Hasil Panen',
-            image: AppAssets.roleBuyer,
-            buttonColor: AppColors.accent,
-            buttonForeground: AppColors.textPrimary,
-            buttonKey: const ValueKey('buyer-role-button'),
-            onPressed: onBuyerPressed,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _HeroBasket extends StatelessWidget {
-  const _HeroBasket();
-
-  @override
-  Widget build(BuildContext context) {
-    return Transform.rotate(
-      angle: -0.122,
-      child: Image.asset(AppAssets.roleHeroBasket, fit: BoxFit.contain),
     );
   }
 }
@@ -254,44 +178,39 @@ class _PaneninBrand extends StatelessWidget {
   const _PaneninBrand();
 
   @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 112,
-      height: 54,
-      child: Stack(
-        children: [
-          Positioned(
-            left: 0,
-            top: 0,
-            width: 54,
-            height: 54,
-            child: Image.asset(AppAssets.logo),
-          ),
-          const Positioned(
-            left: 39,
-            top: 28,
-            child: Text(
-              'anenin',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                height: 1,
-              ),
+  Widget build(BuildContext context) => SizedBox(
+    width: 112,
+    height: 54,
+    child: Stack(
+      children: [
+        Positioned(
+          left: 0,
+          top: 0,
+          width: 54,
+          height: 54,
+          child: ExcludeSemantics(child: Image.asset(AppAssets.logo)),
+        ),
+        const Positioned(
+          left: 39,
+          top: 28,
+          child: Text(
+            'anenin',
+            style: TextStyle(
+              color: AppColors.primary,
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              height: 1,
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
 }
 
 class _RoleCard extends StatelessWidget {
   const _RoleCard({
     super.key,
-    required this.width,
-    required this.height,
-    required this.compact,
     required this.title,
     required this.description,
     required this.action,
@@ -299,149 +218,110 @@ class _RoleCard extends StatelessWidget {
     required this.buttonColor,
     required this.buttonForeground,
     required this.buttonKey,
+    required this.semanticLabel,
     required this.onPressed,
   });
 
-  final double width;
-  final double height;
-  final bool compact;
-  final String title;
-  final String description;
-  final String action;
-  final String image;
-  final Color buttonColor;
-  final Color buttonForeground;
+  final String title, description, action, image, semanticLabel;
+  final Color buttonColor, buttonForeground;
   final Key buttonKey;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
-      child: ColoredBox(
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final cardHeight = 205.0 + math.max(0, textScale - 1) * 150;
+    return Semantics(
+      container: true,
+      button: true,
+      excludeSemantics: true,
+      label: semanticLabel,
+      child: Material(
         color: Colors.white,
-        child: SizedBox(
-          width: width,
-          height: height,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final double imageWidth = compact
-                  ? constraints.maxWidth * 0.47
-                  : math.min(203.0, constraints.maxWidth * 0.52);
-              final contentWidth = constraints.maxWidth - imageWidth;
-              final contentPadding = compact ? 12.0 : 15.0;
-              final double buttonWidth = math.min(
-                155.0,
-                contentWidth - (contentPadding * 2),
-              );
-
-              return Stack(
-                children: [
-                  Positioned(
-                    top: 0,
-                    right: 0,
-                    width: imageWidth,
-                    height: constraints.maxHeight,
-                    child: Image.asset(image, fit: BoxFit.cover),
-                  ),
-                  Positioned(
-                    top: compact ? 18 : 20,
-                    left: 0,
-                    width: contentWidth,
-                    bottom: 6,
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: contentPadding),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            maxLines: compact ? 3 : 2,
-                            overflow: TextOverflow.ellipsis,
+        borderRadius: BorderRadius.circular(8),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(8),
+          child: SizedBox(
+            height: cardHeight,
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 52,
+                  child: Padding(
+                    padding: const EdgeInsets.all(15),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            color: AppColors.textPrimary,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Expanded(
+                          child: Text(
+                            description,
                             style: const TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              height: 1.5,
+                              color: AppColors.textMuted,
+                              fontSize: 14,
+                              height: 1.4,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          Expanded(
-                            child: Align(
-                              alignment: Alignment.topLeft,
-                              child: Text(
-                                description,
-                                maxLines: compact ? 5 : 4,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
-                                  fontSize: 14,
-                                  height: 20 / 14,
-                                ),
+                        ),
+                        SizedBox(
+                          height: 44,
+                          child: Material(
+                            key: buttonKey,
+                            color: buttonColor,
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      action,
+                                      style: TextStyle(
+                                        color: buttonForeground,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                  Icon(
+                                    Icons.arrow_forward,
+                                    size: 18,
+                                    color: buttonForeground,
+                                  ),
+                                ],
                               ),
                             ),
                           ),
-                          SizedBox(
-                            width: buttonWidth,
-                            height: 44,
-                            child: Semantics(
-                              button: true,
-                              excludeSemantics: true,
-                              label: action,
-                              child: Material(
-                                key: buttonKey,
-                                color: buttonColor,
-                                borderRadius: BorderRadius.circular(12),
-                                child: InkWell(
-                                  onTap: onPressed,
-                                  borderRadius: BorderRadius.circular(12),
-                                  splashColor: buttonForeground.withValues(
-                                    alpha: 0.18,
-                                  ),
-                                  highlightColor: buttonForeground.withValues(
-                                    alpha: 0.10,
-                                  ),
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: compact ? 10 : 12,
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          child: FittedBox(
-                                            alignment: Alignment.centerLeft,
-                                            fit: BoxFit.scaleDown,
-                                            child: Text(
-                                              action,
-                                              style: TextStyle(
-                                                color: buttonForeground,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                height: 16 / 12,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 6),
-                                        Icon(
-                                          Icons.arrow_forward,
-                                          size: 18,
-                                          color: buttonForeground,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              );
-            },
+                ),
+                Expanded(
+                  flex: 48,
+                  child: ExcludeSemantics(
+                    child: Image.asset(
+                      image,
+                      fit: BoxFit.cover,
+                      height: double.infinity,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

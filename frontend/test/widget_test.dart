@@ -140,6 +140,53 @@ void main() {
     );
   });
 
+  testWidgets('role cards are accessible and entirely tappable', (
+    tester,
+  ) async {
+    final semantics = tester.ensureSemantics();
+    await tester.pumpWidget(const PaneninApp());
+
+    expect(
+      find.bySemanticsLabel(
+        'Pilih peran petani. Menjual hasil panen kepada UMKM.',
+      ),
+      findsOneWidget,
+    );
+    await tester.ensureVisible(find.byKey(const ValueKey('buyer-role-card')));
+    await tester.tap(find.byKey(const ValueKey('buyer-role-card')));
+    await tester.pumpAndSettle();
+    expect(find.byType(CreateAccountScreen), findsOneWidget);
+    expect(find.text('Daftar sebagai UMKM'), findsOneWidget);
+    semantics.dispose();
+  });
+
+  testWidgets('role selection supports landscape and large text', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(700, 320));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      const MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(2)),
+        child: MaterialApp(home: SelectRoleScreen()),
+      ),
+    );
+
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.byKey(const ValueKey('buyer-role-card')));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('registration can return to role selection', (tester) async {
+    await tester.pumpWidget(const PaneninApp());
+    await tester.tap(find.byKey(const ValueKey('farmer-role-card')));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byKey(const ValueKey('change-role-button')));
+    await tester.pumpAndSettle();
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+  });
+
   testWidgets('farmer registration continues to profile setup', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
