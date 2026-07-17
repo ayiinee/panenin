@@ -66,6 +66,17 @@ const agentFieldsSchema = z.object({
   PANENIN_RAG_TOOL_URL: loopbackUrl.default("http://127.0.0.1:3001/internal/tools/rag-query"),
 });
 
+const paneninCoreFieldsSchema = z.object({
+  PANENIN_CORE_ENABLED: envBoolean.default(false),
+  PANENIN_CORE_API_URL: z.string().url().default("http://127.0.0.1:8000"),
+  PANENIN_AI_SERVICE_TOKEN: optionalText,
+  WHATSAPP_SUBJECT_PEPPER: optionalText,
+});
+
+export const paneninCoreEnvSchema = baseEnvSchema
+  .merge(paneninCoreFieldsSchema)
+  .superRefine(validateEnabledPaneninCoreFields);
+
 export const agentEnvSchema = baseEnvSchema
   .merge(agentFieldsSchema)
   .merge(groqFieldsSchema)
@@ -88,7 +99,11 @@ export const fullEnvSchema = geminiEnvSchema
   .merge(supabaseEnvSchema)
   .merge(fonnteEnvSchema)
   .merge(agentFieldsSchema)
-  .superRefine(validateEnabledAgentFields);
+  .merge(paneninCoreFieldsSchema)
+  .superRefine((data, context) => {
+    validateEnabledAgentFields(data, context);
+    validateEnabledPaneninCoreFields(data, context);
+  });
 
 export type BaseEnv = z.infer<typeof baseEnvSchema>;
 export type GeminiEnv = z.infer<typeof geminiEnvSchema>;
@@ -96,6 +111,7 @@ export type GroqEnv = z.infer<typeof groqEnvSchema>;
 export type SupabaseEnv = z.infer<typeof supabaseEnvSchema>;
 export type FonnteEnv = z.infer<typeof fonnteEnvSchema>;
 export type AgentEnv = z.infer<typeof agentEnvSchema>;
+export type PaneninCoreEnv = z.infer<typeof paneninCoreEnvSchema>;
 export type InternalToolEnv = z.infer<typeof internalToolEnvSchema>;
 export type OlagonTestEnv = z.infer<typeof olagonTestEnvSchema>;
 export type FullEnv = z.infer<typeof fullEnvSchema>;
@@ -122,6 +138,12 @@ export function parseFonnteEnv(input: NodeJS.ProcessEnv = process.env): FonnteEn
 
 export function parseAgentEnv(input: NodeJS.ProcessEnv = process.env): AgentEnv {
   return parseEnv(agentEnvSchema, input);
+}
+
+export function parsePaneninCoreEnv(
+  input: NodeJS.ProcessEnv = process.env,
+): PaneninCoreEnv {
+  return parseEnv(paneninCoreEnvSchema, input);
 }
 
 export function parseInternalToolEnv(input: NodeJS.ProcessEnv = process.env): InternalToolEnv {
@@ -188,6 +210,26 @@ function validateEnabledAgentFields(
         code: z.ZodIssueCode.custom,
         path: [field],
         message: minimum === 1 ? "wajib diisi saat OPENCLAW_ENABLED=true" : "minimal 24 karakter saat OPENCLAW_ENABLED=true",
+      });
+    }
+  }
+}
+
+function validateEnabledPaneninCoreFields(
+  data: z.infer<typeof paneninCoreFieldsSchema>,
+  context: z.RefinementCtx,
+): void {
+  if (!data.PANENIN_CORE_ENABLED) return;
+
+  for (const field of [
+    "PANENIN_AI_SERVICE_TOKEN",
+    "WHATSAPP_SUBJECT_PEPPER",
+  ] as const) {
+    if (data[field].length < 24) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: [field],
+        message: "minimal 24 karakter saat PANENIN_CORE_ENABLED=true",
       });
     }
   }

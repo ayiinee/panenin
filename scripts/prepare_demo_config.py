@@ -16,7 +16,7 @@ def main() -> None:
     env = dotenv_values(ROOT / ".env")
     missing = [
         key
-        for key in ("SUPABASE_URL", "SUPABASE_ANON_KEY")
+        for key in ("SUPABASE_URL", "SUPABASE_ANON_KEY", "WHATSAPP_PHONE_NUMBER")
         if not (env.get(key) or "").strip()
     ]
     if missing:
@@ -27,6 +27,7 @@ def main() -> None:
         "SUPABASE_ANON_KEY": env["SUPABASE_ANON_KEY"],
         "AUTH_REDIRECT_URL": "com.panenin.app://login-callback/",
         "PASSWORD_RESET_REDIRECT_URL": "com.panenin.app://reset-password/",
+        "WHATSAPP_PHONE_NUMBER": env["WHATSAPP_PHONE_NUMBER"],
     }
     output = ROOT / "frontend" / "config.local.json"
     output.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")

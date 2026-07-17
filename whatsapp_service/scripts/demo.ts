@@ -5,6 +5,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { parseFullEnv, type FullEnv } from "../src/config/env.js";
+import { PaneninCoreClient } from "../src/panenin-core/client.js";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const tsxCli = resolve(repoRoot, "node_modules", "tsx", "dist", "cli.mjs");
@@ -93,13 +94,14 @@ async function checkReadiness(
   localWebhookPort: number,
 ): Promise<Array<{ label: string; ok: boolean; scope: "local" | "external" }>> {
   const webhookConfigured = hasExpectedWebhook(config);
-  const [toolReady, gatewayReady, webhookReady, fonnteReady, publicReady] = await Promise.all([
+  const [toolReady, gatewayReady, webhookReady, coreReady, fonnteReady, publicReady] = await Promise.all([
     isExpectedHttpStatus(
       `http://${config.INTERNAL_TOOL_HOST}:${config.INTERNAL_TOOL_PORT}/internal/tools/rag-query`,
       405,
     ),
     isPortOpen(services[1].port),
     isExpectedHttpStatus(`http://127.0.0.1:${localWebhookPort}/health`, 200),
+    checkPaneninCore(config),
     checkFonnteDevice(config.FONNTE_TOKEN),
     checkPublicHealth(config.PUBLIC_WEBHOOK_URL),
   ]);
@@ -108,10 +110,32 @@ async function checkReadiness(
     { label: "internal RAG tool hanya tersedia di loopback", ok: toolReady, scope: "local" },
     { label: "OpenClaw gateway tersedia di loopback", ok: gatewayReady, scope: "local" },
     { label: "webhook app lokal sehat", ok: webhookReady, scope: "local" },
+    {
+      label: config.PANENIN_CORE_ENABLED
+        ? "service token dan identity endpoint Panenin Core siap"
+        : "integrasi Panenin Core dinonaktifkan",
+      ok: coreReady,
+      scope: "local",
+    },
     { label: "Fonnte token valid dan device connected", ok: fonnteReady, scope: "external" },
     { label: "PUBLIC_WEBHOOK_URL memakai route dan secret demo yang benar", ok: webhookConfigured, scope: "external" },
     { label: "endpoint publik /health dapat dijangkau", ok: publicReady, scope: "external" },
   ];
+}
+
+async function checkPaneninCore(config: FullEnv): Promise<boolean> {
+  if (!config.PANENIN_CORE_ENABLED) return true;
+  try {
+    const client = new PaneninCoreClient({
+      baseUrl: config.PANENIN_CORE_API_URL,
+      serviceToken: config.PANENIN_AI_SERVICE_TOKEN,
+      timeoutMs: 5_000,
+    });
+    const identity = await client.resolveIdentity(`wa:v1:${"0".repeat(64)}`);
+    return typeof identity.linked === "boolean";
+  } catch {
+    return false;
+  }
 }
 
 async function checkFonnteDevice(token: string): Promise<boolean> {

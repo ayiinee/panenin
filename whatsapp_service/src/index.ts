@@ -20,6 +20,9 @@ import { HybridConversationRouter } from "./conversation/hybrid-router.js";
 import { OpenClawClient } from "./agent/openclaw-client.js";
 import { createAgentSessionId } from "./agent/session-id.js";
 import { createWebhookHandler } from "./webhook/handler.js";
+import type { ConversationRouterLike } from "./webhook/handler.js";
+import { PaneninCoreClient } from "./panenin-core/client.js";
+import { PaneninCoreRouter } from "./panenin-core/router.js";
 
 export function createLabServer() {
   const env = parseFullEnv();
@@ -48,7 +51,7 @@ export function createLabServer() {
     gateway: textClient,
     sessionStore: store,
   });
-  const router = new HybridConversationRouter({
+  const hybridRouter = new HybridConversationRouter({
     localRouter,
     enabled: env.OPENCLAW_ENABLED,
     ...(env.OPENCLAW_ENABLED
@@ -62,6 +65,16 @@ export function createLabServer() {
         }
       : {}),
   });
+  const router: ConversationRouterLike = env.PANENIN_CORE_ENABLED
+    ? new PaneninCoreRouter({
+        delegate: hybridRouter,
+        coreClient: new PaneninCoreClient({
+          baseUrl: env.PANENIN_CORE_API_URL,
+          serviceToken: env.PANENIN_AI_SERVICE_TOKEN,
+        }),
+        subjectPepper: env.WHATSAPP_SUBJECT_PEPPER,
+      })
+    : hybridRouter;
   const webhook = createWebhookHandler({
     provider,
     store,

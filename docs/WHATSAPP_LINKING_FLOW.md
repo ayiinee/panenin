@@ -14,6 +14,15 @@
 3. FastAPI locks the code, verifies hash/expiry/single-use state, prevents the subject from being linked to another user, upserts `user_channels`, marks it verified, consumes the code, and audits the link atomically.
 4. Later calls use `identity/resolve` or `/context`; no code is required again.
 
+The WhatsApp service handles the following commands before any AI routing:
+
+- `HUBUNGKAN <kode>` exchanges the one-time code.
+- `STATUS AKUN` resolves the opaque subject and reports linked/unlinked state.
+- `RINGKASAN` reads the redacted Core account context.
+
+These commands never enter OpenClaw and never send the raw sender number to
+Panenin Core.
+
 ## Status refresh
 
 Flutter calls `GET /api/v1/whatsapp/status`. The response includes only linked state and verification time. It never returns the stored channel subject.
@@ -27,3 +36,15 @@ Flutter calls `GET /api/v1/whatsapp/status`. The response includes only linked s
 - Missing profile: link-code generation is rejected
 
 Codes and raw contact data are never included in audit JSON or application error messages.
+
+## Required runtime alignment
+
+- FastAPI: `PANENIN_AI_SERVICE_TOKEN_HASH` and `CONFIRMATION_CODE_PEPPER`.
+- WhatsApp service: `PANENIN_CORE_ENABLED=true`,
+  `PANENIN_CORE_API_URL`, the matching plaintext
+  `PANENIN_AI_SERVICE_TOKEN`, and an independent
+  `WHATSAPP_SUBJECT_PEPPER`.
+- Flutter: `WHATSAPP_PHONE_NUMBER` in the dart-define configuration.
+
+The service-token plaintext and subject pepper are backend-only secrets. The
+WhatsApp phone number is a public application build value.

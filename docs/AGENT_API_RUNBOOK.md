@@ -90,6 +90,27 @@ Fill `whatsapp_service/.env` according to
 service-role key unless the isolated lab schema and its security boundary have
 been reviewed.
 
+Enable the Panenin Core identity integration in `whatsapp_service/.env`:
+
+```env
+PANENIN_CORE_ENABLED=true
+PANENIN_CORE_API_URL=http://127.0.0.1:8000
+PANENIN_AI_SERVICE_TOKEN=<plaintext token whose SHA-256 is configured in Core>
+WHATSAPP_SUBJECT_PEPPER=<independent random secret, at least 24 characters>
+```
+
+`PANENIN_AI_SERVICE_TOKEN` must match `PANENIN_AI_SERVICE_TOKEN_HASH` in the
+FastAPI environment. `WHATSAPP_SUBJECT_PEPPER` stays only in the WhatsApp
+service and deterministically pseudonymizes the sender as `wa:v1:<hmac>`.
+
+The Flutter build also requires the public demo-device number:
+
+```env
+WHATSAPP_PHONE_NUMBER=628...
+```
+
+Run `scripts/prepare_demo_config.py` after adding it to the root `.env`.
+
 Run the quality gates:
 
 ```powershell
@@ -129,11 +150,11 @@ npm run fonnte:activate
 npm run demo:check
 ```
 
-Despite the reference branch name, that snapshot does not implement the
-Panenin Core business tools or the `HUBUNGKAN` identity flow. Its own
-`docs/PANENIN_CORE_INTEGRATION_PLAN.md` marks those capabilities as blocked
-pending the canonical Core contract. The imported service therefore remains
-read-only/draft-only and must not be presented as a transaction gateway.
+The service implements the deterministic `HUBUNGKAN <kode>`, `STATUS AKUN`,
+and read-only `RINGKASAN` flows against the canonical Core contract. These
+commands bypass OpenClaw. Transaction preview/confirmation tools remain
+intentionally unavailable in the WhatsApp service; it must not be presented as
+a transaction gateway.
 
 ## Export and validate contract
 
