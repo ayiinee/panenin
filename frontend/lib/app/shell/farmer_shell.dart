@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:panenin/app/app_repositories.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
@@ -8,10 +9,16 @@ import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 
 class FarmerShell extends StatefulWidget {
-  const FarmerShell({this.initialIndex = 0, this.initialStockItem, super.key});
+  const FarmerShell({
+    this.initialIndex = 0,
+    this.initialStockItem,
+    this.repositories,
+    super.key,
+  });
 
   final int initialIndex;
   final StockItem? initialStockItem;
+  final AppRepositories? repositories;
 
   @override
   State<FarmerShell> createState() => _FarmerShellState();
@@ -58,12 +65,21 @@ class _FarmerShellState extends State<FarmerShell> {
         index: _selectedIndex,
         children: [
           FarmerHomeScreen(
+            demandRepository: widget.repositories?.demands,
+            orderRepository: widget.repositories?.orders,
             embeddedInShell: true,
             onOpenStock: () => _selectDestination(1),
             onOpenOrders: () => _selectDestination(2),
           ),
-          StockScreen(embeddedInShell: true, initialItem: _incomingStockItem),
-          const ManageOrdersScreen(embeddedInShell: true),
+          StockScreen(
+            repository: widget.repositories?.stock,
+            embeddedInShell: true,
+            initialItem: _incomingStockItem,
+          ),
+          ManageOrdersScreen(
+            repository: widget.repositories?.orders,
+            embeddedInShell: true,
+          ),
           const FarmerProfileScreen(embeddedInShell: true),
         ],
       ),

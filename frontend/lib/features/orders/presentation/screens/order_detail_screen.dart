@@ -31,9 +31,14 @@ class OrderDetailData {
 }
 
 class OrderDetailScreen extends StatefulWidget {
-  const OrderDetailScreen({required this.order, super.key});
+  const OrderDetailScreen({
+    required this.order,
+    this.enableLocalTransitions = true,
+    super.key,
+  });
 
   final OrderDetailData order;
+  final bool enableLocalTransitions;
 
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();
@@ -90,7 +95,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                     _CustomerCard(order: widget.order),
                     const SizedBox(height: 32),
                     _ShippingDetails(order: widget.order),
-                    if (_stage != OrderDetailStage.completed) ...[
+                    if (widget.enableLocalTransitions &&
+                        _stage != OrderDetailStage.completed) ...[
                       const SizedBox(height: 36),
                       SizedBox(
                         width: double.infinity,

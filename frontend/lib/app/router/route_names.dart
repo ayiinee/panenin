@@ -15,6 +15,7 @@ abstract final class RouteNames {
   static const detailPesanan = '/detail-pesanan';
 
   static const stokSaya = '/stok';
+  static const whatsapp = '/whatsapp';
   static const fotoJualCepat = '/jual-cepat/foto';
   static const formStok = '/stok/form';
 

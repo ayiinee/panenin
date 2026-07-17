@@ -4,6 +4,8 @@ import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
+import 'package:panenin/features/orders/data/order_repository.dart';
+import 'package:panenin/features/orders/presentation/order_ui_mapper.dart';
 
 enum _OrderFilter { all, awaitingPayment, processing, completed }
 
@@ -12,8 +14,13 @@ const _progressCardTop = 120.0;
 const _progressCardHeight = 110.0;
 
 class ManageOrdersScreen extends StatefulWidget {
-  const ManageOrdersScreen({this.embeddedInShell = false, super.key});
+  const ManageOrdersScreen({
+    this.repository,
+    this.embeddedInShell = false,
+    super.key,
+  });
 
+  final OrderRepository? repository;
   final bool embeddedInShell;
 
   @override
@@ -22,9 +29,35 @@ class ManageOrdersScreen extends StatefulWidget {
 
 class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
   _OrderFilter _filter = _OrderFilter.all;
+  late List<OrderListItem> _orders;
+  bool _loading = false;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _orders = widget.repository == null ? List.of(demoOrders) : [];
+    if (widget.repository != null) _load();
+  }
+
+  Future<void> _load() async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      final records = await widget.repository!.list();
+      if (!mounted) return;
+      setState(() => _orders = records.map(mapOrderToListItem).toList());
+    } catch (error) {
+      if (mounted) setState(() => _error = '$error');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   List<OrderListItem> get _visibleOrders {
-    if (_filter == _OrderFilter.all) return demoOrders;
+    if (_filter == _OrderFilter.all) return _orders;
 
     final status = switch (_filter) {
       _OrderFilter.awaitingPayment => OrderStatus.awaitingPayment,
@@ -32,7 +65,7 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
       _OrderFilter.completed => OrderStatus.completed,
       _OrderFilter.all => throw StateError('Filter semua tidak punya status'),
     };
-    return demoOrders.where((order) => order.status == status).toList();
+    return _orders.where((order) => order.status == status).toList();
   }
 
   void _openDetail(OrderListItem order) {
@@ -75,24 +108,38 @@ class _ManageOrdersScreenState extends State<ManageOrdersScreen> {
               onSelected: (filter) => setState(() => _filter = filter),
             ),
             Expanded(
-              child: ListView.separated(
-                padding: EdgeInsets.fromLTRB(
-                  20,
-                  8,
-                  20,
-                  92 + MediaQuery.paddingOf(context).bottom,
-                ),
-                itemCount: orders.length,
-                separatorBuilder: (_, _) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final order = orders[index];
-                  return OrderCard(
-                    key: ValueKey('managed-order-${order.code}'),
-                    order: order,
-                    onTap: () => _openDetail(order),
-                  );
-                },
-              ),
+              child: _loading && orders.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : _error != null && orders.isEmpty
+                  ? Center(
+                      child: OutlinedButton(
+                        onPressed: _load,
+                        child: const Text('Coba Lagi'),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: widget.repository == null
+                          ? () async {}
+                          : _load,
+                      child: ListView.separated(
+                        padding: EdgeInsets.fromLTRB(
+                          20,
+                          8,
+                          20,
+                          92 + MediaQuery.paddingOf(context).bottom,
+                        ),
+                        itemCount: orders.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final order = orders[index];
+                          return OrderCard(
+                            key: ValueKey('managed-order-${order.code}'),
+                            order: order,
+                            onTap: () => _openDetail(order),
+                          );
+                        },
+                      ),
+                    ),
             ),
           ],
         ),

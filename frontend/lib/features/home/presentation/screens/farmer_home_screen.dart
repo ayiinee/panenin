@@ -8,18 +8,25 @@ import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/home/presentation/widgets/active_orders_section.dart';
 import 'package:panenin/features/home/presentation/widgets/demand_request_card.dart';
 import 'package:panenin/features/home/presentation/widgets/farmer_home_header.dart';
+import 'package:panenin/features/demands/data/demand_repository.dart';
+import 'package:panenin/features/orders/data/order_repository.dart';
+import 'package:panenin/features/orders/presentation/order_ui_mapper.dart';
 import 'package:panenin/shared/widgets/app_notification_card.dart';
 
 enum _DemandAction { accepted, rejected }
 
 class FarmerHomeScreen extends StatefulWidget {
   const FarmerHomeScreen({
+    this.demandRepository,
+    this.orderRepository,
     this.embeddedInShell = false,
     this.onOpenStock,
     this.onOpenOrders,
     super.key,
   });
 
+  final DemandRepository? demandRepository;
+  final OrderRepository? orderRepository;
   final bool embeddedInShell;
   final VoidCallback? onOpenStock;
   final VoidCallback? onOpenOrders;
@@ -29,15 +36,15 @@ class FarmerHomeScreen extends StatefulWidget {
 }
 
 class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
-  static const _demands = [
-    (
+  static const _demoDemands = [
+    _DemandView(
       id: 'rina',
       buyerName: 'Mbak Rina',
       businessName: 'Mango Sticky Rice Sigura-Gura',
       requestText: 'Ingin langganan Cabai Merah 10 kg tiap Selasa & Jumat...',
       avatarPath: 'assets/images/home/buyer_avatar.png',
     ),
-    (
+    _DemandView(
       id: 'syaiful',
       buyerName: 'Pak Syaiful',
       businessName: 'Warung Barokah Dinoyo',
@@ -49,8 +56,59 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
 
   Timer? _notificationTimer;
   _DemandAction? _feedback;
-  final _activeDemandIds = {'rina', 'syaiful'};
+  late List<_DemandView> _demands;
+  late List<OrderListItem> _orders;
+  late Set<String> _activeDemandIds;
   bool _showNotification = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _demands = List.of(_demoDemands);
+    _orders = List.of(demoOrders);
+    _activeDemandIds = _demands.map((item) => item.id).toSet();
+    if (widget.demandRepository != null || widget.orderRepository != null) {
+      _loadData();
+    }
+  }
+
+  Future<void> _loadData() async {
+    try {
+      final demandRecords = widget.demandRepository == null
+          ? const <DemandRecord>[]
+          : await widget.demandRepository!.list();
+      final orderRecords = widget.orderRepository == null
+          ? const <OrderRecord>[]
+          : await widget.orderRepository!.list();
+      if (!mounted) return;
+      setState(() {
+        if (widget.demandRepository != null) {
+          _demands = demandRecords
+              .map(
+                (item) => _DemandView(
+                  id: item.id,
+                  buyerName: item.buyerName,
+                  businessName: item.buyerName,
+                  requestText:
+                      'Membutuhkan ${item.commodity} ${item.quantityRemaining}${item.unit} '
+                      'maks. Rp${item.maxPrice.round()}/${item.unit}',
+                  avatarPath: 'assets/images/home/buyer_avatar.png',
+                ),
+              )
+              .toList();
+          _activeDemandIds = _demands.map((item) => item.id).toSet();
+        }
+        if (widget.orderRepository != null) {
+          _orders = orderRecords.map(mapOrderToListItem).toList();
+        }
+      });
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Gagal memuat beranda: $error')));
+    }
+  }
 
   void _openOrders() {
     if (widget.onOpenOrders case final onOpenOrders?) {
@@ -69,6 +127,16 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
   }
 
   void _completeDemand(String id, _DemandAction action) {
+    if (widget.demandRepository != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Perubahan permintaan harus melalui preview dan konfirmasi eksplisit.',
+          ),
+        ),
+      );
+      return;
+    }
     if (!_activeDemandIds.contains(id)) return;
 
     _notificationTimer?.cancel();
@@ -166,7 +234,10 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
                                   onNegotiate: () {},
                                 ),
                               ),
-                          ActiveOrdersSection(onViewAll: _openOrders),
+                          ActiveOrdersSection(
+                            onViewAll: _openOrders,
+                            orders: _orders,
+                          ),
                           SizedBox(
                             height: MediaQuery.paddingOf(context).bottom + 8,
                           ),
@@ -235,6 +306,22 @@ class _FarmerHomeScreenState extends State<FarmerHomeScreen> {
       ),
     );
   }
+}
+
+class _DemandView {
+  const _DemandView({
+    required this.id,
+    required this.buyerName,
+    required this.businessName,
+    required this.requestText,
+    required this.avatarPath,
+  });
+
+  final String id;
+  final String buyerName;
+  final String businessName;
+  final String requestText;
+  final String avatarPath;
 }
 
 class _RejectDemandDialog extends StatelessWidget {

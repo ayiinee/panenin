@@ -45,13 +45,18 @@ const demoOrders = [
 ];
 
 class ActiveOrdersSection extends StatelessWidget {
-  const ActiveOrdersSection({this.onViewAll, super.key});
+  const ActiveOrdersSection({
+    this.onViewAll,
+    this.orders = demoOrders,
+    super.key,
+  });
 
   final VoidCallback? onViewAll;
+  final List<OrderListItem> orders;
 
   @override
   Widget build(BuildContext context) {
-    final activeOrders = demoOrders
+    final activeOrders = orders
         .where((order) => order.status != OrderStatus.completed)
         .toList();
 
@@ -290,6 +295,7 @@ class OrderListItem {
     required this.code,
     required this.imagePath,
     required this.status,
+    this.detailData,
   });
 
   final String customer;
@@ -299,57 +305,60 @@ class OrderListItem {
   final String code;
   final String imagePath;
   final OrderStatus status;
+  final OrderDetailData? detailData;
 
-  OrderDetailData get detail => switch (code) {
-    'E839KG' => const OrderDetailData(
-      code: 'E839KG',
-      customer: 'Tacibay',
-      tagline: 'Olahan tomat segar setiap hari',
-      recipient: 'Tacibay',
-      address: 'Jl. Tidar No. 39, Malang',
-      phone: '0812 3456 8390',
-      item: 'Tomat 20 Kg',
-      note: 'Pilih tomat matang dan segar',
-      imagePath: 'assets/images/home/buyer_avatar.png',
-      initialStage: OrderDetailStage.completed,
-    ),
-    'E840KG' => const OrderDetailData(
-      code: 'E840KG',
-      customer: 'Rumah Makan Suhat',
-      tagline: 'Masakan rumahan di kawasan Suhat',
-      recipient: 'Rumah Makan Suhat',
-      address: 'Jl. Soekarno Hatta No. 40, Malang',
-      phone: '0812 3456 8400',
-      item: 'Lobak Putih 25 Kg',
-      note: 'Ukuran sedang dan tidak memar',
-      imagePath: 'assets/images/home/pasar_induk.png',
-      initialStage: OrderDetailStage.completed,
-    ),
-    'E841KG' => const OrderDetailData(
-      code: 'E841KG',
-      customer: 'Warung Tegal Klojen',
-      tagline: 'Sedia aneka masakan rumahan khas Tegal',
-      recipient: 'Warung Tegal Klojen',
-      address: 'Jl. Klojen No. 27, Malang',
-      phone: '0812 3456 8410',
-      item: 'Kacang Panjang 15 Kg',
-      note: 'Pastikan masih segar',
-      imagePath: 'assets/images/home/warteg_owner.png',
-      initialStage: OrderDetailStage.awaitingPayment,
-    ),
-    _ => const OrderDetailData(
-      code: 'E842KG',
-      customer: 'Warung Swimpit',
-      tagline: 'Sedia nasi hangat dan lauk rumahan setiap hari',
-      recipient: 'Bu Siti',
-      address: 'Jl. Swimpit No. 8, Malang',
-      phone: '0812 3456 8420',
-      item: 'Kubis 20 Kg',
-      note: 'Pilih ukuran sedang',
-      imagePath: 'assets/images/home/swimpit_owner.png',
-      initialStage: OrderDetailStage.readyToShip,
-    ),
-  };
+  OrderDetailData get detail =>
+      detailData ??
+      switch (code) {
+        'E839KG' => const OrderDetailData(
+          code: 'E839KG',
+          customer: 'Tacibay',
+          tagline: 'Olahan tomat segar setiap hari',
+          recipient: 'Tacibay',
+          address: 'Jl. Tidar No. 39, Malang',
+          phone: '0812 3456 8390',
+          item: 'Tomat 20 Kg',
+          note: 'Pilih tomat matang dan segar',
+          imagePath: 'assets/images/home/buyer_avatar.png',
+          initialStage: OrderDetailStage.completed,
+        ),
+        'E840KG' => const OrderDetailData(
+          code: 'E840KG',
+          customer: 'Rumah Makan Suhat',
+          tagline: 'Masakan rumahan di kawasan Suhat',
+          recipient: 'Rumah Makan Suhat',
+          address: 'Jl. Soekarno Hatta No. 40, Malang',
+          phone: '0812 3456 8400',
+          item: 'Lobak Putih 25 Kg',
+          note: 'Ukuran sedang dan tidak memar',
+          imagePath: 'assets/images/home/pasar_induk.png',
+          initialStage: OrderDetailStage.completed,
+        ),
+        'E841KG' => const OrderDetailData(
+          code: 'E841KG',
+          customer: 'Warung Tegal Klojen',
+          tagline: 'Sedia aneka masakan rumahan khas Tegal',
+          recipient: 'Warung Tegal Klojen',
+          address: 'Jl. Klojen No. 27, Malang',
+          phone: '0812 3456 8410',
+          item: 'Kacang Panjang 15 Kg',
+          note: 'Pastikan masih segar',
+          imagePath: 'assets/images/home/warteg_owner.png',
+          initialStage: OrderDetailStage.awaitingPayment,
+        ),
+        _ => const OrderDetailData(
+          code: 'E842KG',
+          customer: 'Warung Swimpit',
+          tagline: 'Sedia nasi hangat dan lauk rumahan setiap hari',
+          recipient: 'Bu Siti',
+          address: 'Jl. Swimpit No. 8, Malang',
+          phone: '0812 3456 8420',
+          item: 'Kubis 20 Kg',
+          note: 'Pilih ukuran sedang',
+          imagePath: 'assets/images/home/swimpit_owner.png',
+          initialStage: OrderDetailStage.readyToShip,
+        ),
+      };
 
   String get statusLabel => switch (status) {
     OrderStatus.awaitingPayment => 'Menunggu DP',

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:panenin/app/app_repositories.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/farmer_shell.dart';
 import 'package:panenin/app/theme/app_theme.dart';
@@ -20,9 +21,10 @@ import 'package:panenin/features/orders/presentation/screens/order_detail_screen
 import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
 import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
+import 'package:panenin/features/whatsapp/presentation/whatsapp_link_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-Map<String, WidgetBuilder> buildAppRoutes() => {
+Map<String, WidgetBuilder> buildAppRoutes({AppRepositories? repositories}) => {
   RouteNames.register: (_) => const CreateAccountScreen(),
   RouteNames.login: (_) => const LoginScreen(),
   RouteNames.forgotPassword: (_) => const ForgotPasswordScreen(),
@@ -35,25 +37,35 @@ Map<String, WidgetBuilder> buildAppRoutes() => {
     saveSelectedRole: (role) => AuthService.create().saveRole(role),
   ),
   RouteNames.profile: (context) => ProfileSetupScreen(
+    repository: repositories?.profile,
     role: switch (ModalRoute.of(context)?.settings.arguments) {
       UserRole role => role,
       _ => UserRole.farmer,
     },
     saveRole: (role) => AuthService.create().saveRole(role),
   ),
-  RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
+  RouteNames.buyerHome: (_) => BuyerHomeScreen(
+    repository: repositories?.buyerHome,
+    onOpenWhatsApp: repositories == null ? null : RouteNames.whatsapp,
+  ),
   RouteNames.productDetail: ProductDetailScreen.fromRoute,
   RouteNames.negotiationChat: NegotiationChatScreen.fromRoute,
   RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute,
-  RouteNames.homePetani: (_) => const FarmerShell(),
-  RouteNames.farmerProfile: (_) => const FarmerShell(initialIndex: 3),
-  RouteNames.kelolaPesanan: (_) => const FarmerShell(initialIndex: 2),
+  RouteNames.homePetani: (_) => FarmerShell(repositories: repositories),
+  RouteNames.farmerProfile: (_) =>
+      FarmerShell(initialIndex: 3, repositories: repositories),
+  RouteNames.kelolaPesanan: (_) =>
+      FarmerShell(initialIndex: 2, repositories: repositories),
   RouteNames.detailPesanan: (context) => OrderDetailScreen(
     order: ModalRoute.settingsOf(context)!.arguments! as OrderDetailData,
+    enableLocalTransitions: repositories == null,
   ),
+  RouteNames.whatsapp: (_) =>
+      WhatsAppLinkScreen(repository: repositories?.whatsapp),
   RouteNames.stokSaya: (context) => FarmerShell(
     initialIndex: 1,
     initialStockItem: ModalRoute.settingsOf(context)!.arguments as StockItem?,
+    repositories: repositories,
   ),
   RouteNames.fotoJualCepat: (_) => const QuickSellCameraScreen(),
   RouteNames.formStok: (context) => StockFormScreen(
@@ -62,9 +74,10 @@ Map<String, WidgetBuilder> buildAppRoutes() => {
 };
 
 class PaneninApp extends StatefulWidget {
-  const PaneninApp({this.authEvents, super.key});
+  const PaneninApp({this.authEvents, this.repositories, super.key});
 
   final Stream<AuthState>? authEvents;
+  final AppRepositories? repositories;
 
   @override
   State<PaneninApp> createState() => _PaneninAppState();
@@ -113,7 +126,7 @@ class _PaneninAppState extends State<PaneninApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       initialRoute: RouteNames.register,
-      routes: buildAppRoutes(),
+      routes: buildAppRoutes(repositories: widget.repositories),
     );
   }
 }
