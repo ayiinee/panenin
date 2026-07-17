@@ -7,6 +7,7 @@ import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
@@ -32,6 +33,7 @@ class PaneninApp extends StatelessWidget {
         ),
         RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
         RouteNames.productDetail: ProductDetailScreen.fromRoute,
+        RouteNames.negotiationChat: NegotiationChatScreen.fromRoute,
         RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute,
       },
     );

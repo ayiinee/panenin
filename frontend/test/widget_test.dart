@@ -9,6 +9,7 @@ import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
 import 'package:panenin/features/marketplace/presentation/screens/recurring_supply_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
 
@@ -394,14 +395,17 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('supply contract opens recurring supply with active product', (
+  testWidgets('supply contract opens negotiation before recurring supply', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(428, 1056));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MaterialApp(
-        routes: {RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute},
+        routes: {
+          RouteNames.negotiationChat: NegotiationChatScreen.fromRoute,
+          RouteNames.recurringSupply: RecurringSupplyScreen.fromRoute,
+        },
         home: const ProductDetailScreen(),
       ),
     );
@@ -410,10 +414,125 @@ void main() {
     await tester.tap(find.text('Buat Kontrak Pasokan'));
     await tester.pumpAndSettle();
 
+    expect(find.byType(NegotiationChatScreen), findsOneWidget);
+    expect(find.byType(RecurringSupplyScreen), findsNothing);
+    expect(find.text('Balasan Nego dari Pemasok'), findsOneWidget);
+
+    await tester.drag(
+      find.byKey(const ValueKey('negotiation-chat-scroll')),
+      const Offset(0, -500),
+    );
+    await tester.pumpAndSettle();
+    tester
+        .widget<ElevatedButton>(find.byKey(const ValueKey('agree-offer')))
+        .onPressed!();
+    await tester.pumpAndSettle();
+    expect(find.byKey(const ValueKey('continue-contract')), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('continue-contract')));
+    await tester.pumpAndSettle();
+
     expect(find.byType(RecurringSupplyScreen), findsOneWidget);
     expect(find.text('Atur Pasokan Rutin'), findsOneWidget);
     expect(find.text('Tomat Segar • Grade Premium'), findsOneWidget);
-    expect(find.text('Rp 495.000'), findsWidgets);
+    expect(find.text('Rp 470.000'), findsWidgets);
+  });
+
+  testWidgets('price negotiation uses its own copy and validates price', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1056));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.negotiationChat: NegotiationChatScreen.fromRoute},
+        home: const ProductDetailScreen(),
+      ),
+    );
+
+    await tester.ensureVisible(find.text('Negosiasi Harga'));
+    await tester.tap(find.text('Negosiasi Harga'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text(
+        'Halo Pak, saya ingin menegosiasikan harga untuk pembelian berikut:',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Frekuensi'), findsNothing);
+    expect(find.text('Jadwal'), findsNothing);
+
+    await tester.drag(
+      find.byKey(const ValueKey('negotiation-chat-scroll')),
+      const Offset(0, -500),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('negotiate-again')));
+    await tester.pumpAndSettle();
+    await tester.enterText(
+      find.byKey(const ValueKey('negotiation-price-field')),
+      '',
+    );
+    await tester.tap(find.text('Kirim Ajuan'));
+    await tester.pump();
+
+    expect(find.text('Masukkan harga lebih dari Rp0.'), findsOneWidget);
+    expect(find.byType(AlertDialog), findsOneWidget);
+  });
+
+  testWidgets('negotiation chat sends a buyer message and supports states', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: NegotiationChatScreen()));
+
+    await tester.enterText(
+      find.byKey(const ValueKey('chat-message-field')),
+      'Apakah pengiriman pagi bisa?',
+    );
+    await tester.tap(find.byKey(const ValueKey('send-chat-message')));
+    await tester.pumpAndSettle();
+    expect(find.text('Apakah pengiriman pagi bisa?'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: NegotiationChatScreen(state: NegotiationChatViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: NegotiationChatScreen(state: NegotiationChatViewState.empty),
+      ),
+    );
+    expect(find.text('Belum ada percakapan'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: NegotiationChatScreen(state: NegotiationChatViewState.error),
+      ),
+    );
+    expect(find.text('Percakapan gagal dimuat'), findsOneWidget);
+  });
+
+  testWidgets('negotiation back button returns to product detail', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.productDetail: ProductDetailScreen.fromRoute},
+        home: const NegotiationChatScreen(),
+      ),
+    );
+
+    await tester.tap(find.byKey(const ValueKey('negotiation-back')));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProductDetailScreen), findsOneWidget);
+    expect(find.text('Detail Produk'), findsOneWidget);
   });
 
   testWidgets('recurring supply route falls back to official tomato fixture', (

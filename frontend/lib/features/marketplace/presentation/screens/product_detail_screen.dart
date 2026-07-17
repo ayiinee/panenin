@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
+import 'package:panenin/features/marketplace/presentation/screens/negotiation_chat_screen.dart';
 
 enum ProductDetailViewState { loading, empty, error, success }
 
@@ -129,11 +130,23 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             else
               _DescriptionSection(
                 data: widget.data,
-                onAction: _showMessage,
+                onBuy: () =>
+                    _showMessage('Produk siap ditambahkan ke pesanan.'),
                 onSupplyContract: () => Navigator.pushNamed(
                   context,
-                  RouteNames.recurringSupply,
-                  arguments: widget.data,
+                  RouteNames.negotiationChat,
+                  arguments: NegotiationChatRouteArguments(
+                    product: widget.data,
+                    intent: NegotiationIntent.supplyContract,
+                  ),
+                ),
+                onPriceNegotiation: () => Navigator.pushNamed(
+                  context,
+                  RouteNames.negotiationChat,
+                  arguments: NegotiationChatRouteArguments(
+                    product: widget.data,
+                    intent: NegotiationIntent.price,
+                  ),
                 ),
               ),
           ],
@@ -514,13 +527,15 @@ class _TabButton extends StatelessWidget {
 class _DescriptionSection extends StatelessWidget {
   const _DescriptionSection({
     required this.data,
-    required this.onAction,
+    required this.onBuy,
     required this.onSupplyContract,
+    required this.onPriceNegotiation,
   });
 
   final ProductDetailData data;
-  final ValueChanged<String> onAction;
+  final VoidCallback onBuy;
   final VoidCallback onSupplyContract;
+  final VoidCallback onPriceNegotiation;
 
   @override
   Widget build(BuildContext context) {
@@ -576,7 +591,7 @@ class _DescriptionSection extends StatelessWidget {
                 child: SizedBox(
                   height: 48,
                   child: OutlinedButton(
-                    onPressed: () => onAction('Membuka negosiasi harga...'),
+                    onPressed: onPriceNegotiation,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: const BorderSide(color: AppColors.primary),
@@ -599,8 +614,7 @@ class _DescriptionSection extends StatelessWidget {
                 child: SizedBox(
                   height: 48,
                   child: ElevatedButton(
-                    onPressed: () =>
-                        onAction('Produk siap ditambahkan ke pesanan.'),
+                    onPressed: onBuy,
                     style: ElevatedButton.styleFrom(
                       elevation: 0,
                       backgroundColor: AppColors.primary,

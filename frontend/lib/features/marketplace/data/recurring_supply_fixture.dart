@@ -54,7 +54,10 @@ abstract final class RecurringSupplyFixture {
     initialQuality: 'Grade B (Standard)',
   );
 
-  static RecurringSupplyData fromProductDetail(ProductDetailData product) {
+  static RecurringSupplyData fromProductDetail(
+    ProductDetailData product, {
+    int? unitPrice,
+  }) {
     final parsedPrice = int.tryParse(
       product.price.replaceAll(RegExp(r'[^0-9]'), ''),
     );
@@ -63,7 +66,7 @@ abstract final class RecurringSupplyFixture {
       commodityName: product.name,
       itemDescription: '${product.name} • Grade Premium',
       supplierImage: product.supplierImage,
-      unitPrice: parsedPrice ?? demo.unitPrice,
+      unitPrice: unitPrice ?? parsedPrice ?? demo.unitPrice,
       qualityOptions: demo.qualityOptions,
       initialQuality: demo.initialQuality,
     );

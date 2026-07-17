@@ -24,9 +24,13 @@ class RecurringSupplyScreen extends StatefulWidget {
   static Widget fromRoute(BuildContext context) {
     final arguments = ModalRoute.of(context)?.settings.arguments;
     return RecurringSupplyScreen(
-      data: arguments is ProductDetailData
-          ? RecurringSupplyFixture.fromProductDetail(arguments)
-          : RecurringSupplyFixture.demo,
+      data: switch (arguments) {
+        RecurringSupplyData data => data,
+        ProductDetailData product => RecurringSupplyFixture.fromProductDetail(
+          product,
+        ),
+        _ => RecurringSupplyFixture.demo,
+      },
     );
   }
 
