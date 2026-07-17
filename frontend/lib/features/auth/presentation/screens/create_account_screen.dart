@@ -30,6 +30,7 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -58,14 +59,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     final name = _nameController.text.trim();
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
-    final validationError =
-        AuthValidators.name(name) ??
-        AuthValidators.email(email) ??
-        AuthValidators.password(password);
-    if (validationError != null) {
-      _showMessage(validationError);
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isEmailLoading = true);
     try {
@@ -143,62 +137,68 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthShell(
-      child: AutofillGroup(
-        child: Column(
-          children: [
-            const AuthBrandHeader(
-              title: 'Buat Akun Anda',
-              subtitle: 'Kami hadir untuk membantu usahamu',
-            ),
-            const SizedBox(height: 39),
-            AuthTextField(
-              label: 'Nama Pengguna',
-              hint: 'Masukkan Nama Pengguna',
-              controller: _nameController,
-              enabled: !_isBusy,
-              textCapitalization: TextCapitalization.words,
-              autofillHints: const [AutofillHints.name],
-            ),
-            const SizedBox(height: 11),
-            AuthTextField(
-              label: 'Alamat Email',
-              hint: 'Masukkan Alamat Email',
-              controller: _emailController,
-              enabled: !_isBusy,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-            ),
-            const SizedBox(height: 11),
-            AuthTextField(
-              label: 'Kata Sandi',
-              hint: 'Minimal 8 karakter',
-              controller: _passwordController,
-              enabled: !_isBusy,
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.newPassword],
-              onSubmitted: (_) => _registerWithEmail(),
-            ),
-            const SizedBox(height: 27),
-            AuthPrimaryButton(
-              label: 'Daftarkan Akun',
-              isLoading: _isEmailLoading,
-              onPressed: _isBusy ? null : _registerWithEmail,
-            ),
-            const SizedBox(height: 39),
-            GoogleAuthButton(
-              action: 'Daftar',
-              isLoading: _isGoogleLoading,
-              onPressed: _isBusy ? null : _registerWithGoogle,
-            ),
-            const SizedBox(height: 12),
-            AuthSwitchLink(
-              question: 'Sudah punya akun?',
-              action: 'Masuk',
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, RouteNames.login),
-            ),
-          ],
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            children: [
+              const AuthBrandHeader(
+                title: 'Buat Akun Anda',
+                subtitle: 'Kami hadir untuk membantu usahamu',
+              ),
+              const SizedBox(height: 39),
+              AuthTextField(
+                label: 'Nama Pengguna',
+                hint: 'Masukkan Nama Pengguna',
+                controller: _nameController,
+                enabled: !_isBusy,
+                textCapitalization: TextCapitalization.words,
+                autofillHints: const [AutofillHints.name],
+                validator: (value) => AuthValidators.name(value ?? ''),
+              ),
+              const SizedBox(height: 11),
+              AuthTextField(
+                label: 'Alamat Email',
+                hint: 'Masukkan Alamat Email',
+                controller: _emailController,
+                enabled: !_isBusy,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                validator: (value) => AuthValidators.email(value ?? ''),
+              ),
+              const SizedBox(height: 11),
+              AuthTextField(
+                label: 'Kata Sandi',
+                hint: 'Minimal 8 karakter',
+                controller: _passwordController,
+                enabled: !_isBusy,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (value) => AuthValidators.password(value ?? ''),
+                onSubmitted: (_) => _registerWithEmail(),
+              ),
+              const SizedBox(height: 27),
+              AuthPrimaryButton(
+                label: 'Daftarkan Akun',
+                isLoading: _isEmailLoading,
+                onPressed: _isBusy ? null : _registerWithEmail,
+              ),
+              const SizedBox(height: 39),
+              GoogleAuthButton(
+                action: 'Daftar',
+                isLoading: _isGoogleLoading,
+                onPressed: _isBusy ? null : _registerWithGoogle,
+              ),
+              const SizedBox(height: 12),
+              AuthSwitchLink(
+                question: 'Sudah punya akun?',
+                action: 'Masuk',
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, RouteNames.login),
+              ),
+            ],
+          ),
         ),
       ),
     );

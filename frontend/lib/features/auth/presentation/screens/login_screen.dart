@@ -30,6 +30,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   AuthService? _authService;
@@ -55,12 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _signInWithEmail() async {
     final email = _emailController.text.trim().toLowerCase();
     final password = _passwordController.text;
-    final validationError =
-        AuthValidators.email(email) ?? AuthValidators.password(password);
-    if (validationError != null) {
-      _showMessage(validationError);
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isEmailLoading = true);
     try {
@@ -138,74 +134,81 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthShell(
-      child: AutofillGroup(
-        child: Column(
-          children: [
-            const AuthBrandHeader(
-              title: 'Selamat Datang Kembali',
-              subtitle: 'Masuk untuk melanjutkan usahamu',
-            ),
-            const SizedBox(height: 39),
-            AuthTextField(
-              label: 'Email',
-              hint: 'Masukkan email',
-              controller: _emailController,
-              enabled: !_isBusy,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email],
-            ),
-            const SizedBox(height: 11),
-            AuthTextField(
-              label: 'Kata Sandi',
-              hint: 'Masukkan sandi',
-              controller: _passwordController,
-              enabled: !_isBusy,
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.password],
-              onSubmitted: (_) => _signInWithEmail(),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _isBusy
-                    ? null
-                    : () => Navigator.pushNamed(
-                        context,
-                        RouteNames.forgotPassword,
-                      ),
-                style: TextButton.styleFrom(
-                  foregroundColor: const Color(0xFF2F6B3F),
-                  padding: const EdgeInsets.only(top: 2),
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text(
-                  'Lupa kata sandi?',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            children: [
+              const AuthBrandHeader(
+                title: 'Selamat Datang Kembali',
+                subtitle: 'Masuk untuk melanjutkan usahamu',
+              ),
+              const SizedBox(height: 39),
+              AuthTextField(
+                label: 'Email',
+                hint: 'Masukkan email',
+                controller: _emailController,
+                enabled: !_isBusy,
+                keyboardType: TextInputType.emailAddress,
+                autofillHints: const [AutofillHints.email],
+                validator: (value) => AuthValidators.email(value ?? ''),
+              ),
+              const SizedBox(height: 11),
+              AuthTextField(
+                label: 'Kata Sandi',
+                hint: 'Masukkan sandi',
+                controller: _passwordController,
+                enabled: !_isBusy,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                validator: (value) => AuthValidators.password(value ?? ''),
+                onSubmitted: (_) => _signInWithEmail(),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _isBusy
+                      ? null
+                      : () => Navigator.pushNamed(
+                          context,
+                          RouteNames.forgotPassword,
+                        ),
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF2F6B3F),
+                    padding: const EdgeInsets.only(top: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Lupa kata sandi?',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 18),
-            AuthPrimaryButton(
-              label: 'Masuk',
-              isLoading: _isEmailLoading,
-              onPressed: _isBusy ? null : _signInWithEmail,
-            ),
-            const SizedBox(height: 39),
-            GoogleAuthButton(
-              action: 'Masuk',
-              isLoading: _isGoogleLoading,
-              onPressed: _isBusy ? null : _signInWithGoogle,
-            ),
-            const SizedBox(height: 12),
-            AuthSwitchLink(
-              question: 'Belum punya akun?',
-              action: 'Daftar',
-              onPressed: () =>
-                  Navigator.pushReplacementNamed(context, RouteNames.register),
-            ),
-          ],
+              const SizedBox(height: 18),
+              AuthPrimaryButton(
+                label: 'Masuk',
+                isLoading: _isEmailLoading,
+                onPressed: _isBusy ? null : _signInWithEmail,
+              ),
+              const SizedBox(height: 39),
+              GoogleAuthButton(
+                action: 'Masuk',
+                isLoading: _isGoogleLoading,
+                onPressed: _isBusy ? null : _signInWithGoogle,
+              ),
+              const SizedBox(height: 12),
+              AuthSwitchLink(
+                question: 'Belum punya akun?',
+                action: 'Daftar',
+                onPressed: () => Navigator.pushReplacementNamed(
+                  context,
+                  RouteNames.register,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

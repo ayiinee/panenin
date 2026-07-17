@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/app/theme/app_colors.dart';
+import 'package:panenin/core/validation/input_validators.dart';
 import 'package:panenin/features/stock/domain/stock_item.dart';
 
 class StockFormScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _StockFormScreenState extends State<StockFormScreen> {
   late DateTime _harvestedAt = widget.item?.harvestedAt ?? DateTime.now();
   late final String? _photoStoragePath =
       widget.capturedPhotoPath ?? widget.item?.photoStoragePath;
+  bool _quantityTouched = false;
 
   bool get _isEditing => widget.item != null;
 
@@ -36,8 +38,10 @@ class _StockFormScreenState extends State<StockFormScreen> {
     super.dispose();
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() => _quantityTouched = true);
+    if (!_formKey.currentState!.validate() || _quantity <= 0) return;
 
     final existing = widget.item;
     final item = StockItem(
@@ -52,7 +56,21 @@ class _StockFormScreenState extends State<StockFormScreen> {
       imagePath: existing?.imagePath,
       photoStoragePath: _photoStoragePath,
     );
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) =>
+          _InventoryConfirmationDialog(item: item, isEditing: _isEditing),
+    );
+    if (confirmed != true || !mounted) return;
     Navigator.of(context).pop(item);
+  }
+
+  void _changeQuantity(int delta) {
+    final next = (_quantity + delta).clamp(0, 999999);
+    setState(() {
+      _quantity = next;
+      _quantityTouched = true;
+    });
   }
 
   @override
@@ -76,6 +94,7 @@ class _StockFormScreenState extends State<StockFormScreen> {
                 ),
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -106,11 +125,16 @@ class _StockFormScreenState extends State<StockFormScreen> {
                         key: const ValueKey('stock-name-field'),
                         controller: _nameController,
                         textCapitalization: TextCapitalization.words,
+                        inputFormatters: [
+                          LengthLimitingTextInputFormatter(120),
+                        ],
                         decoration: _inputDecoration('Contoh: Cabai Merah'),
-                        validator: (value) =>
-                            value == null || value.trim().isEmpty
-                            ? 'Nama produk wajib diisi.'
-                            : null,
+                        validator: (value) => InputValidators.requiredText(
+                          value,
+                          label: 'Nama produk',
+                          minLength: 2,
+                          maxLength: 120,
+                        ),
                       ),
                       const SizedBox(height: 26),
                       _FieldLabel(text: 'Tanggal Panen'),
@@ -141,9 +165,22 @@ class _StockFormScreenState extends State<StockFormScreen> {
                         quantity: _quantity,
                         onDecrease: _quantity == 0
                             ? null
-                            : () => setState(() => _quantity--),
-                        onIncrease: () => setState(() => _quantity++),
+                            : () => _changeQuantity(-1),
+                        onIncrease: _quantity >= 999999
+                            ? null
+                            : () => _changeQuantity(1),
                       ),
+                      if (_quantityTouched && _quantity <= 0) ...[
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Jumlah stok harus lebih dari 0.',
+                          key: ValueKey('stock-quantity-error'),
+                          style: TextStyle(
+                            color: AppColors.danger,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 26),
                       _FieldLabel(text: 'Satuan'),
                       const SizedBox(height: 8),
@@ -176,16 +213,15 @@ class _StockFormScreenState extends State<StockFormScreen> {
                         keyboardType: TextInputType.number,
                         inputFormatters: [
                           FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(9),
                         ],
                         decoration: _inputDecoration(
                           '49.500',
                         ).copyWith(prefixText: 'Rp '),
-                        validator: (value) {
-                          final price = int.tryParse(value ?? '');
-                          return price == null || price <= 0
-                              ? 'Harga jual wajib diisi.'
-                              : null;
-                        },
+                        validator: (value) => InputValidators.positiveInteger(
+                          value,
+                          label: 'Harga jual',
+                        ),
                       ),
                       const SizedBox(height: 28),
                       SizedBox(
@@ -217,6 +253,101 @@ class _StockFormScreenState extends State<StockFormScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InventoryConfirmationDialog extends StatelessWidget {
+  const _InventoryConfirmationDialog({
+    required this.item,
+    required this.isEditing,
+  });
+
+  final StockItem item;
+  final bool isEditing;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      key: const ValueKey('inventory-confirmation-dialog'),
+      title: const Row(
+        children: [
+          Icon(Icons.inventory_2_outlined, color: AppColors.primary),
+          SizedBox(width: 10),
+          Expanded(child: Text('Konfirmasi Inventaris')),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            isEditing
+                ? 'Pastikan perubahan stok berikut sudah benar.'
+                : 'Pastikan data stok berikut sudah benar.',
+          ),
+          const SizedBox(height: 16),
+          _ConfirmationRow(label: 'Produk', value: item.name),
+          _ConfirmationRow(
+            label: 'Jumlah',
+            value: '${item.quantity} ${item.unit}',
+          ),
+          _ConfirmationRow(
+            label: 'Harga',
+            value: 'Rp ${_formatPrice(item.price)}/${item.unit}',
+          ),
+          if (item.harvestedAt case final harvestedAt?)
+            _ConfirmationRow(
+              label: 'Tanggal panen',
+              value: _formatDate(harvestedAt),
+            ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          key: const ValueKey('cancel-inventory-confirmation'),
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Periksa Lagi'),
+        ),
+        FilledButton(
+          key: const ValueKey('confirm-inventory'),
+          onPressed: () => Navigator.pop(context, true),
+          child: Text(isEditing ? 'Simpan Perubahan' : 'Tambah Inventaris'),
+        ),
+      ],
+    );
+  }
+}
+
+class _ConfirmationRow extends StatelessWidget {
+  const _ConfirmationRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontWeight: FontWeight.w700),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -298,7 +429,7 @@ class _QuantityStepper extends StatelessWidget {
 
   final int quantity;
   final VoidCallback? onDecrease;
-  final VoidCallback onIncrease;
+  final VoidCallback? onIncrease;
 
   @override
   Widget build(BuildContext context) {
@@ -429,3 +560,8 @@ String _formatDate(DateTime value) {
   ];
   return '${value.day} ${months[value.month - 1]} ${value.year}';
 }
+
+String _formatPrice(int value) => value.toString().replaceAllMapped(
+  RegExp(r'\B(?=(\d{3})+(?!\d))'),
+  (_) => '.',
+);

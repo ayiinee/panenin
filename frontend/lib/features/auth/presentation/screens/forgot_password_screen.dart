@@ -23,6 +23,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   AuthService? _authService;
   bool _isLoading = false;
@@ -35,11 +36,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   Future<void> _sendReset() async {
     final email = _emailController.text.trim().toLowerCase();
-    final validationError = AuthValidators.email(email);
-    if (validationError != null) {
-      _showMessage(validationError);
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
     try {
@@ -74,41 +71,45 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthShell(
-      child: AutofillGroup(
-        child: Column(
-          children: [
-            const AuthBrandHeader(
-              title: 'Lupa Kata Sandi?',
-              subtitle: 'Kami akan mengirim tautan pemulihan ke emailmu',
-            ),
-            const SizedBox(height: 39),
-            AuthTextField(
-              label: 'Alamat Email',
-              hint: 'Masukkan alamat email',
-              controller: _emailController,
-              enabled: !_isLoading,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.email],
-              onSubmitted: (_) => _sendReset(),
-            ),
-            const SizedBox(height: 27),
-            AuthPrimaryButton(
-              label: 'Kirim Tautan Pemulihan',
-              isLoading: _isLoading,
-              onPressed: _isLoading ? null : _sendReset,
-            ),
-            const SizedBox(height: 16),
-            TextButton(
-              onPressed: _isLoading
-                  ? null
-                  : () => Navigator.pushReplacementNamed(
-                      context,
-                      RouteNames.login,
-                    ),
-              child: const Text('Kembali ke halaman masuk'),
-            ),
-          ],
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            children: [
+              const AuthBrandHeader(
+                title: 'Lupa Kata Sandi?',
+                subtitle: 'Kami akan mengirim tautan pemulihan ke emailmu',
+              ),
+              const SizedBox(height: 39),
+              AuthTextField(
+                label: 'Alamat Email',
+                hint: 'Masukkan alamat email',
+                controller: _emailController,
+                enabled: !_isLoading,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.email],
+                validator: (value) => AuthValidators.email(value ?? ''),
+                onSubmitted: (_) => _sendReset(),
+              ),
+              const SizedBox(height: 27),
+              AuthPrimaryButton(
+                label: 'Kirim Tautan Pemulihan',
+                isLoading: _isLoading,
+                onPressed: _isLoading ? null : _sendReset,
+              ),
+              const SizedBox(height: 16),
+              TextButton(
+                onPressed: _isLoading
+                    ? null
+                    : () => Navigator.pushReplacementNamed(
+                        context,
+                        RouteNames.login,
+                      ),
+                child: const Text('Kembali ke halaman masuk'),
+              ),
+            ],
+          ),
         ),
       ),
     );

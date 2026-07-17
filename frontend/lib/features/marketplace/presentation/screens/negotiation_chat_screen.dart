@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/core/validation/input_validators.dart';
 import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
 import 'package:panenin/features/marketplace/data/recurring_supply_fixture.dart';
 
@@ -59,6 +60,7 @@ class _NegotiationChatScreenState extends State<NegotiationChatScreen> {
   late int _buyerPrice;
   late int _sellerPrice;
   int _attemptsLeft = 2;
+  String? _messageError;
 
   @override
   void initState() {
@@ -95,10 +97,15 @@ class _NegotiationChatScreenState extends State<NegotiationChatScreen> {
 
   void _sendMessage() {
     final message = _messageController.text.trim();
-    if (message.isEmpty) return;
+    final error = InputValidators.chatMessage(message);
+    if (error != null) {
+      setState(() => _messageError = error);
+      return;
+    }
     setState(() {
       _messages.add(message);
       _messageController.clear();
+      _messageError = null;
     });
     _scrollToBottom();
   }
@@ -120,6 +127,11 @@ class _NegotiationChatScreenState extends State<NegotiationChatScreen> {
               FilteringTextInputFormatter.digitsOnly,
               LengthLimitingTextInputFormatter(9),
             ],
+            onChanged: (_) {
+              if (errorText != null) {
+                setDialogState(() => errorText = null);
+              }
+            },
             decoration: InputDecoration(
               labelText: 'Harga per kg',
               prefixText: 'Rp ',
@@ -209,6 +221,15 @@ class _NegotiationChatScreenState extends State<NegotiationChatScreen> {
                       _Composer(
                         controller: _messageController,
                         onSend: _sendMessage,
+                        errorText: _messageError,
+                        onChanged: (value) {
+                          if (_messageError == null) return;
+                          setState(
+                            () => _messageError = InputValidators.chatMessage(
+                              value,
+                            ),
+                          );
+                        },
                       ),
                   ],
                 ),
@@ -775,9 +796,16 @@ class _DealRow extends StatelessWidget {
 }
 
 class _Composer extends StatelessWidget {
-  const _Composer({required this.controller, required this.onSend});
+  const _Composer({
+    required this.controller,
+    required this.onSend,
+    required this.errorText,
+    required this.onChanged,
+  });
   final TextEditingController controller;
   final VoidCallback onSend;
+  final String? errorText;
+  final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -793,10 +821,13 @@ class _Composer extends StatelessWidget {
           controller: controller,
           textInputAction: TextInputAction.send,
           onSubmitted: (_) => onSend(),
+          onChanged: onChanged,
+          inputFormatters: [LengthLimitingTextInputFormatter(500)],
           decoration: InputDecoration(
             filled: true,
             fillColor: Colors.white,
             hintText: 'Ketik pesanmu...',
+            errorText: errorText,
             contentPadding: const EdgeInsets.only(
               left: 20,
               top: 15,

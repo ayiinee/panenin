@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/core/validation/input_validators.dart';
 import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
 import 'package:panenin/features/marketplace/data/recurring_supply_fixture.dart';
 
@@ -57,6 +58,7 @@ class _RecurringSupplyScreenState extends State<RecurringSupplyScreen> {
   DeliveryFrequency _frequency = DeliveryFrequency.daily;
   late String _quality;
   final Set<int> _selectedDays = {0, 1, 2, 3, 4, 5, 6};
+  bool _quantityTouched = false;
 
   int get _quantity => int.tryParse(_quantityController.text) ?? 0;
   int get _quantityInKilograms => _quantity * _unit.kilogramMultiplier;
@@ -272,7 +274,15 @@ class _RecurringSupplyScreenState extends State<RecurringSupplyScreen> {
                 _QuantityAndUnit(
                   controller: _quantityController,
                   selectedUnit: _unit,
-                  onQuantityChanged: (_) => setState(() {}),
+                  errorText: _quantityTouched
+                      ? InputValidators.positiveInteger(
+                          _quantityController.text,
+                          label: 'Jumlah',
+                          maxValue: 999999,
+                        )
+                      : null,
+                  onQuantityChanged: (_) =>
+                      setState(() => _quantityTouched = true),
                   onUnitChanged: (unit) => setState(() => _unit = unit),
                 ),
                 const SizedBox(height: 17),
@@ -516,12 +526,14 @@ class _QuantityAndUnit extends StatelessWidget {
   const _QuantityAndUnit({
     required this.controller,
     required this.selectedUnit,
+    required this.errorText,
     required this.onQuantityChanged,
     required this.onUnitChanged,
   });
 
   final TextEditingController controller;
   final DeliveryUnit selectedUnit;
+  final String? errorText;
   final ValueChanged<String> onQuantityChanged;
   final ValueChanged<DeliveryUnit> onUnitChanged;
 
@@ -619,11 +631,29 @@ class _QuantityAndUnit extends StatelessWidget {
             ],
           ),
         );
-        if (constraints.maxWidth >= 358) return row;
-        return FittedBox(
-          fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
-          child: SizedBox(width: 358, child: row),
+        final responsiveRow = constraints.maxWidth >= 358
+            ? row
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: SizedBox(width: 358, child: row),
+              );
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            responsiveRow,
+            if (errorText case final message?) ...[
+              const SizedBox(height: 6),
+              Text(
+                message,
+                key: const ValueKey('recurring-quantity-error'),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ],
         );
       },
     );

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/core/validation/input_validators.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/features/home/data/buyer_home_fixture.dart';
 import 'package:panenin/features/home/data/buyer_home_repository.dart';
@@ -194,38 +195,7 @@ class _BuyerHomeContent extends StatelessWidget {
             onAction: onAction,
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            height: 44,
-            child: TextField(
-              key: const ValueKey('buyer-home-search'),
-              onSubmitted: (value) => onAction(
-                value.trim().isEmpty
-                    ? 'Masukkan komoditas yang ingin dicari.'
-                    : 'Mencari $value...',
-              ),
-              decoration: InputDecoration(
-                hintText: 'Cari sayuran, buah, atau petani...',
-                hintStyle: const TextStyle(
-                  color: Color(0xFFA1A9B8),
-                  fontSize: 14,
-                ),
-                prefixIcon: const Icon(
-                  Icons.search,
-                  color: Color(0xFF868FA0),
-                  size: 20,
-                ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(7),
-                  borderSide: const BorderSide(color: Color(0xFFD9DDE4)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(7),
-                  borderSide: const BorderSide(color: AppColors.primary),
-                ),
-              ),
-            ),
-          ),
+          _BuyerSearchField(onSearch: onAction),
           const SizedBox(height: 24),
           _SupplyBanner(
             onPressed: () => onAction('Membuka semua komoditas...'),
@@ -300,6 +270,68 @@ class _BuyerHomeContent extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BuyerSearchField extends StatefulWidget {
+  const _BuyerSearchField({required this.onSearch});
+
+  final ValueChanged<String> onSearch;
+
+  @override
+  State<_BuyerSearchField> createState() => _BuyerSearchFieldState();
+}
+
+class _BuyerSearchFieldState extends State<_BuyerSearchField> {
+  final _formKey = GlobalKey<FormState>();
+
+  void _search(String value) {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    widget.onSearch('Mencari ${value.trim()}...');
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: TextFormField(
+        key: const ValueKey('buyer-home-search'),
+        textInputAction: TextInputAction.search,
+        inputFormatters: [LengthLimitingTextInputFormatter(80)],
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        validator: InputValidators.search,
+        onFieldSubmitted: _search,
+        decoration: InputDecoration(
+          hintText: 'Cari sayuran, buah, atau petani...',
+          hintStyle: const TextStyle(color: Color(0xFFA1A9B8), fontSize: 14),
+          prefixIcon: const Icon(
+            Icons.search,
+            color: Color(0xFF868FA0),
+            size: 20,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 10),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(7),
+            borderSide: const BorderSide(color: Color(0xFFD9DDE4)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(7),
+            borderSide: const BorderSide(color: AppColors.primary),
+          ),
+          errorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(7),
+            borderSide: BorderSide(color: Theme.of(context).colorScheme.error),
+          ),
+          focusedErrorBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(7),
+            borderSide: BorderSide(
+              color: Theme.of(context).colorScheme.error,
+              width: 1.5,
+            ),
+          ),
+        ),
       ),
     );
   }

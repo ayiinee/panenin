@@ -19,6 +19,7 @@ class ResetPasswordScreen extends StatefulWidget {
 }
 
 class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _passwordController = TextEditingController();
   final _confirmationController = TextEditingController();
   AuthService? _authService;
@@ -33,14 +34,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
   Future<void> _updatePassword() async {
     final password = _passwordController.text;
-    final confirmation = _confirmationController.text;
-    final validationError =
-        AuthValidators.password(password) ??
-        AuthValidators.passwordConfirmation(password, confirmation);
-    if (validationError != null) {
-      _showMessage(validationError);
-      return;
-    }
+    if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isLoading = true);
     try {
@@ -82,40 +76,48 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthShell(
-      child: AutofillGroup(
-        child: Column(
-          children: [
-            const AuthBrandHeader(
-              title: 'Buat Kata Sandi Baru',
-              subtitle: 'Gunakan minimal 8 karakter',
-            ),
-            const SizedBox(height: 39),
-            AuthTextField(
-              label: 'Kata Sandi Baru',
-              hint: 'Minimal 8 karakter',
-              controller: _passwordController,
-              enabled: !_isLoading,
-              obscureText: true,
-              autofillHints: const [AutofillHints.newPassword],
-            ),
-            const SizedBox(height: 11),
-            AuthTextField(
-              label: 'Konfirmasi Kata Sandi',
-              hint: 'Ulangi kata sandi baru',
-              controller: _confirmationController,
-              enabled: !_isLoading,
-              obscureText: true,
-              textInputAction: TextInputAction.done,
-              autofillHints: const [AutofillHints.newPassword],
-              onSubmitted: (_) => _updatePassword(),
-            ),
-            const SizedBox(height: 27),
-            AuthPrimaryButton(
-              label: 'Simpan Kata Sandi',
-              isLoading: _isLoading,
-              onPressed: _isLoading ? null : _updatePassword,
-            ),
-          ],
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            children: [
+              const AuthBrandHeader(
+                title: 'Buat Kata Sandi Baru',
+                subtitle: 'Gunakan minimal 8 karakter',
+              ),
+              const SizedBox(height: 39),
+              AuthTextField(
+                label: 'Kata Sandi Baru',
+                hint: 'Minimal 8 karakter',
+                controller: _passwordController,
+                enabled: !_isLoading,
+                obscureText: true,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (value) => AuthValidators.password(value ?? ''),
+              ),
+              const SizedBox(height: 11),
+              AuthTextField(
+                label: 'Konfirmasi Kata Sandi',
+                hint: 'Ulangi kata sandi baru',
+                controller: _confirmationController,
+                enabled: !_isLoading,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.newPassword],
+                validator: (value) => AuthValidators.passwordConfirmation(
+                  _passwordController.text,
+                  value ?? '',
+                ),
+                onSubmitted: (_) => _updatePassword(),
+              ),
+              const SizedBox(height: 27),
+              AuthPrimaryButton(
+                label: 'Simpan Kata Sandi',
+                isLoading: _isLoading,
+                onPressed: _isLoading ? null : _updatePassword,
+              ),
+            ],
+          ),
         ),
       ),
     );

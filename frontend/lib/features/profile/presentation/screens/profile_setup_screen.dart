@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
+import 'package:panenin/core/validation/input_validators.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/profile/data/profile_repository.dart';
 
@@ -56,10 +57,12 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
   }
 
   String? _required(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Bagian ini wajib diisi.';
-    }
-    return null;
+    return InputValidators.requiredText(
+      value,
+      label: 'Bagian ini',
+      minLength: 2,
+      maxLength: 300,
+    );
   }
 
   void _showMessage(String message) {
@@ -191,6 +194,8 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                             right: pageWidth < 390 ? 16 : 21,
                             child: Form(
                               key: _formKey,
+                              autovalidateMode:
+                                  AutovalidateMode.onUserInteraction,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
@@ -238,6 +243,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                         ? 'Masukkan nama pengguna'
                                         : 'Masukkan nama petani',
                                     validator: _required,
+                                    maxLength: 80,
                                   ),
                                   const SizedBox(height: 12),
                                   _FieldLabel(
@@ -281,6 +287,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                         ? 'Masukkan nama bisnis'
                                         : 'Masukkan nama kelompok tani',
                                     validator: isBuyer ? null : _required,
+                                    maxLength: 120,
                                   ),
                                   const SizedBox(height: 12),
                                   SizedBox(
@@ -295,6 +302,7 @@ class _ProfileSetupScreenState extends State<ProfileSetupScreen> {
                                           hint: 'Tambahkan alamatmu',
                                           validator: _required,
                                           maxLines: 3,
+                                          maxLength: 300,
                                         ),
                                         Positioned(
                                           top: 112,
@@ -395,6 +403,7 @@ class _ProfileTextField extends StatelessWidget {
     required this.hint,
     required this.validator,
     this.maxLines = 1,
+    this.maxLength = 120,
     super.key,
   });
 
@@ -403,6 +412,7 @@ class _ProfileTextField extends StatelessWidget {
   final String hint;
   final FormFieldValidator<String>? validator;
   final int maxLines;
+  final int maxLength;
 
   @override
   Widget build(BuildContext context) {
@@ -422,6 +432,7 @@ class _ProfileTextField extends StatelessWidget {
           controller: controller,
           validator: validator,
           maxLines: maxLines,
+          inputFormatters: [LengthLimitingTextInputFormatter(maxLength)],
           textInputAction: maxLines == 1
               ? TextInputAction.next
               : TextInputAction.newline,

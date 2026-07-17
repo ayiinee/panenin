@@ -438,6 +438,12 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('save-stock')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Konfirmasi Inventaris'), findsOneWidget);
+    expect(find.text('Bayam'), findsNWidgets(2));
+    expect(find.text('1 Kg'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-inventory')));
+    await tester.pumpAndSettle();
+
     expect(find.byType(StockScreen), findsOneWidget);
     expect(find.text('Bayam'), findsOneWidget);
     expect(find.text('4 Produk  •  23 Kg tersedia'), findsOneWidget);
@@ -467,6 +473,25 @@ void main() {
     await tester.pump();
     expect(find.text('Permintaan Baru'), findsOneWidget);
     expect(find.byType(PaneninBottomNavigation), findsOneWidget);
+  });
+
+  testWidgets('form stok menampilkan error inline sebelum membuka modal', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(428, 938);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    await tester.pumpWidget(const MaterialApp(home: StockFormScreen()));
+
+    await tester.ensureVisible(find.byKey(const ValueKey('save-stock')));
+    await tester.tap(find.byKey(const ValueKey('save-stock')));
+    await tester.pump();
+
+    expect(find.text('Nama produk wajib diisi.'), findsOneWidget);
+    expect(find.text('Harga jual wajib diisi.'), findsOneWidget);
+    expect(find.text('Jumlah stok harus lebih dari 0.'), findsOneWidget);
+    expect(find.text('Konfirmasi Inventaris'), findsNothing);
   });
 
   testWidgets('jual cepat membuka kamera tanpa tombol galeri', (tester) async {
@@ -576,6 +601,10 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('save-stock')));
     await tester.pumpAndSettle();
 
+    expect(find.text('Konfirmasi Inventaris'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-inventory')));
+    await tester.pumpAndSettle();
+
     expect(find.byType(StockScreen), findsOneWidget);
     expect(find.text('Buncis'), findsOneWidget);
     expect(find.byKey(const ValueKey('stock-file-photo')), findsOneWidget);
@@ -636,6 +665,10 @@ void main() {
 
     await tester.tap(find.byKey(const ValueKey('increase-stock')));
     await tester.tap(find.byKey(const ValueKey('save-stock')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Konfirmasi Inventaris'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('confirm-inventory')));
     await tester.pumpAndSettle();
 
     expect(find.byType(StockScreen), findsOneWidget);
@@ -1265,6 +1298,25 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('pencarian buyer memvalidasi input sebelum mencari', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerHomeScreen()));
+
+    final search = find.byKey(const ValueKey('buyer-home-search'));
+    await tester.tap(search);
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
+    expect(find.text('Masukkan komoditas yang ingin dicari.'), findsOneWidget);
+
+    await tester.enterText(search, ' Tomat ');
+    await tester.testTextInput.receiveAction(TextInputAction.search);
+    await tester.pump();
+    expect(find.text('Mencari Tomat...'), findsOneWidget);
+  });
+
   testWidgets('buyer home supports loading, empty, and error states', (
     tester,
   ) async {
@@ -1524,10 +1576,16 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(const MaterialApp(home: NegotiationChatScreen()));
 
+    await tester.tap(find.byKey(const ValueKey('send-chat-message')));
+    await tester.pump();
+    expect(find.text('Masukkan pesan sebelum mengirim.'), findsOneWidget);
+
     await tester.enterText(
       find.byKey(const ValueKey('chat-message-field')),
       'Apakah pengiriman pagi bisa?',
     );
+    await tester.pump();
+    expect(find.text('Masukkan pesan sebelum mengirim.'), findsNothing);
     await tester.tap(find.byKey(const ValueKey('send-chat-message')));
     await tester.pumpAndSettle();
     expect(find.text('Apakah pengiriman pagi bisa?'), findsOneWidget);
