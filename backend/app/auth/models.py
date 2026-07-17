@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
@@ -8,6 +9,7 @@ class AuthenticatedUser(BaseModel):
     email: EmailStr | None = None
     name: str | None = None
     provider: str | None = None
+    role: Literal["FARMER", "BUYER"] | None = None
 
 
 class AuthMeResponse(BaseModel):

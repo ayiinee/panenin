@@ -21,7 +21,10 @@ async def test_auth_service_returns_google_user() -> None:
             json={
                 "id": "11111111-1111-1111-1111-111111111111",
                 "email": "user@example.com",
-                "user_metadata": {"full_name": "Demo User"},
+                "user_metadata": {
+                    "full_name": "Demo User",
+                    "role": "FARMER",
+                },
                 "app_metadata": {"provider": "google"},
             },
         )
@@ -38,6 +41,7 @@ async def test_auth_service_returns_google_user() -> None:
 
     assert user.email == "user@example.com"
     assert user.provider == "google"
+    assert user.role == "FARMER"
 
 
 @pytest.mark.asyncio
