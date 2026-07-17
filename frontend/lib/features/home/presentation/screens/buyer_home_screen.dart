@@ -6,6 +6,7 @@ import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/features/home/data/buyer_home_fixture.dart';
+import 'package:panenin/features/marketplace/data/product_detail_fixture.dart';
 
 enum BuyerHomeViewState { loading, empty, error, success }
 
@@ -224,8 +225,15 @@ class _BuyerHomeContent extends StatelessWidget {
             itemBuilder: (context, index) => _ProductCard(
               product: data.products[index],
               compact: compact,
-              onOpen: () =>
-                  Navigator.pushNamed(context, RouteNames.productDetail),
+              onOpen: () => Navigator.pushNamed(
+                context,
+                RouteNames.productDetail,
+                arguments: ProductDetailRouteArguments(
+                  name: data.products[index].name,
+                  price: data.products[index].price,
+                  image: data.products[index].asset,
+                ),
+              ),
               onAdd: () => onAction(
                 '${data.products[index].name} ditambahkan ke keranjang.',
               ),

@@ -18,6 +18,17 @@ class ProductDetailScreen extends StatefulWidget {
   final ProductDetailViewState state;
   final ProductDetailData data;
 
+  static Widget fromRoute(BuildContext context) {
+    return ProductDetailScreen(
+      data: switch (ModalRoute.of(context)?.settings.arguments) {
+        ProductDetailRouteArguments arguments => ProductDetailFixture.fromRoute(
+          arguments,
+        ),
+        _ => ProductDetailFixture.design,
+      },
+    );
+  }
+
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
@@ -341,15 +352,7 @@ class _SupplierLogo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipOval(
-      child: SizedBox.square(
-        dimension: 42,
-        child: OverflowBox(
-          alignment: Alignment.centerLeft,
-          minWidth: 190,
-          maxWidth: 190,
-          child: Image.asset(asset, width: 190, height: 44, fit: BoxFit.fill),
-        ),
-      ),
+      child: Image.asset(asset, width: 42, height: 42, fit: BoxFit.cover),
     );
   }
 }
@@ -524,7 +527,7 @@ class _DescriptionSection extends StatelessWidget {
           Text(
             'Tersedia: ${data.availableQuantity}\n'
             'Jarak: ${data.distance}\n'
-            'Supplier: ${data.descriptionSupplier}\n'
+            'Supplier: ${data.supplierName}\n'
             'Rating: ${data.rating.toStringAsFixed(1)}',
             style: const TextStyle(
               color: AppColors.textPrimary,
@@ -635,7 +638,9 @@ class _ReviewsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SingleChildScrollView(
+            key: const ValueKey('review-filter-scroll'),
             scrollDirection: Axis.horizontal,
+            physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 19),
             child: Row(
               children: [
@@ -652,6 +657,7 @@ class _ReviewsSection extends StatelessWidget {
                     onPressed: () => onFilterChanged(rating),
                   ),
                 ],
+                const SizedBox(width: 19),
               ],
             ),
           ),
@@ -726,26 +732,35 @@ class _ReviewFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      borderRadius: BorderRadius.circular(15),
-      child: Container(
-        height: 24,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : Colors.white,
-          border: Border.all(color: AppColors.primary),
-          borderRadius: BorderRadius.circular(15),
-        ),
-        alignment: Alignment.center,
-        child: Text(
-          label,
-          style: TextStyle(
-            color: AppColors.primary,
-            fontSize: selected ? 14 : 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+    return Semantics(
+      button: true,
+      selected: selected,
+      label: 'Filter ulasan $label',
+      child: InkWell(
+        key: ValueKey('review-filter-$label'),
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(22),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Container(
+            height: 24,
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.primary.withValues(alpha: 0.1)
+                  : Colors.white,
+              border: Border.all(color: AppColors.primary),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: selected ? 14 : 13,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+              ),
+            ),
           ),
         ),
       ),

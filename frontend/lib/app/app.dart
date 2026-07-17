@@ -30,7 +30,7 @@ class PaneninApp extends StatelessWidget {
           },
         ),
         RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
-        RouteNames.productDetail: (_) => const ProductDetailScreen(),
+        RouteNames.productDetail: ProductDetailScreen.fromRoute,
       },
     );
   }
