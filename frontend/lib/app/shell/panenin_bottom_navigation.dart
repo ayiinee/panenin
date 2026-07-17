@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/theme/app_colors.dart';
+import 'package:panenin/features/stock/domain/stock_item.dart';
 
 class PaneninBottomNavigation extends StatelessWidget {
   const PaneninBottomNavigation({
@@ -133,13 +135,30 @@ class _NavigationItem extends StatelessWidget {
 class _QuickSellItem extends StatelessWidget {
   const _QuickSellItem();
 
+  Future<void> _openCamera(BuildContext context) async {
+    final photoPath = await Navigator.of(
+      context,
+    ).pushNamed(RouteNames.fotoJualCepat);
+    if (photoPath is! String || !context.mounted) return;
+
+    final item = await Navigator.of(
+      context,
+    ).pushNamed(RouteNames.formStok, arguments: photoPath);
+    if (item is! StockItem || !context.mounted) return;
+
+    await Navigator.of(
+      context,
+    ).pushReplacementNamed(RouteNames.stokSaya, arguments: item);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
       label: 'Jual Cepat',
       child: InkWell(
-        onTap: () {},
+        key: const ValueKey('quick-sell-camera'),
+        onTap: () => _openCamera(context),
         borderRadius: BorderRadius.circular(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -148,12 +167,12 @@ class _QuickSellItem extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: AppColors.textMuted,
+                color: AppColors.primary,
                 shape: BoxShape.circle,
                 border: Border.all(color: Colors.white, width: 4),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x55A8A29E),
+                    color: Color(0x552F6B3F),
                     blurRadius: 8,
                     offset: Offset(0, 6),
                   ),
@@ -169,7 +188,7 @@ class _QuickSellItem extends StatelessWidget {
             const Text(
               'Jual Cepat',
               style: TextStyle(
-                color: AppColors.textMuted,
+                color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),

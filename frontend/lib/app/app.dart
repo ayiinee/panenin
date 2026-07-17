@@ -10,6 +10,9 @@ import 'package:panenin/features/auth/presentation/screens/reset_password_screen
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:panenin/features/quick_sell/presentation/screens/quick_sell_camera_screen.dart';
+import 'package:panenin/features/stock/domain/stock_item.dart';
+import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -23,7 +26,13 @@ Map<String, WidgetBuilder> buildAppRoutes() => {
   RouteNames.detailPesanan: (context) => OrderDetailScreen(
     order: ModalRoute.settingsOf(context)!.arguments! as OrderDetailData,
   ),
-  RouteNames.stokSaya: (_) => const StockScreen(),
+  RouteNames.stokSaya: (context) => StockScreen(
+    initialItem: ModalRoute.settingsOf(context)!.arguments as StockItem?,
+  ),
+  RouteNames.fotoJualCepat: (_) => const QuickSellCameraScreen(),
+  RouteNames.formStok: (context) => StockFormScreen(
+    capturedPhotoPath: ModalRoute.settingsOf(context)!.arguments as String?,
+  ),
 };
 
 class PaneninApp extends StatefulWidget {

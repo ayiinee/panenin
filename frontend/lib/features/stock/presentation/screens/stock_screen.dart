@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
@@ -6,14 +8,23 @@ import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 
 class StockScreen extends StatefulWidget {
-  const StockScreen({super.key});
+  const StockScreen({this.initialItem, super.key});
+
+  final StockItem? initialItem;
 
   @override
   State<StockScreen> createState() => _StockScreenState();
 }
 
 class _StockScreenState extends State<StockScreen> {
-  final _items = List<StockItem>.of(demoStockItems);
+  late final _items = List<StockItem>.of(demoStockItems);
+
+  @override
+  void initState() {
+    super.initState();
+    final item = widget.initialItem;
+    if (item != null) _items.add(item);
+  }
 
   int get _totalStock => _items.fold(
     0,
@@ -257,7 +268,10 @@ class _StockCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _ProductImage(path: item.imagePath),
+              _ProductImage(
+                assetPath: item.imagePath,
+                filePath: item.photoStoragePath,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -365,28 +379,36 @@ class _StockCard extends StatelessWidget {
 }
 
 class _ProductImage extends StatelessWidget {
-  const _ProductImage({required this.path});
+  const _ProductImage({required this.assetPath, required this.filePath});
 
-  final String? path;
+  final String? assetPath;
+  final String? filePath;
 
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: path == null
-          ? Container(
+      child: filePath != null
+          ? Image.file(
+              File(filePath!),
+              key: const ValueKey('stock-file-photo'),
               width: 68,
               height: 68,
-              color: AppColors.surfaceSubtle,
-              child: const Icon(
-                Icons.eco_outlined,
-                color: AppColors.primary,
-                size: 32,
-              ),
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => _placeholder(),
             )
-          : Image.asset(path!, width: 68, height: 68, fit: BoxFit.cover),
+          : assetPath != null
+          ? Image.asset(assetPath!, width: 68, height: 68, fit: BoxFit.cover)
+          : _placeholder(),
     );
   }
+
+  Widget _placeholder() => Container(
+    width: 68,
+    height: 68,
+    color: AppColors.surfaceSubtle,
+    child: const Icon(Icons.eco_outlined, color: AppColors.primary, size: 32),
+  );
 }
 
 class _StockMetric extends StatelessWidget {
