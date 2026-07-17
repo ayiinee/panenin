@@ -10,6 +10,8 @@ abstract final class AppColors {
   static const textMuted = Color(0xFF6B7280);
   static const border = Color(0xFFE5E7EB);
   static const card = Color(0xE6FFFFFF);
+  static const pageBackground = Color(0xFFF5F7EE);
+  static const surfaceShadow = Color(0x40000000);
   static const profileBackground = Color(0xFFF7FAF7);
   static const profileBorder = Color(0xFFE8ECE9);
   static const profileSubtleBorder = Color(0xFFDDE9DF);

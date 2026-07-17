@@ -62,7 +62,7 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.dark.copyWith(
         statusBarColor: Colors.white,
-        systemNavigationBarColor: const Color(0xFFF5F7EE),
+        systemNavigationBarColor: AppColors.pageBackground,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       child: Scaffold(
