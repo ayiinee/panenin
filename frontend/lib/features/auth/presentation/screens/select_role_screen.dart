@@ -7,7 +7,13 @@ import 'package:panenin/core/constants/app_assets.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 import 'package:panenin/features/auth/domain/user_role.dart';
 
-enum RoleSelectionFlow { onboarding, login }
+enum RoleSelectionFlow { onboarding, login, skipAuth }
+
+class ProfileSetupRouteArguments {
+  const ProfileSetupRouteArguments({required this.role});
+
+  final UserRole role;
+}
 
 typedef SaveSelectedRole = Future<void> Function(UserRole role);
 
@@ -54,7 +60,9 @@ class _SelectRoleScreenState extends State<SelectRoleScreen> {
     Navigator.pushReplacementNamed(
       context,
       RouteNames.profile,
-      arguments: role,
+      arguments: widget.flow == RoleSelectionFlow.skipAuth
+          ? ProfileSetupRouteArguments(role: role)
+          : role,
     );
   }
 

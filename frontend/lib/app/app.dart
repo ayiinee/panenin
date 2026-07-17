@@ -28,17 +28,23 @@ Map<String, WidgetBuilder> buildAppRoutes() => {
   RouteNames.selectRole: (context) => SelectRoleScreen(
     flow: switch (ModalRoute.settingsOf(context)?.arguments) {
       RoleSelectionFlow flow => flow,
-      _ => RoleSelectionFlow.onboarding,
+      _ => RoleSelectionFlow.skipAuth,
     },
     saveSelectedRole: (role) => AuthService.create().saveRole(role),
   ),
-  RouteNames.profile: (context) => ProfileSetupScreen(
-    role: switch (ModalRoute.of(context)?.settings.arguments) {
-      UserRole role => role,
-      _ => UserRole.farmer,
-    },
-    saveRole: (role) => AuthService.create().saveRole(role),
-  ),
+  RouteNames.profile: (context) {
+    final arguments = ModalRoute.of(context)?.settings.arguments;
+    return ProfileSetupScreen(
+      role: switch (arguments) {
+        ProfileSetupRouteArguments arguments => arguments.role,
+        UserRole role => role,
+        _ => UserRole.farmer,
+      },
+      saveRole: arguments is ProfileSetupRouteArguments
+          ? null
+          : (role) => AuthService.create().saveRole(role),
+    );
+  },
   RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
   RouteNames.productDetail: ProductDetailScreen.fromRoute,
   RouteNames.homePetani: (_) => const FarmerShell(),
@@ -108,7 +114,7 @@ class _PaneninAppState extends State<PaneninApp> {
       title: 'Panenin',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
-      initialRoute: RouteNames.register,
+      initialRoute: RouteNames.selectRole,
       routes: buildAppRoutes(),
     );
   }
