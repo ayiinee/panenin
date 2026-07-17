@@ -60,6 +60,10 @@ class BuyerHomeScreen extends StatelessWidget {
                           child: BuyerBottomNavigation(
                             selected: BuyerNavigationDestination.home,
                             onHome: () {},
+                            onMessages: () => Navigator.pushReplacementNamed(
+                              context,
+                              RouteNames.buyerMessages,
+                            ),
                             onTransactions: () =>
                                 Navigator.pushReplacementNamed(
                                   context,

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:panenin/core/constants/app_colors.dart';
 
-enum BuyerNavigationDestination { home, transactions, profile }
+enum BuyerNavigationDestination { home, messages, transactions, profile }
 
 class BuyerBottomNavigation extends StatelessWidget {
   const BuyerBottomNavigation({
     required this.selected,
     required this.onHome,
+    required this.onMessages,
     required this.onTransactions,
     required this.onProfile,
     required this.onUnavailable,
@@ -15,6 +16,7 @@ class BuyerBottomNavigation extends StatelessWidget {
 
   final BuyerNavigationDestination selected;
   final VoidCallback onHome;
+  final VoidCallback onMessages;
   final VoidCallback onTransactions;
   final VoidCallback onProfile;
   final ValueChanged<String> onUnavailable;
@@ -53,9 +55,11 @@ class BuyerBottomNavigation extends StatelessWidget {
                 ),
                 Expanded(
                   child: _NavigationItem(
+                    key: const ValueKey('messages-navigation'),
                     icon: Icons.message_outlined,
                     label: 'Pesan',
-                    onPressed: () => onUnavailable('Pesan'),
+                    selected: selected == BuyerNavigationDestination.messages,
+                    onPressed: onMessages,
                   ),
                 ),
                 const Expanded(child: SizedBox()),

@@ -58,6 +58,10 @@ class BuyerProfileScreen extends StatelessWidget {
                             context,
                             RouteNames.buyerHome,
                           ),
+                          onMessages: () => Navigator.pushReplacementNamed(
+                            context,
+                            RouteNames.buyerMessages,
+                          ),
                           onTransactions: () => Navigator.pushReplacementNamed(
                             context,
                             RouteNames.buyerOrders,
