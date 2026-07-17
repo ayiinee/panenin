@@ -11,7 +11,32 @@ import 'package:panenin/features/auth/presentation/screens/reset_password_screen
 import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
 import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
+import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
+import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
+import 'package:panenin/features/stock/presentation/screens/stock_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+Map<String, WidgetBuilder> buildAppRoutes() => {
+  RouteNames.register: (_) => const CreateAccountScreen(),
+  RouteNames.login: (_) => const LoginScreen(),
+  RouteNames.forgotPassword: (_) => const ForgotPasswordScreen(),
+  RouteNames.resetPassword: (_) => const ResetPasswordScreen(),
+  RouteNames.selectRole: (_) => const SelectRoleScreen(),
+  RouteNames.profile: (context) => ProfileSetupScreen(
+    role: switch (ModalRoute.of(context)?.settings.arguments) {
+      UserRole role => role,
+      _ => UserRole.farmer,
+    },
+  ),
+  RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
+  RouteNames.homePetani: (_) => const FarmerHomeScreen(),
+  RouteNames.kelolaPesanan: (_) => const ManageOrdersScreen(),
+  RouteNames.detailPesanan: (context) => OrderDetailScreen(
+    order: ModalRoute.settingsOf(context)!.arguments! as OrderDetailData,
+  ),
+  RouteNames.stokSaya: (_) => const StockScreen(),
+};
 
 class PaneninApp extends StatefulWidget {
   const PaneninApp({this.authEvents, super.key});
@@ -65,20 +90,7 @@ class _PaneninAppState extends State<PaneninApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       initialRoute: RouteNames.register,
-      routes: {
-        RouteNames.selectRole: (_) => const SelectRoleScreen(),
-        RouteNames.register: (_) => const CreateAccountScreen(),
-        RouteNames.login: (_) => const LoginScreen(),
-        RouteNames.forgotPassword: (_) => const ForgotPasswordScreen(),
-        RouteNames.resetPassword: (_) => const ResetPasswordScreen(),
-        RouteNames.profile: (context) => ProfileSetupScreen(
-          role: switch (ModalRoute.of(context)?.settings.arguments) {
-            UserRole role => role,
-            _ => UserRole.farmer,
-          },
-        ),
-        RouteNames.buyerHome: (_) => const BuyerHomeScreen(),
-      },
+      routes: buildAppRoutes(),
     );
   }
 }
