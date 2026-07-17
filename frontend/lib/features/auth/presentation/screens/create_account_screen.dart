@@ -84,8 +84,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
         return;
       }
-      final identity = result.user?.name ?? result.user?.email ?? 'pengguna';
-      _showMessage('Akun berhasil dibuat sebagai $identity.');
+      _openRoleSelection();
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -111,10 +110,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   Future<void> _registerWithGoogle() async {
     setState(() => _isGoogleLoading = true);
     try {
-      final user = await (widget.googleSignIn ?? _googleSignInWithService)();
+      await (widget.googleSignIn ?? _googleSignInWithService)();
       if (!mounted) return;
-      final identity = user.name ?? user.email ?? 'pengguna';
-      _showMessage('Pendaftaran berhasil sebagai $identity.');
+      _openRoleSelection();
     } on Object catch (error) {
       if (!mounted) return;
       _showMessage(
@@ -132,6 +130,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   Future<AuthenticatedUser> _googleSignInWithService() {
     _authService ??= widget.authService ?? AuthService.create();
     return _authService!.signInWithGoogle();
+  }
+
+  void _openRoleSelection() {
+    Navigator.pushNamedAndRemoveUntil(
+      context,
+      RouteNames.selectRole,
+      (_) => false,
+    );
   }
 
   @override

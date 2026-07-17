@@ -10,6 +10,9 @@ abstract final class AppConfig {
     'PASSWORD_RESET_REDIRECT_URL',
     defaultValue: 'com.panenin.app://reset-password/',
   );
+  static const whatsappPhoneNumber = String.fromEnvironment(
+    'WHATSAPP_PHONE_NUMBER',
+  );
 
   static void ensureConfigured() {
     final missing = <String>[

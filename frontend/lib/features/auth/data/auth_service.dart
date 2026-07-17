@@ -5,6 +5,7 @@ import 'package:panenin/core/config/app_config.dart';
 import 'package:panenin/core/network/api_client.dart';
 import 'package:panenin/features/auth/data/models/authenticated_user.dart';
 import 'package:panenin/features/auth/data/models/email_sign_up_result.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 typedef GoogleSignIn = Future<AuthenticatedUser> Function();
@@ -82,13 +83,30 @@ class AuthService {
     await _supabase.auth.signOut();
   }
 
+  Future<void> saveRole(UserRole role) async {
+    await _supabase.auth.updateUser(
+      UserAttributes(data: {'role': role.apiValue}),
+    );
+  }
+
+  Future<void> signOut() => _supabase.auth.signOut();
+
   Future<AuthenticatedUser> signInWithGoogle() async {
     final signedIn = Completer<void>();
-    final subscription = _supabase.auth.onAuthStateChange.listen((event) {
-      if (event.event == AuthChangeEvent.signedIn && !signedIn.isCompleted) {
-        signedIn.complete();
-      }
-    });
+    final subscription = _supabase.auth.onAuthStateChange.listen(
+      (event) {
+        if (event.event == AuthChangeEvent.signedIn &&
+            event.session != null &&
+            !signedIn.isCompleted) {
+          signedIn.complete();
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!signedIn.isCompleted) {
+          signedIn.completeError(error, stackTrace);
+        }
+      },
+    );
 
     try {
       final launched = await _supabase.auth.signInWithOAuth(

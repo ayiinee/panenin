@@ -2,15 +2,21 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/features/stock/domain/stock_item.dart';
 import 'package:panenin/features/stock/presentation/screens/stock_form_screen.dart';
 
 class StockScreen extends StatefulWidget {
-  const StockScreen({this.initialItem, super.key});
+  const StockScreen({
+    this.initialItem,
+    this.embeddedInShell = false,
+    super.key,
+  });
 
   final StockItem? initialItem;
+  final bool embeddedInShell;
 
   @override
   State<StockScreen> createState() => _StockScreenState();
@@ -26,6 +32,23 @@ class _StockScreenState extends State<StockScreen> {
     if (item != null) _items.add(item);
   }
 
+  @override
+  void didUpdateWidget(covariant StockScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final item = widget.initialItem;
+    if (item == null || identical(item, oldWidget.initialItem)) return;
+    _upsertItem(item);
+  }
+
+  void _upsertItem(StockItem item) {
+    final index = _items.indexWhere((current) => current.id == item.id);
+    if (index == -1) {
+      _items.add(item);
+    } else {
+      _items[index] = item;
+    }
+  }
+
   int get _totalStock => _items.fold(
     0,
     (total, item) =>
@@ -39,12 +62,7 @@ class _StockScreenState extends State<StockScreen> {
     if (result == null || !mounted) return;
 
     setState(() {
-      final index = _items.indexWhere((item) => item.id == result.id);
-      if (index == -1) {
-        _items.add(result);
-      } else {
-        _items[index] = result;
-      }
+      _upsertItem(result);
     });
   }
 
@@ -57,12 +75,21 @@ class _StockScreenState extends State<StockScreen> {
       ),
       child: Scaffold(
         extendBody: true,
-        bottomNavigationBar: PaneninBottomNavigation(
-          selectedIndex: 1,
-          onDestinationSelected: (index) {
-            if (index == 0) Navigator.of(context).maybePop();
-          },
-        ),
+        bottomNavigationBar: widget.embeddedInShell
+            ? null
+            : PaneninBottomNavigation(
+                selectedIndex: 1,
+                onDestinationSelected: (index) {
+                  if (index == 1) return;
+                  final route = switch (index) {
+                    0 => RouteNames.homePetani,
+                    2 => RouteNames.kelolaPesanan,
+                    3 => RouteNames.farmerProfile,
+                    _ => RouteNames.stokSaya,
+                  };
+                  Navigator.of(context).pushReplacementNamed(route);
+                },
+              ),
         body: Column(
           children: [
             _StockHeader(

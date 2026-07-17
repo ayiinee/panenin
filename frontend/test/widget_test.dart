@@ -6,17 +6,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:panenin/app/app.dart';
 import 'package:panenin/app/router/route_names.dart';
+import 'package:panenin/app/shell/farmer_shell.dart';
 import 'package:panenin/app/shell/panenin_bottom_navigation.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:panenin/app/theme/app_theme.dart';
 import 'package:panenin/features/auth/data/models/authenticated_user.dart';
 import 'package:panenin/features/auth/data/models/email_sign_up_result.dart';
+import 'package:panenin/features/auth/domain/user_role.dart';
 import 'package:panenin/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/login_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/reset_password_screen.dart';
+import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/google_auth_button.dart';
+import 'package:panenin/features/home/presentation/screens/buyer_home_screen.dart';
+import 'package:panenin/features/marketplace/presentation/screens/product_detail_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/profile_setup_screen.dart';
+import 'package:panenin/features/profile/presentation/screens/farmer_profile_screen.dart';
 import 'package:panenin/features/home/presentation/screens/farmer_home_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/order_detail_screen.dart';
 import 'package:panenin/features/orders/presentation/screens/manage_orders_screen.dart';
@@ -30,6 +37,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() {
   test('route utama mengikuti nama branch UI', () {
     expect(RouteNames.homePetani, '/beranda');
+    expect(RouteNames.farmerProfile, '/petani/profile');
     expect(RouteNames.kelolaPesanan, '/kelola-pesanan');
     expect(RouteNames.detailPesanan, '/detail-pesanan');
     expect(RouteNames.stokSaya, '/stok');
@@ -39,6 +47,7 @@ void main() {
       buildAppRoutes().keys,
       containsAll([
         RouteNames.homePetani,
+        RouteNames.farmerProfile,
         RouteNames.kelolaPesanan,
         RouteNames.detailPesanan,
         RouteNames.stokSaya,
@@ -361,6 +370,32 @@ void main() {
     expect(find.text('4 Produk  •  23 Kg tersedia'), findsOneWidget);
   });
 
+  testWidgets('farmer shell berpindah ke seluruh tab tanpa menumpuk route', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(theme: AppTheme.light, home: const FarmerShell()),
+    );
+
+    await tester.tap(find.text('Stok'));
+    await tester.pump();
+    expect(find.text('Stok Saya'), findsOneWidget);
+
+    await tester.tap(find.text('Pesanan'));
+    await tester.pump();
+    expect(find.text('Kelola Pesanan'), findsOneWidget);
+
+    await tester.tap(find.text('Profile'));
+    await tester.pump();
+    expect(find.byType(FarmerProfileScreen), findsOneWidget);
+    expect(find.text('Profile Petani'), findsOneWidget);
+
+    await tester.tap(find.text('Beranda'));
+    await tester.pump();
+    expect(find.text('Permintaan Baru'), findsOneWidget);
+    expect(find.byType(PaneninBottomNavigation), findsOneWidget);
+  });
+
   testWidgets('jual cepat membuka kamera tanpa tombol galeri', (tester) async {
     tester.view.physicalSize = const Size(428, 938);
     tester.view.devicePixelRatio = 1;
@@ -516,8 +551,16 @@ void main() {
     provider: 'email',
   );
 
+  const demoFarmer = AuthenticatedUser(
+    id: '22222222-2222-2222-2222-222222222222',
+    email: 'petani@panenin.id',
+    name: 'Pak Ferdi',
+    provider: 'email',
+    role: UserRole.farmer,
+  );
+
   testWidgets('renders correctly typed create account fields', (tester) async {
-    await tester.pumpWidget(const PaneninApp());
+    await tester.pumpWidget(const MaterialApp(home: CreateAccountScreen()));
 
     expect(find.text('Buat Akun Anda'), findsOneWidget);
     expect(find.text('Nama Pengguna'), findsOneWidget);
@@ -535,6 +578,81 @@ void main() {
     expect(fields[1].keyboardType, TextInputType.emailAddress);
     expect(fields[2].obscureText, isTrue);
     expect(fields[2].textInputAction, TextInputAction.done);
+  });
+
+  testWidgets('opens registration as the first screen', (tester) async {
+    await tester.pumpWidget(const PaneninApp());
+
+    expect(find.byType(CreateAccountScreen), findsOneWidget);
+    expect(find.text('Buat Akun Anda'), findsOneWidget);
+  });
+
+  testWidgets('renders the role selection screen', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: SelectRoleScreen()));
+
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    expect(find.textContaining('Halo!'), findsOneWidget);
+    expect(find.text('Saya ingin menjual\nhasil panen'), findsOneWidget);
+    expect(find.text('Saya ingin membeli\nhasil panen'), findsOneWidget);
+    expect(find.text('Jual Hasil Panen'), findsOneWidget);
+    expect(find.text('Beli Hasil Panen'), findsOneWidget);
+
+    final farmerButton = tester.widget<Material>(
+      find.byKey(const ValueKey('farmer-role-button')),
+    );
+    final buyerButton = tester.widget<Material>(
+      find.byKey(const ValueKey('buyer-role-button')),
+    );
+    expect(farmerButton.color, AppColors.primary);
+    expect(buyerButton.color, AppColors.accent);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('farmer-role-button'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('farmer role continues to farmer profile setup', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: const SelectRoleScreen(),
+      ),
+    );
+
+    final farmerAction = find.text('Jual Hasil Panen');
+    await tester.ensureVisible(farmerAction);
+    await tester.tap(farmerAction);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Petani'), findsOneWidget);
+    expect(find.text('Komoditas Penjualan'), findsOneWidget);
+  });
+
+  testWidgets('buyer role continues to UMKM profile setup', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: const SelectRoleScreen(),
+      ),
+    );
+
+    final buyerAction = find.text('Beli Hasil Panen');
+    await tester.ensureVisible(buyerAction);
+    await tester.tap(buyerAction);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Pengguna'), findsOneWidget);
+    expect(find.text('Kategori Produk UMKM'), findsOneWidget);
   });
 
   testWidgets('registration validates required fields before Supabase', (
@@ -596,6 +714,7 @@ void main() {
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
       MaterialApp(
+        routes: {RouteNames.selectRole: (_) => const SelectRoleScreen()},
         home: CreateAccountScreen(googleSignIn: () async => demoUser),
       ),
     );
@@ -605,16 +724,18 @@ void main() {
     await tester.tap(googleButton);
     await tester.pumpAndSettle();
 
-    expect(
-      find.text('Pendaftaran berhasil sebagai Demo Panenin.'),
-      findsOneWidget,
-    );
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
   });
 
   testWidgets('login screen is separate and navigable', (tester) async {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    await tester.pumpWidget(const PaneninApp());
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {'/login': (_) => const LoginScreen()},
+        home: const CreateAccountScreen(),
+      ),
+    );
 
     await tester.ensureVisible(find.text('Masuk'));
     await tester.tap(find.text('Masuk'));
@@ -629,6 +750,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       MaterialApp(
+        routes: {RouteNames.selectRole: (_) => const SelectRoleScreen()},
         home: LoginScreen(
           emailSignIn: (email, password) async {
             expect(email, 'demo@panenin.id');
@@ -646,7 +768,61 @@ void main() {
     await tester.tap(find.text('Masuk'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Berhasil masuk sebagai Demo Panenin.'), findsOneWidget);
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+  });
+
+  testWidgets('akun dengan role petani langsung masuk ke home petani', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.homePetani: (_) => const FarmerShell()},
+        home: LoginScreen(emailSignIn: (_, _) async => demoFarmer),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'petani@panenin.id');
+    await tester.enterText(fields.at(1), 'password123');
+    await tester.ensureVisible(find.text('Masuk'));
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(FarmerShell), findsOneWidget);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
+    expect(find.text('Permintaan Baru'), findsOneWidget);
+  });
+
+  testWidgets('login tanpa role dapat memilih petani lalu masuk ke home', (
+    tester,
+  ) async {
+    UserRole? savedRole;
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.selectRole: (context) => SelectRoleScreen(
+            flow:
+                ModalRoute.settingsOf(context)!.arguments! as RoleSelectionFlow,
+            saveSelectedRole: (role) async => savedRole = role,
+          ),
+          RouteNames.homePetani: (_) => const FarmerShell(),
+        },
+        home: LoginScreen(emailSignIn: (_, _) async => demoUser),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'demo@panenin.id');
+    await tester.enterText(fields.at(1), 'password123');
+    await tester.ensureVisible(find.text('Masuk'));
+    await tester.tap(find.text('Masuk'));
+    await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Jual Hasil Panen'));
+    await tester.tap(find.text('Jual Hasil Panen'));
+    await tester.pumpAndSettle();
+
+    expect(savedRole, UserRole.farmer);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
   });
 
   testWidgets('forgot password sends a privacy-safe response', (tester) async {
@@ -733,7 +909,10 @@ void main() {
     await tester.binding.setSurfaceSize(const Size(428, 926));
     addTearDown(() => tester.binding.setSurfaceSize(null));
     await tester.pumpWidget(
-      MaterialApp(home: LoginScreen(googleSignIn: () async => demoUser)),
+      MaterialApp(
+        routes: {RouteNames.selectRole: (_) => const SelectRoleScreen()},
+        home: LoginScreen(googleSignIn: () async => demoUser),
+      ),
     );
 
     final googleButton = find.byType(GoogleAuthButton);
@@ -741,7 +920,7 @@ void main() {
     await tester.tap(googleButton);
     await tester.pumpAndSettle();
 
-    expect(find.text('Berhasil masuk sebagai Demo Panenin.'), findsOneWidget);
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
   });
 
   testWidgets('Google login failure gives actionable feedback', (tester) async {
@@ -761,6 +940,435 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Login Google gagal. Silakan coba lagi'), findsOneWidget);
+  });
+
+  testWidgets('role selection adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const MaterialApp(home: SelectRoleScreen()));
+
+    expect(tester.takeException(), isNull);
+    expect(find.text('Beli Hasil Panen'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('farmer-role-button'))).height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(
+      tester.getSize(find.byKey(const ValueKey('buyer-role-button'))).height,
+      greaterThanOrEqualTo(44),
+    );
+  });
+
+  testWidgets('registration continues through role to farmer profile setup', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.selectRole: (_) => const SelectRoleScreen(),
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: CreateAccountScreen(
+          emailSignUp: (name, email, password) async => const EmailSignUpResult(
+            requiresEmailVerification: false,
+            user: demoUser,
+          ),
+        ),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Demo Panenin');
+    await tester.enterText(fields.at(1), 'demo@panenin.id');
+    await tester.enterText(fields.at(2), 'password123');
+    await tester.tap(find.text('Daftarkan Akun'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    await tester.ensureVisible(find.text('Jual Hasil Panen'));
+    await tester.tap(find.text('Jual Hasil Panen'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Silahkan Isi Data Diri Anda'), findsOneWidget);
+    expect(find.text('Daftar Sekarang'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('profile-submit-button')))
+          .height,
+      54,
+    );
+  });
+
+  testWidgets('registration continues through role to UMKM profile setup', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {
+          RouteNames.selectRole: (_) => const SelectRoleScreen(),
+          RouteNames.profile: (context) => ProfileSetupScreen(
+            role: ModalRoute.of(context)!.settings.arguments! as UserRole,
+          ),
+        },
+        home: CreateAccountScreen(
+          emailSignUp: (name, email, password) async => const EmailSignUpResult(
+            requiresEmailVerification: false,
+            user: demoUser,
+          ),
+        ),
+      ),
+    );
+
+    final fields = find.byType(TextField);
+    await tester.enterText(fields.at(0), 'Demo Panenin');
+    await tester.enterText(fields.at(1), 'demo@panenin.id');
+    await tester.enterText(fields.at(2), 'password123');
+    await tester.tap(find.text('Daftarkan Akun'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    await tester.ensureVisible(find.text('Beli Hasil Panen'));
+    await tester.tap(find.text('Beli Hasil Panen'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(find.text('Nama Pengguna'), findsOneWidget);
+    expect(find.text('Kategori Produk UMKM'), findsOneWidget);
+    expect(find.text('Nama Bisnis (Opsional)'), findsOneWidget);
+    expect(find.text('Masukkan nama bisnis'), findsOneWidget);
+  });
+
+  testWidgets('buyer profile continues to the buyer home', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.buyerHome: (_) => const BuyerHomeScreen()},
+        home: const ProfileSetupScreen(role: UserRole.buyer),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('buyer-name-field')),
+      'Mbak Ani',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('address-field')),
+      'Ambarawa, Jawa Tengah',
+    );
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    await tester.pump(const Duration(milliseconds: 450));
+    await tester.pumpAndSettle();
+    expect(find.byType(BuyerHomeScreen), findsOneWidget);
+    expect(find.text('Komoditas Cepat'), findsOneWidget);
+  });
+
+  testWidgets('buyer home renders the Figma content and large tap targets', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerHomeScreen()));
+
+    expect(find.text('Lokasi Anda'), findsOneWidget);
+    expect(find.text('Malang, Jawa Timur'), findsOneWidget);
+    expect(find.text('Pasokan rutin,\nusaha makin pasti'), findsOneWidget);
+    expect(find.text('Cabai Merah Kering'), findsOneWidget);
+    expect(find.text('Rp 49.500'), findsOneWidget);
+    expect(find.text('Beranda'), findsOneWidget);
+    expect(find.text('Maps'), findsOneWidget);
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('find-commodities-button')))
+          .height,
+      greaterThanOrEqualTo(44),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('buyer home supports loading, empty, and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: BuyerHomeScreen(state: BuyerHomeViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: BuyerHomeScreen(state: BuyerHomeViewState.empty)),
+    );
+    expect(find.text('Komoditas belum tersedia'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(home: BuyerHomeScreen(state: BuyerHomeViewState.error)),
+    );
+    expect(find.text('Gagal memuat beranda'), findsOneWidget);
+  });
+
+  testWidgets('buyer home adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: BuyerHomeScreen()));
+
+    expect(find.text('Komoditas Cepat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.drag(
+      find.byKey(const ValueKey('buyer-home-scroll')),
+      const Offset(0, -500),
+    );
+    await tester.pump();
+    expect(find.text('Bawang Putih'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('tapping a buyer product opens its detail page', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.productDetail: ProductDetailScreen.fromRoute},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    final product = find.byKey(const ValueKey('open-Cabai Merah Kering'));
+    await tester.ensureVisible(product);
+    await tester.tap(product);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProductDetailScreen), findsOneWidget);
+    expect(find.text('Detail Produk'), findsOneWidget);
+    expect(find.text('Cabai Merah Kering'), findsOneWidget);
+    expect(find.text('Tomat Segar'), findsNothing);
+    expect(
+      find.textContaining('Supplier: Kelompok Tani Makmur'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('buyer add action does not open the product detail', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.productDetail: ProductDetailScreen.fromRoute},
+        home: const BuyerHomeScreen(),
+      ),
+    );
+
+    final addButton = find.byKey(const ValueKey('add-Cabai Merah Kering'));
+    await tester.ensureVisible(addButton);
+    await tester.tap(addButton);
+    await tester.pump();
+
+    expect(find.byType(BuyerHomeScreen), findsOneWidget);
+    expect(find.byType(ProductDetailScreen), findsNothing);
+    expect(
+      find.text('Cabai Merah Kering ditambahkan ke keranjang.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('product detail switches from description to reviews', (
+    tester,
+  ) async {
+    await tester.binding.setSurfaceSize(const Size(428, 1055));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProductDetailScreen()));
+
+    expect(find.text('Buat Kontrak Pasokan'), findsOneWidget);
+    await tester.tap(find.byKey(const ValueKey('product-reviews-tab')));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Tambah Ulasan'), findsOneWidget);
+    expect(find.text('Es Buah Rosyidah'), findsOneWidget);
+    expect(find.text('Tacibay'), findsOneWidget);
+    expect(
+      tester.getSize(find.byKey(const ValueKey('review-filter-Semua'))).height,
+      greaterThanOrEqualTo(44),
+    );
+    await tester.drag(
+      find.byKey(const ValueKey('review-filter-scroll')),
+      const Offset(-500, 0),
+    );
+    await tester.pump();
+    expect(tester.getTopLeft(find.text('Bintang 1')).dx, lessThan(428));
+    await tester.ensureVisible(find.text('Bintang 4'));
+    await tester.tap(find.text('Bintang 4'));
+    await tester.pump();
+    expect(find.text('Belum ada ulasan untuk rating ini.'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('product detail supports loading, empty, and error states', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.loading),
+      ),
+    );
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.empty),
+      ),
+    );
+    expect(find.text('Produk tidak ditemukan'), findsOneWidget);
+
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: ProductDetailScreen(state: ProductDetailViewState.error),
+      ),
+    );
+    expect(find.text('Gagal memuat produk'), findsOneWidget);
+  });
+
+  testWidgets('product detail adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProductDetailScreen()));
+
+    expect(find.text('Detail Produk'), findsOneWidget);
+    await tester.ensureVisible(find.text('Beli Sekarang'));
+    expect(tester.takeException(), isNull);
+
+    await tester.ensureVisible(
+      find.byKey(const ValueKey('product-reviews-tab')),
+    );
+    await tester.tap(find.byKey(const ValueKey('product-reviews-tab')));
+    await tester.pumpAndSettle();
+    await tester.drag(
+      find.byKey(const ValueKey('review-filter-scroll')),
+      const Offset(-500, 0),
+    );
+    await tester.pump();
+
+    expect(tester.getTopLeft(find.text('Bintang 1')).dx, lessThan(320));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('profile setup requires terms before submission', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(
+      find.text('Setujui Syarat & Ketentuan untuk melanjutkan.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profile setup validates commodity selection', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(
+      find.text('Pilih minimal satu komoditas penjualan.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profile setup adapts to a narrow screen', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(320, 700));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    expect(tester.takeException(), isNull);
+    await tester.ensureVisible(find.text('Daftar Sekarang'));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('profile setup keeps location action accessible', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    expect(
+      tester
+          .getSize(find.byKey(const ValueKey('choose-location-button')))
+          .height,
+      greaterThanOrEqualTo(44),
+    );
+    await tester.tap(find.byKey(const ValueKey('choose-location-button')));
+    await tester.pump();
+    expect(
+      find.text('Pemilihan lokasi di peta akan segera tersedia.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('profile setup submits a valid profile', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    UserRole? savedRole;
+    await tester.pumpWidget(
+      MaterialApp(
+        routes: {RouteNames.homePetani: (_) => const FarmerShell()},
+        home: ProfileSetupScreen(saveRole: (role) async => savedRole = role),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('farmer-name-field')),
+      'Pak Ferdi',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('farmer-group-field')),
+      'Kelompok Tani Makmur',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('address-field')),
+      'Garut, Jawa Barat',
+    );
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    await tester.pumpAndSettle();
+    expect(savedRole, UserRole.farmer);
+    expect(find.byType(FarmerHomeScreen), findsOneWidget);
+    expect(find.text('Permintaan Baru'), findsOneWidget);
+  });
+
+  testWidgets('profile setup validates required fields', (tester) async {
+    await tester.binding.setSurfaceSize(const Size(428, 926));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+    await tester.pumpWidget(const MaterialApp(home: ProfileSetupScreen()));
+
+    await tester.tap(find.text('Tomat'));
+    await tester.tap(find.byKey(const ValueKey('terms-row')));
+    await tester.tap(find.text('Daftar Sekarang'));
+    await tester.pump();
+
+    expect(find.text('Bagian ini wajib diisi.'), findsNWidgets(3));
   });
 }
 
