@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:panenin/app/router/route_names.dart';
 import 'package:panenin/app/theme/app_colors.dart';
 import 'package:path_provider/path_provider.dart';
 
@@ -138,14 +140,15 @@ class _QuickSellCameraScreenState extends State<QuickSellCameraScreen>
   }
 
   Future<String> _persistPhoto(XFile photo) async {
+    final squareBytes = await cropImageToSquare(await photo.readAsBytes());
     final documents = await getApplicationDocumentsDirectory();
     final photos = Directory(
       '${documents.path}${Platform.pathSeparator}stock_photos',
     );
     await photos.create(recursive: true);
     final savedPath =
-        '${photos.path}${Platform.pathSeparator}${DateTime.now().microsecondsSinceEpoch}.jpg';
-    await photo.saveTo(savedPath);
+        '${photos.path}${Platform.pathSeparator}${DateTime.now().microsecondsSinceEpoch}.png';
+    await File(savedPath).writeAsBytes(squareBytes, flush: true);
     return savedPath;
   }
 
@@ -172,55 +175,60 @@ class _QuickSellCameraScreenState extends State<QuickSellCameraScreen>
           color: Colors.white,
           child: Column(
             children: [
-              const SafeArea(bottom: false, child: _CameraHeader()),
+              const _CameraHeader(),
               Expanded(
                 child: LayoutBuilder(
                   builder: (context, constraints) {
                     final cameraSize = math.min(
                       constraints.maxWidth,
-                      math.max(0.0, constraints.maxHeight - 120),
+                      math.max(0.0, constraints.maxHeight - 170),
                     );
-                    return Stack(
-                      clipBehavior: Clip.none,
+                    return Column(
                       children: [
-                        Align(
-                          alignment: Alignment.topCenter,
-                          child: SizedBox.square(
-                            key: const ValueKey('camera-square-preview'),
-                            dimension: cameraSize,
+                        SizedBox.square(
+                          key: const ValueKey('camera-square-preview'),
+                          dimension: cameraSize,
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              _CameraView(
+                                controller: _controller,
+                                error: _error,
+                                initializing: _initializing,
+                                onRetry: _initializeCamera,
+                              ),
+                              if (cameraReady) const _FocusFrame(),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: ColoredBox(
+                            key: const ValueKey('camera-controls-panel'),
+                            color: Colors.white,
                             child: Stack(
-                              fit: StackFit.expand,
                               children: [
-                                _CameraView(
-                                  controller: _controller,
-                                  error: _error,
-                                  initializing: _initializing,
-                                  onRetry: _initializeCamera,
+                                Align(
+                                  alignment: Alignment.topCenter,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(top: 20),
+                                    child: _CaptureButton(
+                                      enabled: cameraReady && !_takingPicture,
+                                      loading: _takingPicture,
+                                      onPressed: _takePicture,
+                                    ),
+                                  ),
                                 ),
-                                if (cameraReady) const _FocusFrame(),
+                                Positioned(
+                                  right: 48,
+                                  bottom: 18 + bottomPadding,
+                                  child: _FlashButton(
+                                    enabled: cameraReady,
+                                    active: _flashEnabled,
+                                    onPressed: _toggleFlash,
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                        ),
-                        Positioned(
-                          top: cameraSize - 50,
-                          left: 0,
-                          right: 0,
-                          child: Center(
-                            child: _CaptureButton(
-                              enabled: cameraReady && !_takingPicture,
-                              loading: _takingPicture,
-                              onPressed: _takePicture,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          right: 58,
-                          bottom: 28 + bottomPadding,
-                          child: _FlashButton(
-                            enabled: cameraReady,
-                            active: _flashEnabled,
-                            onPressed: _toggleFlash,
                           ),
                         ),
                       ],
@@ -236,41 +244,82 @@ class _QuickSellCameraScreenState extends State<QuickSellCameraScreen>
   }
 }
 
+Future<Uint8List> cropImageToSquare(Uint8List sourceBytes) async {
+  final codec = await ui.instantiateImageCodec(sourceBytes);
+  final frame = await codec.getNextFrame();
+  final source = frame.image;
+  ui.Picture? picture;
+  ui.Image? square;
+
+  try {
+    final side = math.min(source.width, source.height);
+    final left = (source.width - side) / 2;
+    final top = (source.height - side) / 2;
+    final recorder = ui.PictureRecorder();
+    final canvas = ui.Canvas(recorder);
+    canvas.drawImageRect(
+      source,
+      ui.Rect.fromLTWH(left, top, side.toDouble(), side.toDouble()),
+      ui.Rect.fromLTWH(0, 0, side.toDouble(), side.toDouble()),
+      ui.Paint(),
+    );
+    picture = recorder.endRecording();
+    square = await picture.toImage(side, side);
+    final data = await square.toByteData(format: ui.ImageByteFormat.png);
+    if (data == null) throw StateError('Foto tidak dapat diproses.');
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+  } finally {
+    square?.dispose();
+    picture?.dispose();
+    source.dispose();
+    codec.dispose();
+  }
+}
+
 class _CameraHeader extends StatelessWidget {
   const _CameraHeader();
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
+      key: const ValueKey('camera-header-panel'),
+      width: double.infinity,
       height: 115,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          const Text(
-            'Foto Produk Anda!',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Positioned(
-            left: 16,
-            top: 12,
-            child: IconButton(
-              key: const ValueKey('camera-back'),
-              onPressed: () => Navigator.of(context).maybePop(),
-              tooltip: 'Kembali',
-              style: IconButton.styleFrom(
-                foregroundColor: AppColors.textPrimary,
-                minimumSize: const Size.square(48),
-                maximumSize: const Size.square(48),
-                padding: EdgeInsets.zero,
+      color: Colors.white,
+      child: SafeArea(
+        bottom: false,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            const Center(
+              child: Text(
+                'Foto Produk Anda!',
+                style: TextStyle(
+                  color: AppColors.textPrimary,
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              icon: const Icon(Icons.arrow_back_rounded, size: 26),
             ),
-          ),
-        ],
+            Align(
+              alignment: Alignment.topLeft,
+              child: IconButton(
+                key: const ValueKey('camera-back'),
+                onPressed: () => Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  RouteNames.homePetani,
+                  (_) => false,
+                ),
+                tooltip: 'Kembali',
+                color: AppColors.textPrimary,
+                icon: const Icon(
+                  Icons.arrow_back_rounded,
+                  key: ValueKey('camera-back-icon'),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

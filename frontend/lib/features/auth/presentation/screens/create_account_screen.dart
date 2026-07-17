@@ -5,6 +5,7 @@ import 'package:panenin/features/auth/data/models/authenticated_user.dart';
 import 'package:panenin/features/auth/data/models/email_sign_up_result.dart';
 import 'package:panenin/features/auth/presentation/auth_feedback.dart';
 import 'package:panenin/features/auth/presentation/auth_validators.dart';
+import 'package:panenin/features/auth/presentation/screens/select_role_screen.dart';
 import 'package:panenin/features/auth/presentation/screens/verify_email_screen.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_brand_header.dart';
 import 'package:panenin/features/auth/presentation/widgets/auth_primary_button.dart';
@@ -131,6 +132,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       context,
       RouteNames.selectRole,
       (_) => false,
+      arguments: RoleSelectionFlow.onboarding,
     );
   }
 

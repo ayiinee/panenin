@@ -513,6 +513,7 @@ void main() {
               'Permission denied for test',
             ),
           ),
+          RouteNames.homePetani: (_) => const FarmerShell(),
         },
         home: const Scaffold(bottomNavigationBar: PaneninBottomNavigation()),
       ),
@@ -523,10 +524,18 @@ void main() {
 
     expect(find.byType(QuickSellCameraScreen), findsOneWidget);
     expect(find.text('Foto Produk Anda!'), findsOneWidget);
+    expect(find.byKey(const ValueKey('camera-header-panel')), findsOneWidget);
     expect(find.byKey(const ValueKey('camera-back')), findsOneWidget);
     expect(
       tester.getTopLeft(find.byKey(const ValueKey('camera-back'))).dx,
-      inInclusiveRange(16, 32),
+      tester.getTopLeft(find.byKey(const ValueKey('camera-header-panel'))).dx,
+    );
+    expect(
+      tester.getTopLeft(find.byKey(const ValueKey('camera-back-icon'))).dx -
+          tester
+              .getTopLeft(find.byKey(const ValueKey('camera-header-panel')))
+              .dx,
+      inInclusiveRange(12, 20),
     );
     expect(
       tester.getTopLeft(find.byKey(const ValueKey('camera-back'))).dy,
@@ -541,6 +550,21 @@ void main() {
     );
     expect(previewSize.width, previewSize.height);
     expect(
+      tester.getTopLeft(find.byKey(const ValueKey('take-picture'))).dy,
+      greaterThanOrEqualTo(
+        tester
+            .getBottomLeft(find.byKey(const ValueKey('camera-square-preview')))
+            .dy,
+      ),
+    );
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('camera-controls-panel')),
+        matching: find.byKey(const ValueKey('take-picture')),
+      ),
+      findsOneWidget,
+    );
+    expect(
       find.text('Izin kamera diperlukan untuk memotret produk.'),
       findsOneWidget,
     );
@@ -548,6 +572,36 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('camera-back')));
     await tester.pumpAndSettle();
     expect(find.byType(QuickSellCameraScreen), findsNothing);
+    expect(find.byType(FarmerShell), findsOneWidget);
+  });
+
+  testWidgets('hasil foto jual cepat dipotong menjadi rasio 1:1', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      final recorder = ui.PictureRecorder();
+      final canvas = ui.Canvas(recorder);
+      canvas.drawRect(
+        const ui.Rect.fromLTWH(0, 0, 8, 4),
+        ui.Paint()..color = Colors.red,
+      );
+      final source = await recorder.endRecording().toImage(8, 4);
+      final sourceData = await source.toByteData(
+        format: ui.ImageByteFormat.png,
+      );
+      final squareBytes = await cropImageToSquare(
+        sourceData!.buffer.asUint8List(),
+      );
+      final codec = await ui.instantiateImageCodec(squareBytes);
+      final frame = await codec.getNextFrame();
+
+      expect(frame.image.width, frame.image.height);
+      expect(frame.image.width, 4);
+
+      frame.image.dispose();
+      codec.dispose();
+      source.dispose();
+    });
   });
 
   testWidgets('foto jual cepat masuk ke form lalu tampil pada stok', (
@@ -734,11 +788,31 @@ void main() {
     expect(fields[2].textInputAction, TextInputAction.done);
   });
 
-  testWidgets('opens registration as the first screen', (tester) async {
+  testWidgets('melewati autentikasi dan membuka pemilihan role', (
+    tester,
+  ) async {
     await tester.pumpWidget(const PaneninApp());
 
-    expect(find.byType(CreateAccountScreen), findsOneWidget);
-    expect(find.text('Buat Akun Anda'), findsOneWidget);
+    expect(find.byType(SelectRoleScreen), findsOneWidget);
+    expect(find.byType(CreateAccountScreen), findsNothing);
+    expect(find.byType(LoginScreen), findsNothing);
+    expect(
+      tester.widget<SelectRoleScreen>(find.byType(SelectRoleScreen)).flow,
+      RoleSelectionFlow.skipAuth,
+    );
+
+    final farmerAction = find.text('Jual Hasil Panen');
+    await tester.ensureVisible(farmerAction);
+    await tester.tap(farmerAction);
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfileSetupScreen), findsOneWidget);
+    expect(
+      tester
+          .widget<ProfileSetupScreen>(find.byType(ProfileSetupScreen))
+          .saveRole,
+      isNull,
+    );
   });
 
   testWidgets('renders the role selection screen', (tester) async {
