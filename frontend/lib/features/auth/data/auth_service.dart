@@ -89,6 +89,8 @@ class AuthService {
     );
   }
 
+  Future<void> signOut() => _supabase.auth.signOut();
+
   Future<AuthenticatedUser> signInWithGoogle() async {
     final signedIn = Completer<void>();
     final subscription = _supabase.auth.onAuthStateChange.listen(
